@@ -1,0 +1,193 @@
+{% extends 'main/base.html' %}
+
+{% load static %}
+{% load hum_money %}
+{% load humanize %}
+{% block content %}
+{% if messages %}
+<div id="div-msg" class="mt-2 pb-0 pt-0" style="position: relative; top: -30px;">
+    {% for message in messages %}
+    <div id="exist" class="alert alert-{{ message.tags }} alert-dismissible fade show align-items-center" role="alert">
+        <p class="mb-0 msg">{{ message }}</p>
+        <button type="button" class="close align-items-center mb-0" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- LOCK FORM -->
+<div class="d-flex">
+    <div class="form-group ml-auto mt-2" style="position: relative; top: -45px;">
+        <input type="checkbox" class="form-check-input align-self-center mt-2" id="locked" checked>
+        <label class="form-check-label h3 mr-3 mb-0 align-self-center" for="locked"><b>LOCKED</b></label>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-lock-fill align-self-center mb-2" viewBox="0 0 16 16">
+            <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+          </svg>
+    </div>
+</div>
+
+<form method="POST" action="{% url 'core:edit-trs' %}" enctype="multipart/form-data" class="form">
+{% csrf_token %}
+
+<input type="hidden" id='id' name="id" value="{{obj.id}}" class="form-control">
+
+<!-- INFORMATIONS GENERAL -->
+<div class="shadow p-3 mb-5 bg-white rounded w-100y" style="position:relative; top: -30px;">
+    <h3 class="mb-4" style="font-weight: bolder !important;"><b>INFORMATIONS GÉNÉRAL</b></h3>
+    <div class="form-row">
+        <div class="form-group col-md-1">
+            <label for="unit" class="col-form-label"><b>Unité</b></label>
+            <select class="custom-select" name="unit" id="unit" required disabled>
+                <option value="KDU" {% if obj.unit == 'KDU' %} selected {% endif %} >KDU</option>
+                <option value="AZDU" {% if obj.unit == 'AZDU' %} selected {% endif %}>AZDU</option>
+                <option value="SKDU" {% if obj.unit == 'SKDU' %} selected {% endif %}>SKDU</option>
+            </select>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="ligne" class="col-form-label"><b>Ligne</b></label>
+            <input type="text" class="form-control" name="ligne" id="ligne" value="{% if obj.ligne %} {{obj.ligne}} {% else %} - {% endif %}" placeholder="Ligne" required disabled>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="temps_ouv" class="col-form-label"><b>Temps d'ouverture</b></label>
+            <input type="text" class="form-control" name="temps_ouv" id="temps_ouv" value="{% if obj.temps_ouv %} {{obj.temps_ouv}} {% else %} - {% endif %}" placeholder="Min" required disabled>
+        </div>
+    </div>
+</div>
+
+<!-- ARRETS -->
+<div class="shadow p-3 mb-5 bg-white rounded w-100y" style="position:relative; top: -30px;">
+    <h3 class="mb-4" style="font-weight: bolder !important;"><b>ARRETS (Minutes)</b></h3>
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label for="ecarts_cadences" class="col-form-label"><b>Ecarts de cadences</b></label>
+            <input type="text" class="form-control" name="ecarts_cadences" id="ecarts_cadences" value="{{obj.ecarts_cadences|intcomma|space_digits}}" placeholder="Min" required disabled>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="arret_plan" class="col-form-label"><b>Arrets planifiés</b></label>
+            <input type="text" class="form-control" name="arret_plan" id="arret_plan" value="{{obj.arret_plan|intcomma|space_digits}}" placeholder="Min" required disabled>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="arret_non_plan" class="col-form-label"><b>Arrets non-planifiés</b></label>
+            <input type="text" class="form-control" name="arret_non_plan" id="arret_non_plan" value="{{obj.arret_non_plan|intcomma|space_digits}}" placeholder="Min" required disabled>
+        </div>
+    </div>
+</div>
+
+<!-- PRODUCTION -->
+<div class="shadow p-3 mb-5 bg-white rounded w-100y" style="position:relative; top: -30px;">
+    <h3 class="mb-4" style="font-weight: bolder !important;"><b>PRODUCTION DU &nbsp; {{obj.date|date:'d / m / Y'}}</b></h3>
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label for="capacite_theo" class="col-form-label"><b>Capacité théorique</b></label>
+            <input type="text" class="form-control" name="capacite_theo" id="capacite_theo" value="{{obj.capacite_theo|intcomma|space_digits}}" placeholder="Min" required disabled>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="qte_prod" class="col-form-label"><b>Quantité produite</b></label>
+            <input type="text" class="form-control" name="qte_prod" id="qte_prod" value="{{obj.qte_prod|intcomma|space_digits}}" placeholder="Min" required disabled>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="qte_conf" class="col-form-label"><b>Quantité conforme</b></label>
+            <input type="text" class="form-control" name="qte_conf" id="qte_conf" value="{{obj.qte_conf|intcomma|space_digits}}" placeholder="Min" required disabled>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="qte_rebut" class="col-form-label"><b>Quantité rebutée</b></label>
+            <input type="text" class="form-control" name="qte_rebut" id="qte_rebut" value="{{obj.qte_rebut|intcomma|space_digits}}" placeholder="Min" required disabled>
+        </div>
+    </div>
+</div>
+
+<!-- TAUX -->
+<div class="shadow p-3 mb-5 bg-white rounded w-100y" style="position:relative; top: -30px;">
+    <h3 class="mb-4" style="font-weight: bolder !important;"><b>CALCUL DES TAUX</b></h3>
+    <h5 class='mt-3' style="color:teal !important;"><b>Taux de disponibilité</b></h5>
+    <hr class='mt-0' style="height: 4px !important; background-color: teal !important;">
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label for="temps_fct" class="col-form-label"><b>Temps de fonctionnement</b></label>
+            <input type="text" class="form-control" name="temps_fct" id="temps_fct" value="{{obj.temps_fct|intcomma|space_digits}}" placeholder="Min" required disabled>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="temps_req" class="col-form-label"><b>Temps requis</b></label>
+            <input type="text" class="form-control" name="temps_req" id="temps_req" value="{{obj.temps_req|intcomma|space_digits}}" placeholder="Min" required disabled>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="taux_dispo" class="col-form-label"><b>Taux de disponibilité - %</b></label>
+            <input type="text" class="form-control" name="taux_dispo" id="taux_dispo" value="{{taux_dispo|intcomma|space_digits}}" placeholder="Min" required disabled>
+        </div>
+    </div>
+    <h5 class='mt-3' style="color:teal !important;"><b>Taux de performance</b></h5>
+    <hr class='mt-0' style="height: 4px !important; background-color: teal !important;">
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label for="temps_net" class="col-form-label"><b>Temps Net</b></label>
+            <input type="text" class="form-control" name="temps_net" id="temps_net" value="{{obj.temps_net|intcomma|space_digits}}" placeholder="Min" required disabled>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="taux_perf" class="col-form-label"><b>Taux de performance - %</b></label>
+            <input type="text" class="form-control" name="taux_perf" id="taux_perf" value="{{taux_perf|floatformat:'2'|intcomma|space_digits}}" placeholder="Min" required disabled>
+        </div>
+    </div>
+    <h5 class='mt-3' style="color:teal !important;"><b>Taux de qualité</b></h5>
+    <hr class='mt-0' style="height: 4px !important; background-color: teal !important;">
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label for="temps_util" class="col-form-label"><b>Temps Utile</b></label>
+            <input type="text" class="form-control" name="temps_util" id="temps_util" value="{{obj.temps_util|floatformat:'2'|intcomma|space_digits}}" placeholder="Min" required disabled>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="taux_qualit" class="col-form-label"><b>Taux de qualité - %</b></label>
+            <input type="text" class="form-control" name="taux_qualit" id="taux_qualit" value="{{taux_qualit|floatformat:'2'|intcomma|space_digits}}" placeholder="Min" required disabled>
+        </div>
+    </div>
+    <h5 class='mt-3' style="color:teal !important;"><b>Taux de rendement sythétique</b></h5>
+    <hr class='mt-0' style="height: 4px !important; background-color: teal !important;">
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label for="trs" class="col-form-label"><b>TRS - %</b></label>
+            <input type="text" class="form-control" name="trs" id="trs" value="{{trs|floatformat:'2'|intcomma|space_digits}}" placeholder="Min" required disabled>
+        </div>
+    </div>
+</div>
+
+<button type="submit" id="submit-form" class="btn" style="color: white !important; background-color: #0e385b !important; position: relative; top: -30px;"><b class="h5">Modifier</b></button>
+
+</form>
+
+<script>
+
+    $('form').on('submit', function(e) {
+        $(':disabled').each(function(e) {
+            $(this).prop('disabled', false);
+        })
+    });
+
+    $('.form').on('submit', function(){
+        $(':input').not('#locked').val(function(index, value) {
+            return value.replace(/ /g, '');
+        });
+        $(':input').not('#locked').not('input[name="csrfmiddlewaretoken"]').not('#id').prop('type', 'number');
+    });
+
+    $('#locked').on('change', function(){
+        var chk = $(this).is(':checked');
+        if(!chk){
+            $(':input').not('#locked').prop('disabled', false);
+            // $(':select').prop('disabled', false);
+            $('#submit-form').prop('disabled', true);
+            $(':input').not('#locked').not('#ligne').val(function(index, value) {
+                return value.replace(/ /g, '');
+            });
+            $('input').not('#locked').not('input[name="csrfmiddlewaretoken"]').not('#id').not('#ligne').prop('type', 'number');
+        }
+        else{
+            $(':input').not('#locked').not('input[name="csrfmiddlewaretoken"]').not('#id').prop('disabled', true);
+            // $(':select').prop('disabled', true);
+            $('#submit-form').prop('disabled', false);
+        }
+    });
+
+</script>
+
+{% endblock content %}

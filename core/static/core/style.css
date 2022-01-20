@@ -1,0 +1,33 @@
+#navbar_1{
+  background-image: url('img/tin-g0e38989e1_1920.jpg');
+  background-position: center !important;
+  background-repeat: no-repeat;
+}
+
+
+.table td, .table th {
+    font-size: 5px !important;
+}
+
+.h6{
+  font-size: 12.5px !important;
+}
+
+.py-3{
+  vertical-align: middle !important;
+}
+
+.signwallp{
+  background-repeat: no-repeat;
+  background-position: right;
+}
+
+
+/* Chrome only: */
+@media all and (-webkit-min-device-pixel-ratio:0) and (min-resolution: .001dpcm) { 
+  .h5  { font-size: 18px !important; }
+}
+
+/* @media screen and (-webkit-min-device-pixel-ratio:0) {
+  .h5  { font-size: 18px !important; }
+} */

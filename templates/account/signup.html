@@ -1,0 +1,69 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block head_title %}{% trans "Signup" %}{% endblock %}
+
+{% block content %}
+{% if messages %}
+<div id="div-msg" class="mt-2 pb-0 pt-0">
+    {% for message in messages %}
+    <div id="exist" class="alert alert-{{ message.tags }} alert-dismissible fade show align-items-center" role="alert">
+    <b class="font-weight-bold h4">{{ message }}</b>
+    <button type="button" class="close align-items-center" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+  <main>
+    <div class="container">
+      <section class="mb-4">
+        <div class="row wow fadeIn">
+          <div class='col-6 offset-3'>
+            <h1>{% trans "Sign Up" %}</h1>
+            <p>{% blocktrans %}Already have an account? Then please <a href="{{ login_url }}">sign in</a>.{% endblocktrans %}</p>
+            <form class="signup" id="signup_form" method="post" action="{% url 'account_signup' %}">
+              {% csrf_token %}
+              {{ form|crispy }}
+              {{ profile_form|crispy }}
+              {% if redirect_field_value %}
+              <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+              {% endif %}
+              <button class='btn' style="color: white !important; background-color: #0e385b !important;" type="submit"><b>{% trans "Sign Up" %}</b></button>
+            </form>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+
+    var obj = document.getElementById('div_id_escale');
+    var poste = document.getElementById('id_poste');
+    $('#id_escale').prop('required', false);
+    $('#id_dpt').prop('required', true);
+    $('#div_id_escale').slideUp();
+    $('#id_poste').change(function(){
+      if($('#id_poste').val() == 5){
+        // console.log('ESCALE YES')
+        // console.log($('#id_poste').val())
+        $('#div_id_escale').slideDown();
+        $('#id_escale').prop('required', true);
+        $('#id_dpt').prop('required', false);
+        $('#div_id_dpt').slideUp();
+      }
+      else{
+        // console.log('ESCALE NO')
+        // console.log($('#id_poste').val())
+        $('#id_escale').prop('required', false);
+        $('#div_id_escale').slideUp();
+        $('#div_id_dpt').slideDown();
+        $('#id_dpt').prop('required', true);
+      }
+    });
+  </script>
+
+{% endblock %}

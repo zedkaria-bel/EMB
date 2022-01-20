@@ -1,0 +1,181 @@
+{% extends 'main/base.html' %}
+
+{% load static %}
+{% load hum_money %}
+{% load humanize %}
+{% block head_title %}{{req}} {% endblock %}
+{% block content %}
+{% if messages %}
+
+
+
+<div id="div-msg" class="mt-2 pb-0 pt-0">
+    {% for message in messages %}
+    <div id="exist" class="alert alert-{{ message.tags }} alert-dismissible fade show align-items-center" role="alert">
+        <p class="mb-0 msg">{{ message }}</p>
+        <button type="button" class="close align-items-center mb-0" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+<div class="d-flex flex-row" style="display: flex; justify-content: center; align-items: center; position: relative; top: -30px;">
+    <p class="h5 mr-2 mb-0">FILTERS</p>
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-filter mr-4" viewBox="0 0 16 16">
+        <path d="M6 10.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5z"/>
+    </svg>
+    <form method="GET" action="{% url 'core:tcr-view' %}" id="form" class="col-9 d-flex flex-row" style="display: flex; justify-content: center; align-items: center;">
+        {% csrf_token %}
+        <select class="custom-select col-2 mr-4" name="year" id="year">
+            {% for year in years %}
+            <option value="{{year}}" {% if year == Year %} selected {% endif %} >{{year}}</option>
+            {% endfor %}
+        </select>
+        <select class="custom-select col-2 mr-4" name="month" id="month">
+            {% for month in 13|times %}
+            <option value="{{month}}" {% if month == Month %} selected {% endif %} >{{month|month_name}}</option>
+            {% endfor %}
+        </select>
+        <select class="custom-select col-2 mr-4" name="unit" id="unit">
+            <option value="all" {% if unit == 'all' %} selected {% endif %} >Unité (All)</option>
+            <option value="SIEGE" {% if unit == 'SIEGE' %} selected {% endif %} >SIÈGE</option>
+            <option value="KDU" {% if unit == 'KDU' %} selected {% endif %} >KDU</option>
+            <option value="AZDU" {% if unit == 'AZDU' %} selected {% endif %} >AZDU</option>
+            <option value="SKDU" {% if unit == 'SKDU' %} selected {% endif %} >SKDU</option>
+            <option value="ENTREPRISE" {% if unit == 'ENTREPRISE' %} selected {% endif %} >ENTREPRISE</option>
+        </select>
+        <button type="submit" id="submit-form" class="btn d-flex flex-row py-2 align-middle px-3 mr-3" style="color: white !important; background-color: #0e385b !important;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-funnel-fill" viewBox="0 0 16 16">
+                <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z"/>
+              </svg>
+        </button>
+    </form>
+</div>
+
+<!-- <div class="mb-4">
+    <p class="h5">{{qs}}</p>
+</div> -->
+
+<div class="table-responsive">
+    <table id="table-bag-cases" class="table" style="width: 100% !important;">
+        <thead class="thead-dark">
+          <tr>
+            <th class="py-3 align-middle" scope="col"><b class="h6">DÉSIGNATION</b></th>
+            {% if unit %}
+            <th class="py-3 align-middle col-6" scope="col"><b class="h6">{{unit}}</b></th>
+            {% else %}
+            <th class="py-3 align-middle" scope="col"><b class="h6">SIÈGE</b></th>
+            <th class="py-3 align-middle" scope="col"><b class="h6">KDU</b></th>
+            <th class="py-3 align-middle" scope="col"><b class="h6">SKDU</b></th>
+            <th class="py-3 align-middle" scope="col"><b class="h6">AZDU</b></th>
+            <th class="py-3 align-middle" scope="col"><b class="h6">ENTREPRISE</b></th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody id="tbody">
+            {% for request in qs.itertuples %}
+            {% if request.des != 'date' %}
+            <tr class="row_tab" {% if 'EXER' in request.des or 'AJ' in request.des or 'BRUT' in request.des or 'RESULTAT' in request.des %} style="background-color: #dedede !important; border-top: 1px black solid;"  {% endif %} >
+                <th class="py-2 align-middle" scope="row">
+                    {% if 'EXER' in request.des or 'AJ' in request.des or 'BRUT' in request.des or 'RESULTAT' in request.des %}
+                    <b class="h5 font-weight-bold" >{{ request.des }}</b>
+                    {% else %}
+                    <b class="h6 font-weight-normal" >{{ request.des }}</b>
+                    {% endif %}
+                </th>
+                {% if unit %}
+                <td class="py-2 align-middle" scope="row" {% if request.1|negative %} style="background-color: #e5baba; color: #a31f1f;" {% endif %} >
+                    {% if 'EXER' in request.des or 'AJ' in request.des or 'BRUT' in request.des or 'RESULTAT' in request.des %}
+                    <b class="h5 font-weight-bold" >{{ request.1|floatformat:"2"|intcomma|space_digits }}</b>
+                    {% else %}
+                    <b class="h6 font-weight-normal" >{{ request.1|floatformat:"2"|intcomma|space_digits }}</b>
+                    {% endif %}
+                </td>
+                {% else %}
+                <td class="py-2 align-middle" scope="row" {% if request.1|negative %} style="background-color: #e5baba; color: #a31f1f;" {% endif %} >
+                    {% if 'EXER' in request.des or 'AJ' in request.des or 'BRUT' in request.des or 'RESULTAT' in request.des %}
+                    <b class="h5 font-weight-bold" >{{ request.1|floatformat:"2"|intcomma|space_digits }}</b>
+                    {% else %}
+                    <b class="h6 font-weight-normal" >{{ request.1|floatformat:"2"|intcomma|space_digits }}</b>
+                    {% endif %}
+                </td>
+                <td class="py-2 align-middle" scope="row" {% if request.2|negative %} style="background-color: #e5baba; color: #a31f1f;" {% endif %}>
+                    {% if 'EXER' in request.des or 'AJ' in request.des or 'BRUT' in request.des or 'RESULTAT' in request.des %}
+                    <b class="h5 font-weight-bold" >{{ request.2|floatformat:"2"|intcomma|space_digits }}</b>
+                    {% else %}
+                    <b class="h6 font-weight-normal" >{{ request.2|floatformat:"2"|intcomma|space_digits }}</b>
+                    {% endif %}
+                </td>
+                <td class="py-2 align-middle" scope="row" {% if request.3|negative %} style="background-color: #e5baba; color: #a31f1f;" {% endif %}>
+                    {% if 'EXER' in request.des or 'AJ' in request.des or 'BRUT' in request.des or 'RESULTAT' in request.des %}
+                    <b class="h5 font-weight-bold" >{{ request.3|floatformat:"2"|intcomma|space_digits }}</b>
+                    {% else %}
+                    <b class="h6 font-weight-normal" >{{ request.3|floatformat:"2"|intcomma|space_digits }}</b>
+                    {% endif %}
+                </td>
+                <td class="py-2 align-middle" scope="row" {% if request.4|negative %} style="background-color: #e5baba; color: #a31f1f;" {% endif %}>
+                    {% if 'EXER' in request.des or 'AJ' in request.des or 'BRUT' in request.des or 'RESULTAT' in request.des %}
+                    <b class="h5 font-weight-bold" >{{ request.4|floatformat:"2"|intcomma|space_digits }}</b>
+                    {% else %}
+                    <b class="h6 font-weight-normal" >{{ request.4|floatformat:"2"|intcomma|space_digits }}</b>
+                    {% endif %}
+                </td>
+                <td class="py-2 align-middle" scope="row" {% if request.5|negative %} style="background-color: #e5baba; color: #a31f1f;" {% endif %}>
+                    {% if 'EXER' in request.des or 'AJ' in request.des or 'BRUT' in request.des or 'RESULTAT' in request.des %}
+                    <b class="h5 font-weight-bold" >{{ request.5|floatformat:"2"|intcomma|space_digits }}</b>
+                    {% else %}
+                    <b class="h6 font-weight-normal" >{{ request.5|floatformat:"2"|intcomma|space_digits }}</b>
+                    {% endif %}
+                </td>
+                {% endif %}
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- PAGINATION -->
+    <nav aria-label="Page navigation example mt-5">   
+        <ul id="pagin" class="pagination pagination-lg justify-content-center mt-5">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+            <a class="page-link" href="?page=1" aria-label="Previous">
+                <span aria-hidden="true">PREVIOUS</span>
+                <span class="sr-only">begin</span>
+            </a>
+            </li>   {% endif %}
+            
+            {% for n in page_obj.paginator.page_range %}
+            {% if page_obj.number == n %}
+                <li class="page-item active page-active">
+                <span class="page-link" style="background-color: #0e385b !important;">{{ n }}<span class="sr-only">(current)</span></span>
+                </li>
+            {% elif n > page_obj.number|add:'-5' and n < page_obj.number|add:'5' %}
+                <li class="page-item"><a class="page-link" href="?csrfmiddlewaretoken={{request.GET.csrfmiddlewaretoken}}&date={{request.GET.date}}&unit={{request.GET.unit}}&lines={{request.GET.lines}}&page={{n}}">{{ n }}</a></li>
+            {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?csrfmiddlewaretoken={{request.GET.csrfmiddlewaretoken}}&date={{request.GET.date}}&unit={{request.GET.unit}}&lines={{request.GET.lines}}&page={{ page_obj.paginator.num_pages }}" aria-label="Next">
+                <span aria-hidden="true">NEXT</span>
+                <span class="sr-only">end</span>
+                </a>
+            </li>
+            {% endif %}   
+        </ul>
+    </nav>
+
+</div>
+
+<style>
+    table.table tbody tr td,
+    table.table thead tr th,
+    table.table thead,
+    #tbody tr {
+    border-left: 1px solid #707070;
+    border-right: 1px solid #707070;
+    }
+</style>
+{% endblock content %}

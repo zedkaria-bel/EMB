@@ -1,0 +1,212 @@
+{% extends 'main/base.html' %}
+
+{% load static %}
+{% load hum_money %}
+{% load humanize %}
+{% block content %}
+{% if messages %}
+<div id="div-msg" class="mt-2 pb-0 pt-0" style="position: relative; top: -30px;">
+    {% for message in messages %}
+    <div id="exist" class="alert alert-{{ message.tags }} alert-dismissible fade show align-items-center" role="alert">
+        <p class="mb-0 msg">{{ message }}</p>
+        <button type="button" class="close align-items-center mb-0" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- LOCK FORM -->
+<div class="d-flex">
+    <div class="form-group ml-auto mt-2" style="position: relative; top: -45px;">
+        <input type="checkbox" class="form-check-input align-self-center mt-2" id="locked" checked>
+        <label class="form-check-label h3 mr-3 mb-0 align-self-center" for="locked"><b>LOCKED</b></label>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-lock-fill align-self-center mb-2" viewBox="0 0 16 16">
+            <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+          </svg>
+    </div>
+</div>
+
+<form method="POST" action="{% url 'core:edit-prod' %}" enctype="multipart/form-data" class="form">
+{% csrf_token %}
+
+<input type="hidden" id='id' name="id" value="{{obj.id}}" class="form-control">
+
+<!-- INFORMATIONS GENERAL -->
+<div class="shadow p-3 mb-5 bg-white rounded w-100y" style="position:relative; top: -30px;">
+    <h3 class="mb-4" style="font-weight: bolder !important;"><b>INFORMATIONS GÉNÉRAL</b></h3>
+    <div class="form-row">
+        <div class="form-group col-md-1">
+            <label for="unit" class="col-form-label"><b>Unité</b></label>
+            <select class="custom-select" name="unit" id="unit" required disabled>
+                <option value="KDU" {% if obj.unit == 'KDU' %} selected {% endif %} >KDU</option>
+                <option value="AZDU" {% if obj.unit == 'AZDU' %} selected {% endif %}>AZDU</option>
+                <option value="SKDU" {% if obj.unit == 'SKDU' %} selected {% endif %}>SKDU</option>
+            </select>
+        </div>
+        <div class="form-group col-md-2">
+            <label for="line" class="col-form-label"><b>Date</b></label>
+            <input type="date" class="form-control" name="date" id="date" value="{{obj.date|date:'Y-m-d'}}" placeholder="Date" required disabled>
+        </div>
+        <div class="form-group col-md-2">
+            <label for="line" class="col-form-label"><b>Ligne</b></label>
+            <input type="text" class="form-control" name="line" id="line" value="{% if obj.ligne %} {{obj.ligne}} {% else %} - {% endif %}" placeholder="Ligne" required disabled>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="des" class="col-form-label"><b>Désignation</b></label>
+            <input type="text" class="form-control" name="des" id="des" value="{% if obj.des %} {{obj.des}} {% else %} - {% endif %}" placeholder="Désignation" required disabled>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="client" class="col-form-label"><b>Client</b></label>
+            <input type="text" class="form-control" name="client" id="client" value="{% if obj.client %} {{obj.client}} {% else %} - {% endif %}" placeholder="Client" required disabled>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="volume" class="col-form-label"><b>Volume</b></label>
+            <input type="text" class="form-control" name="volume" id="volume" value="{% if obj.volume %} {{obj.volume}} {% else %} - {% endif %}" placeholder="Volume" required disabled>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="category" class="col-form-label"><b>Catégorie</b></label>
+            <input type="text" class="form-control" name="category" id="category" value="{% if obj.category %} {{obj.category}} {% else %} - {% endif %}" placeholder="Catégorie" required disabled>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="produit" class="col-form-label"><b>Produit</b></label>
+            <select class="custom-select" name="produit" id="produit" required disabled>
+                <option value="Boite" {% if obj.produit == 'Boite' %} selected {% endif %} >Boite</option>
+                <option value="Accessoire" {% if obj.produit == 'Accessoire' %} selected {% endif %}>Accessoire</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- PRODUCTION PHYSIQUE -->
+<div class="shadow p-3 mb-5 bg-white rounded w-100y" style="position:relative; top: -30px;">
+    <h3 class="mb-4" style="font-weight: bolder !important;"><b>PRODUCTION PHYSIQUE</b></h3>
+    <div class="form-row">
+        <div class="form-group col-md-1">
+            <label for="obj" class="col-form-label"><b>Objectif</b></label>
+            <input type="text" class="form-control" name="obj" id="obj" value="{{obj.obj|intcomma|space_digits}}" placeholder="Objectif" required disabled>
+        </div>
+        <div class="form-group col-md-1">
+            <label for="capacite_jour" class="col-form-label"><b>Capacité jour</b></label>
+            <input type="text" class="form-control" name="capacite_jour" id="capacite_jour" value="{{obj.capacite_jour|intcomma|space_digits}}" placeholder="Capacité jour" required disabled>
+        </div>
+        <div class="form-group col-md-2">
+            <label for="brute_jour" class="col-form-label"><b>Production brute - le {{obj.date|date:'d/m/Y'}} </b></label>
+            <input type="text" class="form-control" name="brute_jour" id="brute_jour" value="{{obj.brute_jour|intcomma|space_digits}}" placeholder="Brute - jour" required disabled>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="conforme_jour" class="col-form-label"><b>Production conforme - le {{obj.date|date:'d/m/Y'}} </b></label>
+            <input type="text" class="form-control" name="conforme_jour" id="conforme_jour" value="{{obj.conforme_jour|intcomma|space_digits}}" placeholder="Conforme jour" required disabled>
+        </div>
+        <div class="form-group col-md-2">
+            <label for="rebut_jour" class="col-form-label"><b>Production rebut - le {{obj.date|date:'d/m/Y'}} </b></label>
+            <input type="text" class="form-control" name="rebut_jour" id="rebut_jour" value="{{obj.rebut_jour|intcomma|space_digits}}" placeholder="Rebut jour" required disabled>
+        </div>
+        <div class="form-group col-md-2">
+            <label for="taux_jour" class="col-form-label"><b>Taux jour</b></label>
+            <input type="text" class="form-control" name="taux_jour" id="taux_jour" value="{{obj.taux_jour|intcomma|space_digits}}" placeholder="Taux jour" required disabled>
+        </div>
+    </div>
+    <h5 class='mt-3' style="color:teal !important;"><b>Cumulé sur le mois - {{obj.date|date:'F Y'}} </b></h5>
+    <hr class='mt-0' style="height: 4px !important; background-color: teal !important;">
+    <div class="form-row">
+        <div class="form-group col-md-2">
+            <label for="brute_mois" class="col-form-label"><b>Production Brute</b></label>
+            <input type="text" class="form-control" name="brute_mois" id="brute_mois" value="{{obj.brute_mois|intcomma|space_digits}}" placeholder="Brute - Mois" required disabled>
+        </div>
+        <div class="form-group col-md-2">
+            <label for="conforme_mois" class="col-form-label"><b>Production Conforme</b></label>
+            <input type="text" class="form-control" name="conforme_mois" id="conforme_mois" value="{{obj.conforme_mois|intcomma|space_digits}}" placeholder="Conforme - Mois" required disabled>
+        </div>
+        <div class="form-group col-md-2">
+            <label for="rebut_mois" class="col-form-label"><b>Production Rebutée</b></label>
+            <input type="text" class="form-control" name="rebut_mois" id="rebut_mois" value="{{obj.rebut_mois|intcomma|space_digits}}" placeholder="Rebut - Mois" required disabled>
+        </div>
+        <div class="form-group col-md-2">
+            <label for="taux_real" class="col-form-label"><b>Taux de réalisation - %</b></label>
+            <input type="number" min="0" max="100" step="0.01" class="form-control" name="taux_real" id="taux_real" value="{{taux_real}}" placeholder="Taux Réal." required disabled>
+        </div>
+        <div class="form-group col-md-2">
+            <label for="taux_rebut" class="col-form-label"><b>Taux de rebut - %</b></label>
+            <input type="number" min="0" max="100" step="0.01" class="form-control" name="taux_rebut" id="taux_rebut" value="{{taux_rebut}}" placeholder="Taux Rebut" required disabled>
+        </div>
+    </div>
+</div>
+
+<!-- PRODUCTION VALORISEE -->
+<div class="shadow p-3 mb-5 bg-white rounded w-100y" style="position:relative; top: -30px;">
+    <h3 class="mb-4" style="font-weight: bolder !important;"><b>PRODUCTION VALORISÉE</b></h3>
+    <h5 class='mt-3' style="color:teal !important;"><b>Avec coût de revient - Journée du {{obj.date|date:'d/m/Y'}} </b></h5>
+    <hr class='mt-0' style="height: 4px !important; background-color: teal !important;">
+    <div class="form-row">
+        <div class="form-group col-md-2">
+            <label for="pu_cout_revient" class="col-form-label"><b>PU - DZD</b></label>
+            <input type="text" class="form-control" name="pu_cout_revient" id="pu_cout_revient" value="{{obj.pu_cout_revient|intcomma|space_digits}}" placeholder="PU" required disabled>
+        </div>
+        <div class="form-group col-md-2">
+            <label for="montant_journee_coutrev" class="col-form-label"><b>Montant Journée - DZD</b></label>
+            <input type="text" class="form-control" name="montant_journee_coutrev" id="montant_journee_coutrev" value="{{obj.montant_journee_coutrev|intcomma|space_digits}}" placeholder="Montant journée" required disabled>
+        </div>
+        <div class="form-group col-md-2">
+            <label for="montantcumul_coutrev" class="col-form-label"><b>Montant Cumulé - DZD</b></label>
+            <input type="text" class="form-control" name="montantcumul_coutrev" id="montantcumul_coutrev" value="{{obj.montantcumul_coutrev|intcomma|space_digits}}" placeholder="Montant cumulé" required disabled>
+        </div>
+    </div>
+    <h5 class='mt-3' style="color:teal !important;"><b>Avec prix de vente </b></h5>
+    <hr class='mt-0' style="height: 4px !important; background-color: teal !important;">
+    <div class="form-row">
+        <div class="form-group col-md-2">
+            <label for="pu_prix_vente" class="col-form-label"><b>PU - DZD</b></label>
+            <input type="text" class="form-control" name="pu_prix_vente" id="pu_prix_vente" value="{{obj.pu_prix_vente|intcomma|space_digits}}" placeholder="PU" required disabled>
+        </div>
+        <div class="form-group col-md-2">
+            <label for="montant_journee_prix_vente" class="col-form-label"><b>Montant Journée - DZD</b></label>
+            <input type="text" class="form-control" name="montant_journee_prix_vente" id="montant_journee_prix_vente" value="{{obj.montant_journee_prix_vente|intcomma|space_digits}}" placeholder="Montant journée" required disabled>
+        </div>
+        <div class="form-group col-md-2">
+            <label for="montantcumul_prix_vente" class="col-form-label"><b>Montant Cumulé - DZD</b></label>
+            <input type="text" class="form-control" name="montantcumul_prix_vente" id="montantcumul_prix_vente" value="{{obj.montantcumul_prix_vente|intcomma|space_digits}}" placeholder="Montant cumulé" required disabled>
+        </div>
+    </div>
+</div>
+
+<button type="submit" id="submit-form" class="btn" style="color: white !important; background-color: #0e385b !important; position: relative; top: -30px;"><b class="h5">Modifier</b></button>
+
+</form>
+
+<script>
+
+    $('.form').on('submit', function(){
+        $(':input').not('#locked').val(function(index, value) {
+                return value.replace(/ /g, '');
+            });
+            $(':input').not('#locked').not('input[name="csrfmiddlewaretoken"]').not('#id').prop('type', 'number');
+    });
+
+    $('#locked').on('change', function(){
+        var chk = $(this).is(':checked');
+        if(!chk){
+            $(':input').not('#locked').not('#taux_jour').not('#taux_real').not('#taux_rebut').prop('disabled', false);
+            // $(':select').prop('disabled', false);
+            $('#submit-form').prop('disabled', true);
+            $(':input').not('#locked').val(function(index, value) {
+                return value.replace(/ /g, '');
+            });
+            $(':input').not('#locked').not('input[name="csrfmiddlewaretoken"]').not('#id').prop('type', 'number');
+        }
+        else{
+            $(':input').not('#locked').not('#taux_jour').not('#taux_real').not('#taux_rebut').prop('disabled', true);
+            // $(':select').prop('disabled', true);
+            $('#submit-form').prop('disabled', false);
+        }
+    });
+
+    $('form').submit(function(e) {
+        $(':disabled').each(function(e) {
+            $(this).removeAttr('disabled');
+        })
+    });
+</script>
+
+{% endblock content %}

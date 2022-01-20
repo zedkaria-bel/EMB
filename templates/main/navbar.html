@@ -1,0 +1,108 @@
+{% load static %}
+<!-- path -->
+<nav id='navbar_1' class="navbar navbar-expand-lg px-5 pt-1 pb-5" style="padding-bottom: 8.5rem !important;">
+  <style>
+      @font-face {
+      font-family: 'Ubuntu-Medium';
+        src: local('Ubuntu'),
+            url("{% static 'core/font/Ubuntu/Ubuntu-Regular.ttf' %}");
+      }
+    </style>
+  <a class="navbar-brand" href="{% url 'core:home-view' %}" style="font-weight: lighter !important; font-size: 2.85rem !important; color: white !important;">EMB &nbsp; | <b class="font-weight-bold" style="margin-left: 15px !important; letter-spacing: 2px !important; color: white !important;">&nbsp;TECH</b></a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon" style="background-color: white !important;"></span>
+  </button>
+  
+  <div class="collapse navbar-collapse justify-content-end" id="navbarSupportedContent">
+    <b>
+      <ul class="navbar-nav" style="font-family: 'Ubuntu-Medium' !important; font-size:medium !important;">
+        {% if request.user.is_authenticated %}
+        <li class="nav-item active ml-4">
+          <div class="d-flex flex-row d-flex align-items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="white" class="bi bi-box-seam" viewBox="0 0 16 16">
+              <path d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5l2.404.961L10.404 2l-2.218-.887zm3.564 1.426L5.596 5 8 5.961 14.154 3.5l-2.404-.961zm3.25 1.7-6.5 2.6v7.922l6.5-2.6V4.24zM7.5 14.762V6.838L1 4.239v7.923l6.5 2.6zM7.443.184a1.5 1.5 0 0 1 1.114 0l7.129 2.852A.5.5 0 0 1 16 3.5v8.662a1 1 0 0 1-.629.928l-7.185 2.874a.5.5 0 0 1-.372 0L.63 13.09a1 1 0 0 1-.63-.928V3.5a.5.5 0 0 1 .314-.464L7.443.184z"/>
+            </svg>
+            <a class="nav-link" href="{% url 'core:prod-view' %}" style="color: white !important;" href=""><b>Production</b><span class="sr-only">(current)</span></a>
+          </div>
+        </li>
+        <li class="nav-item active ml-4">
+          <div class="d-flex flex-row d-flex align-items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="white" class="bi bi-currency-dollar" viewBox="0 0 16 16">
+              <path d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718H4zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73l.348.086z"/>
+            </svg>
+            <a class="nav-link" style="color: white !important;" href="{% url 'core:sale-view' %}"><b>Vente</b><span class="sr-only"></span></a>
+          </div>
+        </li>
+        <li class="nav-item active ml-4">
+          <div class="d-flex flex-row d-flex align-items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="white" class="bi bi-clipboard-data" viewBox="0 0 16 16">
+              <path d="M4 11a1 1 0 1 1 2 0v1a1 1 0 1 1-2 0v-1zm6-4a1 1 0 1 1 2 0v5a1 1 0 1 1-2 0V7zM7 9a1 1 0 0 1 2 0v3a1 1 0 1 1-2 0V9z"/>
+              <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+              <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+            </svg>
+            <a class="nav-link" style="color: white !important;" href="{% url 'core:trs-view' %}"><b>T R S</b><span class="sr-only"></span></a>
+          </div>
+        </li>
+        <li class="nav-item active ml-4">
+          <div class="d-flex flex-row d-flex align-items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="white" class="bi bi-graph-up-arrow" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M0 0h1v15h15v1H0V0Zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5Z"/>
+            </svg>
+            <a class="nav-link" style="color: white !important;" href="{% url 'core:tcr-view' %}"><b>T C R</b><span class="sr-only"></span></a>
+          </div>
+        </li>
+        <li class="nav-item ml-4 dropdown">
+          <div class="d-flex flex-row d-flex align-items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="white" class="bi bi-plus-circle" viewBox="0 0 16 16">
+              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+            </svg>
+            <a class="nav-link dropdown-toggle" id="usr" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color: white !important;" href="{{request.user.profile.get_absolute_url}}"> <b>Plus d'options</b> </a>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenu2" style="background-color: white !important;">
+              <div class="d-flex flex-row d-flex align-items-center dropdown-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="black" class="bi bi-people" viewBox="0 0 16 16">
+                  <path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1h8zm-7.978-1A.261.261 0 0 1 7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002a.274.274 0 0 1-.014.002H7.022zM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM6.936 9.28a5.88 5.88 0 0 0-1.23-.247A7.35 7.35 0 0 0 5 9c-4 0-5 3-5 4 0 .667.333 1 1 1h4.216A2.238 2.238 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816zM4.92 10A5.493 5.493 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275zM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0zm3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
+                </svg>
+                <a href="#" class="dwn py-2 mb-0 h5" type="button">R.H</a>
+              </div>
+              <div class="d-flex flex-row d-flex align-items-center dropdown-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="black" class="bi bi-bezier2" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M1 2.5A1.5 1.5 0 0 1 2.5 1h1A1.5 1.5 0 0 1 5 2.5h4.134a1 1 0 1 1 0 1h-2.01c.18.18.34.381.484.605.638.992.892 2.354.892 3.895 0 1.993.257 3.092.713 3.7.356.476.895.721 1.787.784A1.5 1.5 0 0 1 12.5 11h1a1.5 1.5 0 0 1 1.5 1.5v1a1.5 1.5 0 0 1-1.5 1.5h-1a1.5 1.5 0 0 1-1.5-1.5H6.866a1 1 0 1 1 0-1h1.711a2.839 2.839 0 0 1-.165-.2C7.743 11.407 7.5 10.007 7.5 8c0-1.46-.246-2.597-.733-3.355-.39-.605-.952-1-1.767-1.112A1.5 1.5 0 0 1 3.5 5h-1A1.5 1.5 0 0 1 1 3.5v-1zM2.5 2a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1zm10 10a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1z"/>
+                </svg>
+                <a href="{% url 'account_logout' %}?next=/accounts/login/" class="dwn py-3 mb-0 h5" type="button">Fil de cuivre</a>
+              </div>
+            </div>
+          </div>
+        </li>
+        <li class="nav-item ml-4 dropdown px-3" style="border-radius: 60px; border: 2px white solid;">
+          <a class="nav-link dropdown-toggle" id="usr" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color: white !important;" href="{{request.user.profile.get_absolute_url}}"> {{request.user.first_name|upper|add:' '|add:request.user.last_name}} </a>
+          <div class="dropdown-menu" aria-labelledby="dropdownMenu2" style="background-color: white !important;">
+            <a href="#" class="dropdown-item dwn py-3 mb-0 h5" type="button">PROFILE</a>
+            <a href="{% url 'account_logout' %}?next=/accounts/login/" class="dropdown-item dwn py-3 mb-0 h5" type="button">LOGOUT</a>
+          </div>
+        </li>
+        {% else %}
+        <li class="nav-item ml-4">
+          <a class="nav-link waves-effect" style="border: 1px white solid !important; border-radius: 4px;" href="{% url 'account_login' %}">
+            <span class="px-2 clearfix d-none d-sm-inline-block" style="color: white;"> Se connecter </span>
+          </a>
+        </li>
+        <li class="nav-item ml-4">
+          <a class="nav-link waves-effect" style="border-radius: 4px; background-color: white; color:#0e385b !important ;" href="{% url 'account_signup' %}">
+            <span class=" px-2 clearfix d-none d-sm-inline-block"> S'inscrire </span>
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+    </b>
+  </div>
+</nav>
+<div class="d-flex justify-content-center" style="position: relative; top: -105px;">
+  <p class="my-0 px-5" style="color: white; font-size: 3rem !important; font-weight: bold; border: 2px solid white;">
+    {% if request.user.is_authenticated %}
+    {{req}}
+    {% else %}
+    Contrôle de gestion
+    {% endif %}
+  </p>
+</div>
