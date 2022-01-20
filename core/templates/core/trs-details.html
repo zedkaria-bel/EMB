@@ -114,7 +114,7 @@
         </div>
         <div class="form-group col-md-3">
             <label for="taux_dispo" class="col-form-label"><b>Taux de disponibilité - %</b></label>
-            <input type="text" class="form-control" name="taux_dispo" id="taux_dispo" value="{{taux_dispo|intcomma|space_digits}}" placeholder="Min" required disabled>
+            <input type="text" class="form-control" name="taux_dispo" id="taux_dispo" value="{{taux_dispo|floatformat:'2'|intcomma|space_digits}}" placeholder="Min" required disabled>
         </div>
     </div>
     <h5 class='mt-3' style="color:teal !important;"><b>Taux de performance</b></h5>
