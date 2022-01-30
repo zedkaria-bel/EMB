@@ -9,10 +9,9 @@ from django.shortcuts import render, redirect
 from django.db.models import Max, Min, Sum, Q
 from django.shortcuts import reverse
 from django.contrib import messages
-from sqlalchemy import create_engine
+from django.core.files.storage import FileSystemStorage
 import datetime
 from django.utils import timezone
-from django.db.models.fields import BLANK_CHOICE_DASH
 from django.template.loader import render_to_string
 import calendar
 from dateutil.relativedelta import relativedelta
@@ -22,6 +21,8 @@ import numpy as np
 import json
 import re
 from django.shortcuts import render
+from openpyxl import load_workbook
+import dateparser
 # pylint: disable=import-error
 from django_pandas.io import read_frame
 from .models import (
@@ -30,6 +31,23 @@ from .models import (
     Trs,
     Tcr,
 )
+from .flasah_test import get_prod_phy
+from .prod_val_boites import missing_prod_in_val, get_val_df
+from .prod_acc import get_acc_df
+from .ventes import get_vente_df
+from .trs import get_trs_df
+import psycopg2
+import sqlalchemy
+from sqlalchemy import create_engine
+from sqlalchemy import func
+from sqlalchemy.orm import sessionmaker
+
+con = psycopg2.connect(database="EMB", user="postgres", password="zaki1690", host="localhost", port="5432")
+con.autocommit = True
+engine = create_engine('postgresql://postgres:zaki1690@localhost:5432/EMB')
+Session = sessionmaker(bind = engine)
+session = Session()
+cursor = con.cursor()
 
 # Create your views here.
 
@@ -399,3 +417,335 @@ class tcrSummary(LoginRequiredMixin, ListView):
         context['req'] = 'TCR - '.upper() + datetime.date(year, month, 28).strftime('%B') + ' ' + datetime.date(year, month, 28).strftime('%Y')
         context['qs'] = self.get_queryset()
         return context
+
+def add_act_journ(request):
+    context = {
+        'title' : "ACtivité journalière".upper(),
+        'req' : "ACtivité journalière".upper(),
+    }
+    return render(request, 'core/add_act_journ.html', context)
+
+class AddAct(View):
+    def post(self, request):
+        if request.FILES['file_pg']:
+            myfile = request.FILES['file_pg']
+            fs = FileSystemStorage()
+            filename = fs.save(myfile.name, myfile)
+            uploaded_file_path = fs.path(filename)
+            new_act_journ = uploaded_file_path
+
+            try:
+                # Order of exec
+
+                # Acc --> Prod. Phy. --> Prod. Valorisé --> Merge
+
+                tab_name = 'Production'
+
+                cursor.execute('SELECT MAX("date") FROM public."' + tab_name + '"')
+                max_dt = cursor.fetchone()[0]
+                # print(max_dt)
+                # max_dt = datetime.date(2022, 1, 16)
+
+                # ACC
+                bg_df = pd.read_excel(new_act_journ, sheet_name='03 Prod Accessoires', skiprows=8, header=1)
+                # Rename the first column so we could address it
+                bg_df.columns.values[0] = 'Unnamed: 0'
+                bg_df.columns.values[1] = 'Unnamed: 1'
+                bg_df.columns.values[2] = 'Unnamed: 2'
+                pd.set_option('display.max_rows', None)
+                # # Delimiter les dataframes
+                dfs = bg_df.index[bg_df['Unnamed: 0'].str.contains('Unité', na = False)].tolist()
+                frames = []
+                for idx, val in enumerate(dfs):
+                    # print(idx, val)
+                    df = pd.DataFrame()
+                    # print(val, dfs[idx+1])
+                    try:
+                        df = bg_df.loc[val: dfs[idx+1]]
+                    except IndexError:
+                        df = bg_df.loc[val:]
+                    df = df.reset_index(drop=True)
+                    dte = df['Unnamed: 5'][1]
+                    # print(dte)
+                    if isinstance(dte, datetime.datetime):
+                        date = dte.date()
+                    else:
+                        match = re.search(r'\d{2}/\d{2}/\d{4}', dte)
+                        date = datetime.datetime.strptime(match.group(), '%d/%m/%Y').date()
+                    # print(date)
+                    if date > max_dt:
+                        # print(date)
+                        # df = df.iloc[3: , :]
+                        df.drop(df.tail(1).index,inplace=True)
+                        # break
+                        acc_df = get_acc_df(df)
+                        frames.append(acc_df)
+                        result = pd.concat(frames)
+                        # print(acc_df)
+
+                acc_df = result
+                # PROD PHY
+                bg_df = pd.read_excel(new_act_journ, sheet_name='01 Prod Physique Boites', skiprows=7, header=1)
+                # Rename the first column so we could address it
+                bg_df.columns.values[0] = 'Unnamed: 0'
+                bg_df.columns.values[1] = 'Unnamed: 1'
+                bg_df.columns.values[2] = 'Unnamed: 2'
+                bg_df.columns.values[3] = 'Unnamed: 3'
+                bg_df.columns.values[6] = 'Unnamed: 6'
+
+                # For the old ones (september w etle3)
+                # bg_df = bg_df.iloc[: , :21]
+                # bg_df.loc[bg_df['Unnamed: 0'].str.lower().str.contains(r'^\s*unité\s*kdu\s*$', na = False, regex = True), 'Unnamed: 0'] = 'KDU'
+                # bg_df.loc[bg_df['Unnamed: 0'].str.lower().str.contains(r'^\s*unité\s*azdu\s*$', na = False, regex = True), 'Unnamed: 0'] = 'AZDU'
+                # bg_df.loc[bg_df['Unnamed: 0'].str.lower().str.contains(r'^\s*skdu\s*$', na = False, regex = True), 'Unnamed: 0'] = 'SKDU'
+                result = pd.DataFrame()
+                dfs = bg_df.index[bg_df['Unnamed: 0'].str.contains('Unité', na = False)].tolist()
+                frames = []
+                for idx, val in enumerate(dfs):
+                    df = pd.DataFrame()
+                    # print(val, dfs[idx+1])
+                    try:
+                        df = bg_df.loc[val: dfs[idx+1]]
+                    except IndexError:
+                        df = bg_df.loc[val:]
+                    # df = df.iloc[3: , :]
+                    df = df.reset_index(drop=True)
+                    dte = df['Unnamed: 6'][1]
+                    # print(dte)
+                    if isinstance(dte, datetime.datetime):
+                        date = dte.date()
+                    else:
+                        match = re.search(r'\d{2}/\d{2}/\d{4}', dte)
+                        date = datetime.datetime.strptime(match.group(), '%d/%m/%Y').date()
+                    # print(date)
+                    if date > max_dt:
+                        df.drop(df.tail(1).index,inplace=True)
+                        # print(df.iloc[:, : 8])
+                        # print('Done')
+                        # if last line, then remove last meaningless lines
+                        # if val == dfs[-1]:
+                        # print(date)
+                        df_prod = get_prod_phy(df)
+                        frames.append(df_prod)
+                        result = pd.concat(frames)
+                        # print(df_prod)
+
+                
+                df_prod = result
+                # PROD VAL
+                bg_df = pd.read_excel(new_act_journ, sheet_name='02 Prod Valorisée Boites', skiprows=8, header=1)
+                bg_df.columns.values[0] = 'Unnamed: 0'
+                bg_df.columns.values[1] = 'Unnamed: 1'
+                bg_df.columns.values[2] = 'Unnamed: 2'
+                bg_df.columns.values[3] = 'Unnamed: 3'
+                # print(bg_df.columns)
+                dfs = bg_df.index[bg_df['Unnamed: 0'].str.contains('Unité', na = False)].tolist()
+                new_subdf = pd.DataFrame()
+                frames = [new_subdf]
+                for idx, val in enumerate(dfs):
+                    df = pd.DataFrame()
+                    # print(val, dfs[idx+1])
+                    try:
+                        df = bg_df.loc[val: dfs[idx+1]]
+                    except IndexError:
+                        df = bg_df.loc[val:]
+                    # df = df.iloc[3: , :]
+                    # print(df['Unnamed: 4'][3])
+                    # break
+                    dte = df['Unnamed: 4'].values[3]
+                    # print(dte)
+                    if isinstance(dte, datetime.datetime):
+                        date = dte.date()
+                    else:
+                        match = re.search(r'\d{2}/\d{2}/\d{4}', dte)
+                        date = datetime.datetime.strptime(match.group(), '%d/%m/%Y').date()
+                    if date > max_dt:
+                        df = df.reset_index(drop=True)
+                        df.drop(df.tail(1).index,inplace=True)
+                        # print(df.iloc[:, : 8])
+                        df = get_val_df(df)
+                        frames.append(df)
+                        result = pd.concat(frames)
+                        # print(result)
+
+
+                # print(result)
+                # print(result.shape)
+                df = pd.DataFrame()
+                df = missing_prod_in_val(df_prod, result)
+                df = df.reset_index(drop = True)
+                df_prod[['PU_cout_revient', 'montant_journee_coutRev', 'MontantCumul_coutRev', 'PU_prix_vente', 'montant_journee_prix_vente', 'MontantCumul_prix_vente']] = df[['PU_coutRev', 'montant_journee_coutRev', 'MontantCumul_coutRev', 'PU_prix_vente', 'montant_journee_prix_vente', 'MontantCumul_prix_vente']]
+                df_prod = df_prod.reset_index(drop=True)
+
+                print(df_prod.loc[df_prod['Ligne'].str.contains('Pails')])
+                # Last reglage : unify strings : Pails 10l => Pails 10 L
+                idx = df_prod.index[df_prod['Ligne'].str.startswith('Pails')].tolist()
+                for x in idx:
+                    print(df_prod.at[x, 'Ligne'])
+                    match = re.search(r'Pails (\d{2})\s*([l|L])', df_prod['Ligne'][x])
+                    if match:
+                        df_prod.at[x, 'Ligne'] = 'Pails ' + str(match.group(1)) + ' ' + str(match.group(2)).upper()
+                    # print('loop idx')
+
+
+                # # MERGE ACC and PROD
+
+                acc_df.rename(columns = {
+                    'PU_coutRev': 'PU_cout_revient'
+                }, inplace = True)
+                df_prod = pd.concat([df_prod, acc_df], ignore_index=True)
+
+                tab_name = 'Production'
+                if tab_name != 'TCR':
+                    cursor.execute('SELECT MAX("ID") FROM public."' + tab_name + '"')
+                    max_id = cursor.fetchone()[0]
+                    df_prod.insert(0, 'ID', range(int(max_id) + 1, 1 + int(max_id) + len(df_prod)))
+                df_prod.to_sql(tab_name, engine, if_exists='append', index=False)
+
+                # df_prod['date'] = df_prod['date'].dt.date
+                # print(df_prod)
+                print(df_prod.shape)
+
+
+                # Vente
+
+                tab_name = 'Vente'
+
+                cursor.execute('SELECT MAX("date") FROM public."' + tab_name + '"')
+                max_dt = cursor.fetchone()[0]
+                print(max_dt)
+
+                bg_df = pd.read_excel(new_act_journ, sheet_name='04 Ventes', skiprows=8, header=1)
+                bg_df.columns.values[0] = 'Unnamed: 0'
+                bg_df.columns.values[1] = 'Unnamed: 1'
+                bg_df.columns.values[2] = 'Unnamed: 2'
+                bg_df.columns.values[3] = 'Unnamed: 3'
+                dfs = bg_df.index[bg_df['Unnamed: 0'].str.contains('Unité', na = False)].tolist()
+                for idx, val in enumerate(dfs):
+                    df = pd.DataFrame()
+                    try:
+                        df = bg_df.loc[val: dfs[idx+1]]
+                    except IndexError:
+                        df = bg_df.loc[val:]
+                    dte = df['Unnamed: 4'].values[0]
+                    if isinstance(dte, datetime.datetime):
+                        date = dte.date()
+                    else:
+                        match = re.search(r'\d{2}/\d{2}/\d{4}', dte)
+                        date = datetime.datetime.strptime(match.group(), '%d/%m/%Y').date()
+                    if date > max_dt:
+                        df = df.reset_index(drop=True)
+                        df = get_vente_df(df)
+                        if tab_name != 'TCR':
+                            cursor.execute('SELECT MAX("ID") FROM public."' + tab_name + '"')
+                            max_id = cursor.fetchone()[0]
+                            df.insert(0, 'ID', range(int(max_id) + 1, 1 + int(max_id) + len(df)))
+                        df.to_sql(tab_name, engine, if_exists='append', index=False)
+                        # print(df)
+
+
+                # TRS
+
+                tab_name = 'TRS'
+
+                cursor.execute('SELECT MAX("date") FROM public."' + tab_name + '"')
+                max_dt = cursor.fetchone()[0]
+                print(max_dt)
+
+
+                bg_df = pd.read_excel(new_act_journ, sheet_name='06 TRS', skiprows=8, header=1)
+                bg_df.columns.values[0] = 'Unnamed: 0'
+                bg_df.columns.values[1] = 'Unnamed: 1'
+                dfs = bg_df.index[bg_df['Unnamed: 0'].str.contains('Unité', na = False)].tolist()
+                for idx, val in enumerate(dfs):
+                    df = pd.DataFrame()
+                    try:
+                        df = bg_df.loc[val: dfs[idx+1]]
+                    except IndexError:
+                        df = bg_df.loc[val:]
+                    dte = df['Unnamed: 5'].values[0]
+                    if isinstance(dte, datetime.datetime):
+                        date = dte.date()
+                    else:
+                        match = re.search(r'\d{2}/\d{2}/\d{4}', dte)
+                        date = datetime.datetime.strptime(match.group(), '%d/%m/%Y').date()
+                    if date > max_dt:
+                        df = df.reset_index(drop=True)
+                        df = get_trs_df(df)
+                        if tab_name != 'TCR':
+                            cursor.execute('SELECT MAX("ID") FROM public."' + tab_name + '"')
+                            max_id = cursor.fetchone()[0]
+                            df.insert(0, 'ID', range(int(max_id) + 1, 1 + int(max_id) + len(df)))
+                        df.to_sql(tab_name, engine, if_exists='append', index=False)
+            except (KeyError, pd.errors.ParserError):
+                messages.error(request, "Erreur ! Noms de feuilles Excel erronés, ou bien la structure du fichier ( d'un tableau ) a été modifiée.")
+                return redirect('core:add-act-journ')
+            except UnboundLocalError:
+                messages.error(request, "Erreur ! Les données des dates concernées ont déjà été chargées.")
+                return redirect('core:add-act-journ')
+        messages.success(request, "Le données ont été stockés avec succès !")
+        return redirect('core:add-act-journ')
+
+def add_tcr(request):
+    context = {
+        'title' : "Nouveau TCR".upper(),
+        'req' : "Nouveau TCR".upper(),
+    }
+    return render(request, 'core/add_tcr.html', context)
+
+
+class AddTcr(View):
+    def post(self, request):
+        if request.FILES['file_pg']:
+            myfile = request.FILES['file_pg']
+            fs = FileSystemStorage()
+            filename = fs.save(myfile.name, myfile)
+            uploaded_file_path = fs.path(filename)
+            file_str = uploaded_file_path
+            book = load_workbook(file_str)
+            tab_name = 'TCR'
+            cursor.execute('SELECT MAX("date") FROM public."' + tab_name + '"')
+            max_dt = cursor.fetchone()[0]
+            xl = pd.ExcelFile(file_str, engine='openpyxl') # pylint: disable=abstract-class-instantiated
+            no_error = True
+            try:
+                for sheetname in xl.sheet_names:
+                    if re.match("^[0-9 ]+$", sheetname):
+                        # print(sheetname)
+                        df = pd.read_excel(file_str, sheet_name=sheetname, header=1)
+                        # print(df)
+                        period = df['Unnamed: 0'][2]
+                        match = re.search(r'\w*\s(\w+)-(\d{4})', period)
+                        month = dateparser.parse(match.group(1)).month
+                        year = dateparser.parse(match.group(2)).year
+                        if datetime.date(year, month, 28) > max_dt.date():
+                            no_error = False
+                            df = pd.read_excel(file_str, sheet_name=sheetname, header=1, skiprows=4)
+                            last_idx = df[df['N°'].str.contains('RATIO', na = False)].index.to_list()[0]
+                            df = df[['Désignation ', 'SIEGE', 'KDU', 'SKDU', 'AZDU', 'ENTREPRISE']]
+                            df = df.iloc[0: last_idx - 1 , :]
+                            df = df.T
+                            df.columns = df.iloc[0]
+                            df = df.iloc[1: , :]
+                            df['date'] = datetime.date(year, month, 28)
+                            df.fillna(0, inplace = True)
+                            if month < 10:
+                                month = '0' + str(month)
+                            else:
+                                month = str(month)
+                            df.reset_index(level=0, inplace=True)
+                            df.rename(columns={ df.columns[0]: "Unité" }, inplace = True)
+                            df.insert(0, 'ID', '')
+                            df['ID'] = df.apply (lambda row: row['Unité'] + '_' + str(row['date'].month) + '_' + str(row['date'].year), axis=1)
+                            df.to_sql(tab_name, engine, if_exists='append', index=False)
+                if no_error:
+                    raise UnboundLocalError('Data already processed.')
+            except (KeyError, pd.errors.ParserError):
+                messages.error(request, "Erreur ! Noms de feuilles Excel erronés, ou bien la structure du fichier ( d'un tableau ) a été modifiée.")
+                return redirect('core:add-tcr')
+            except UnboundLocalError:
+                messages.error(request, "Erreur ! Les données des dates concernées ont déjà été chargées.")
+                return redirect('core:add-tcr')
+            messages.success(request, "Le données ont été stockés avec succès !")
+            return redirect('core:add-tcr')
+                    

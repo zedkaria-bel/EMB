@@ -12,6 +12,10 @@ from .views import (
     trsDetails,
     EditTrs,
     tcrSummary,
+    add_act_journ,
+    AddAct,
+    add_tcr,
+    AddTcr,
 )
 
 app_name = 'core'
@@ -27,5 +31,9 @@ urlpatterns = [
     path('summary/trs/', trsSummary.as_view(), name='trs-view'),
     path('summary/trs/details/<int:pk>/', trsDetails.as_view(), name = 'trs-details'),
     path('edit-trs/', EditTrs.as_view(), name = 'edit-trs'),
-    path('summary/tcr/', tcrSummary.as_view(), name = 'tcr-view')
+    path('summary/tcr/', tcrSummary.as_view(), name = 'tcr-view'),
+    path('add-daily-activity/', add_act_journ, name = 'add-act-journ'),
+    path('add-daily-activity/process-new-act/', AddAct.as_view(), name = 'process-new-act'),
+    path('add-tcr/', add_tcr, name = 'add-tcr'),
+    path('add-tcr/process-new-tcr/', AddTcr.as_view(), name = 'process-new-tcr'),
 ]

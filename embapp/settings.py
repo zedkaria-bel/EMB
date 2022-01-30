@@ -162,3 +162,8 @@ ACCOUNT_USERNAME_REQUIRED = False
 TIME_INPUT_FORMATS = [
     '%H:%M',
 ]
+
+from django.contrib.messages import constants as messages
+MESSAGE_TAGS = {
+    messages.ERROR: 'danger',
+}
