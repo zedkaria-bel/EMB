@@ -50,8 +50,8 @@
         <thead class="thead-dark">
           <tr>
             <th class="py-3 align-middle" scope="col"><b class="h6">#</b></th>
-            <th class="py-3 align-middle" scope="col"><b class="h6">Date</b></th>
             <th class="py-3 align-middle" scope="col"><b class="h6">Unité</b></th>
+            <th class="py-3 align-middle" scope="col"><b class="h6">Ligne</b></th>
             <th class="py-3 align-middle" scope="col"><b class="h6">Ecart cadences</b></th>
             <th class="py-3 align-middle" scope="col"><b class="h6">Arrêts planifiés</b></th>
             <th class="py-3 align-middle" scope="col"><b class="h6">Arrêts non-planifiés</b></th>
@@ -66,8 +66,8 @@
             {% for request in object_list %}
             <tr class="row_tab" style="border-bottom: 2px #d7d7d7 solid !important;">
                 <th class="py-2 align-middle" scope="row"><b class="h6 font-weight-bold" >{{ page_obj.start_index|add:forloop.counter0 }}</b></th>
-                <td class="py-2 align-middle" scope="row"><b class="h6 font-weight-bold" >{{ request.date|date:'d-m-Y' }}</b></td>
                 <td class="py-2 align-middle" scope="row"><b class="h6 font-weight-bold" >{{ request.unite }}</b></td>
+                <td class="py-2 align-middle" scope="row"><b class="h6 font-weight-bold" >{{ request.ligne }}</b></td>
                 <td class="py-2 align-middle" scope="row"><b class="h6 font-weight-bold" >{{ request.ecarts_cadences }}</b></td>
                 <td class="py-2 align-middle" scope="row"><b class="h6 font-weight-bold" >{{ request.arret_plan }}</b></td>
                 <td class="py-2 align-middle" scope="row"><b class="h6 font-weight-bold" >{{ request.arret_non_plan }}</b></td>

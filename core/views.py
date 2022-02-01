@@ -107,7 +107,7 @@ class prodSummary(LoginRequiredMixin, ListView):
         if self.request.GET.get('prod'):
             context['prod'] = self.request.GET.get('prod')
         context['count'] = self.get_queryset().count()
-        context['req'] = 'P R O D U C T I O N'
+        context['req'] = 'PRODUCTION'
         return context
 
 class prodDetails(LoginRequiredMixin, DetailView):
@@ -120,7 +120,7 @@ class prodDetails(LoginRequiredMixin, DetailView):
         context['obj'] = Production.objects.get(id=self.get_object().pk)
         context['taux_rebut'] = round(context['obj'].taux_rebut * 100, 2)
         context['taux_real'] = round(context['obj'].taux_real * 100, 2)
-        context['req'] = 'P R O D U C T I O N'
+        context['req'] = 'PRODUCTION'
         return context
 
 class EditProd(View):
@@ -205,7 +205,7 @@ class saleSummary(LoginRequiredMixin, ListView):
         if self.request.GET.get('category'):
             context['category'] = self.request.GET.get('category')
         context['count'] = self.get_queryset().count()
-        context['req'] = 'V E N T E'
+        context['req'] = 'VENTE'
         return context
 
 class saleDetails(LoginRequiredMixin, DetailView):
@@ -216,7 +216,7 @@ class saleDetails(LoginRequiredMixin, DetailView):
         context = super(saleDetails, self).get_context_data(*args, **kwargs)
         # pylint: disable=no-member
         context['obj'] = Vente.objects.get(id=self.get_object().pk)
-        context['req'] = 'V E N T E'
+        context['req'] = 'VENTE'
         return context
 
 class EditSale(View):
@@ -349,7 +349,7 @@ class tcrSummary(LoginRequiredMixin, ListView):
             # pylint: disable=no-member
             qs = Tcr.objects.filter(date__year = int(self.request.GET.get('year')), date__month = int(self.request.GET.get('month')))
         else:
-            month_bef_date = (datetime.date.today() - datetime.timedelta(days=30))
+            month_bef_date = (datetime.date.today() - datetime.timedelta(days=31))
             # pylint: disable=no-member
             qs = Tcr.objects.filter(date__year = month_bef_date.year, date__month = month_bef_date.month)
         if self.request.GET.get('unit') and self.request.GET.get('unit') != 'all':
@@ -403,7 +403,7 @@ class tcrSummary(LoginRequiredMixin, ListView):
             month = int(self.request.GET.get('month'))
             year = int(self.request.GET.get('year'))
         else:
-            month_bef_date = (datetime.date.today() - datetime.timedelta(days=30))
+            month_bef_date = (datetime.date.today() - datetime.timedelta(days=31))
             year = month_bef_date.year
             month = month_bef_date.month
         # pylint: disable=no-member
@@ -692,7 +692,6 @@ def add_tcr(request):
         'req' : "Nouveau TCR".upper(),
     }
     return render(request, 'core/add_tcr.html', context)
-
 
 class AddTcr(View):
     def post(self, request):
