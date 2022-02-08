@@ -696,6 +696,14 @@ def add_tcr(request):
 class AddTcr(View):
     def post(self, request):
         if request.FILES['file_pg']:
+            month_crn = 0
+            year_crn = 0
+            if 'edit-tcr-month' in request.POST:
+                month_crn = int(request.POST['edit-tcr-month'])
+                year_crn = int(request.POST['edit-tcr-year'])
+                dte = datetime.date(year_crn, month_crn, 28)
+                # pylint: disable=no-member
+                Tcr.objects.filter(date = dte).delete()
             myfile = request.FILES['file_pg']
             fs = FileSystemStorage()
             filename = fs.save(myfile.name, myfile)
@@ -717,7 +725,8 @@ class AddTcr(View):
                         match = re.search(r'\w*\s(\w+)-(\d{4})', period)
                         month = dateparser.parse(match.group(1)).month
                         year = dateparser.parse(match.group(2)).year
-                        if datetime.date(year, month, 28) > max_dt.date():
+                        if datetime.date(year, month, 28) > max_dt.date() or (month == month_crn and year == year_crn):
+                            # print(month, year)
                             no_error = False
                             df = pd.read_excel(file_str, sheet_name=sheetname, header=1, skiprows=4)
                             last_idx = df[df['N°'].str.contains('RATIO', na = False)].index.to_list()[0]
@@ -745,6 +754,9 @@ class AddTcr(View):
             except UnboundLocalError:
                 messages.error(request, "Erreur ! Les données des dates concernées ont déjà été chargées.")
                 return redirect('core:add-tcr')
+            if 'edit-tcr-month' in request.POST:
+                messages.success(request, "Le données ont été stockés avec succès !")
+                return redirect('core:tcr-view')    
             messages.success(request, "Le données ont été stockés avec succès !")
             return redirect('core:add-tcr')
                     
