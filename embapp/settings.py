@@ -12,10 +12,19 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 from pathlib import Path
 import os
+import environ
+# Initialise environment variables
+env = environ.Env()
+environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+DB_USER = env('DB_USER')
+DB = env('DB')
+DB_PASSWORD = env('DB_PASSWORD')
+DB_HOST = env('DB_HOST')
+DB_PORT = env('DB_PORT')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
@@ -68,7 +77,7 @@ ROOT_URLCONF = 'embapp.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [r'C:\Users\zaki1\Desktop\Controle de Gestion\emb-app\embapp\templates'],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -90,11 +99,11 @@ WSGI_APPLICATION = 'embapp.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'EMB',
-        'USER': 'postgres',
-        'PASSWORD': 'zaki1690',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': DB,
+        'USER': DB_USER,
+        'PASSWORD': DB_PASSWORD,
+        'HOST': DB_HOST,
+        'PORT': DB_PORT,
     }
 }
 

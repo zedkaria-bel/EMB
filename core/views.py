@@ -20,6 +20,7 @@ import pandas as pd
 import numpy as np
 import json
 import re
+
 from django.shortcuts import render
 from openpyxl import load_workbook
 import dateparser
@@ -40,11 +41,13 @@ import psycopg2
 import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy import func
+from urllib import parse
 from sqlalchemy.orm import sessionmaker
+from django.conf import settings
 
-con = psycopg2.connect(database="EMB", user="postgres", password="zaki1690", host="localhost", port="5432")
+con = psycopg2.connect(database=settings.DB, user=settings.DB_USER, password=settings.DB_PASSWORD, host=settings.DB_HOST, port=settings.DB_PORT)
 con.autocommit = True
-engine = create_engine('postgresql://postgres:zaki1690@localhost:5432/EMB')
+engine = create_engine(f'postgresql://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB}')
 Session = sessionmaker(bind = engine)
 session = Session()
 cursor = con.cursor()
@@ -71,7 +74,7 @@ class prodSummary(LoginRequiredMixin, ListView):
         # pylint: disable=no-member
         qs = Production.objects.filter(date=date)
         # print(qs.count())
-        if self.request.GET.get('unit') and self.request.GET.get('unit') != 'all':
+        if self.request.GET.get('unit') and self.request.GET.get('unit') != 'all':      
             qs = qs.filter(unite = self.request.GET.get('unit').strip())
         if self.request.GET.get('lines') and self.request.GET.get('lines') != 'all':
             qs = qs.filter(ligne__icontains = self.request.GET.get('lines').strip())
