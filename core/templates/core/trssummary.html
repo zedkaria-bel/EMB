@@ -38,7 +38,50 @@
                 <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z"/>
               </svg>
         </button>
+        {% if empty_qs %}
+        <a id="edit_tcr" href="#" class="ml-3 p-3" style="transition: 0.3s !important; border-radius: 50% !important; background-color:#efefef;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="black" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
+              </svg>
+        </a>
+        {% endif %}
     </form>
+</div>
+
+<div id="loader" class="bg-modal d-flex justify-content-center align-items-center" style="display: none !important;">
+    <div id="spin" class="d-flex flex-column justify-content-center align-items-center" style="display: none !important;">
+        <p class="h3" style="color: white;">Veuillez patienter</p>
+        <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+    </div> 
+    <div id="edit-tcr" class="d-flex flex-column justify-content-center align-items-center p-2" style="border-radius: 10px !important; background-color: white;">
+        <svg id="close_div" xmlns="http://www.w3.org/2000/svg" width="45" height="45" fill="black" class="ml-auto mr-3 mt-3 p-2 bi bi-x-lg" viewBox="0 0 16 16" style="cursor: pointer; transition: 0.3s !important; border-radius: 50% !important;">
+            <path fill-rule="evenodd" d="M13.854 2.146a.5.5 0 0 1 0 .708l-11 11a.5.5 0 0 1-.708-.708l11-11a.5.5 0 0 1 .708 0Z"/>
+            <path fill-rule="evenodd" d="M2.146 2.146a.5.5 0 0 0 0 .708l11 11a.5.5 0 0 0 .708-.708l-11-11a.5.5 0 0 0-.708 0Z"/>
+          </svg>
+        <!-- <p id="close_div" class="h1 ml-auto mr-3 p-3" style="color: black; transform: rotate(45deg); cursor: pointer; transition: 0.5s !important; border-radius: 50% !important; background-color:#efefef;">+</p> -->
+        <form method="POST" enctype="multipart/form-data" action="{% url 'core:process-new-act' %}" class="form mx-5 my-4">
+            {% csrf_token %}
+            <h5 style="font-weight: bolder !important;">AJOUTER UN NOUVEAU FICHIER EXCEL POUR METTRE À JOUR L'ACTIVITÉ JOURNALIÈRE DU <u><b>{{date|date:'d/m/Y'}}</b></u> </h5>
+            <div class="form-row">
+                <div class="form-group col-md-12">
+                    <input type="hidden" name="edit-tcr-month" value="{{Month}}">
+                    <input type="hidden" name="edit-tcr-year" value="{{Year}}">
+                    <label for="pu" class="col-form-label"><b>Fichier de l'activité journalière</b></label>
+                    <input type="file" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="form-control chg" name="file_pg" id="file_pg" />
+                </div>
+            </div>
+            <button type="submit" id="submit-edit" class="btn ld-over ml-0" style="color: white !important; background-color: #0e385b !important;" disabled><b>TRAITER</b></button>
+            <div class="ld ld-ring ld-spin"></div>
+        </form>
+    </div> 
+</div>
+
+<div class="py-2 px-5 mt-0 mb-4 d-flex flex-row shadow-lg" style="background-color: white; border-radius: 5px;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="#31389a" class="mr-4 bi bi-info-circle-fill" viewBox="0 0 16 16">
+        <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+      </svg>
+    <p class="h5 mb-0 align-self-center" style="color: #31389a;">Le dernier taux de rendement enregistré date du : <b>{{max_dt_prod|date:'d/m/Y'}}</b></p>
 </div>
 
 <div class="mb-4">
@@ -120,6 +163,40 @@
     </nav>
 
 </div>
+
+
+<script>
+
+    $('#edit_tcr').on('click', function(){
+        $('#loader').show();
+        $('body').css('overflow-y', 'hidden');
+    });
+
+    $('#close_div').on('click', function(){
+        $('#loader').attr("style", "display: none !important");
+        $('body').css('overflow-y', 'visible');
+    });
+
+
+    $('.chg').on('change', function(){
+        $('#exist').find('.msg').remove();
+        $('#exist').hide();
+        if($('#file_pg').val() == ''){
+            $('#submit-edit').prop('disabled', true);
+        }
+        else{
+            $('#submit-edit').prop('disabled', false);
+        }
+    });
+
+    $('form').submit(function(e) {
+        $('#edit-tcr').attr("style", "display: none !important");
+        $('#spin').show();
+        $(':disabled').each(function(e) {
+            $(this).removeAttr('disabled');
+        })
+    });
+</script>
 
 
 {% endblock content %}

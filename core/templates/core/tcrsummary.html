@@ -50,12 +50,14 @@
                 <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z"/>
               </svg>
         </button>
+        {% if empty_qs %}
         <a id="edit_tcr" href="#" class="ml-3 p-3" style="transition: 0.3s !important; border-radius: 50% !important; background-color:#efefef;">
             <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="black" class="bi bi-pencil-square" viewBox="0 0 16 16">
                 <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
                 <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
               </svg>
         </a>
+        {% endif %}
     </form>
 </div>
 
@@ -72,12 +74,12 @@
         <!-- <p id="close_div" class="h1 ml-auto mr-3 p-3" style="color: black; transform: rotate(45deg); cursor: pointer; transition: 0.5s !important; border-radius: 50% !important; background-color:#efefef;">+</p> -->
         <form method="POST" enctype="multipart/form-data" action="{% url 'core:process-new-tcr' %}" class="form mx-5 my-4">
             {% csrf_token %}
-            <h5 style="font-weight: bolder !important;">AJOUTER UN NOUVEAU FICHIER EXCEL POUR METTRE À JOUR LE <u><b>TCR - {{Month|month_name}} {{Year}}</b></u> </h5>
+            <h5 style="font-weight: bolder !important;">AJOUTER UN NOUVEAU FICHIER EXCEL POUR METTRE À JOUR LE &nbsp; <u><b>TCR - {{Month|month_name}} {{Year}}</b></b></u> </h5>
             <div class="form-row">
                 <div class="form-group col-md-12">
                     <input type="hidden" name="edit-tcr-month" value="{{Month}}">
                     <input type="hidden" name="edit-tcr-year" value="{{Year}}">
-                    <label for="pu" class="col-form-label"><b>Fichier de l'activité journalière</b></label>
+                    <label for="pu" class="col-form-label"><b>Fichier TCR</b></label>
                     <input type="file" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="form-control chg" name="file_pg" id="file_pg" />
                 </div>
             </div>
@@ -217,10 +219,12 @@
 
     $('#edit_tcr').on('click', function(){
         $('#loader').show();
+        $('body').css('overflow-y', 'hidden');
     });
 
     $('#close_div').on('click', function(){
         $('#loader').attr("style", "display: none !important");
+        $('body').css('overflow-y', 'visible');
     });
 
 

@@ -100,6 +100,8 @@ class prodSummary(LoginRequiredMixin, ListView):
         else:
             date = datetime.date.today()
         context['date'] = date
+        context['Year'] = date.year
+        context['Month'] = date.month
         if self.request.GET.get('unit'):
             context['unit'] = self.request.GET.get('unit')
         if self.request.GET.get('lines'):
@@ -108,6 +110,11 @@ class prodSummary(LoginRequiredMixin, ListView):
             context['prod'] = self.request.GET.get('prod')
         context['count'] = self.get_queryset().count()
         context['req'] = 'PRODUCTION'
+        if context['count'] == 0:
+            context['empty_qs'] = False
+        else:
+            context['empty_qs'] = True
+        context['max_dt_prod'] = Production.objects.latest('date').date
         return context
 
 class prodDetails(LoginRequiredMixin, DetailView):
@@ -206,6 +213,13 @@ class saleSummary(LoginRequiredMixin, ListView):
             context['category'] = self.request.GET.get('category')
         context['count'] = self.get_queryset().count()
         context['req'] = 'VENTE'
+        context['Year'] = date.year
+        context['Month'] = date.month
+        if context['count'] == 0:
+            context['empty_qs'] = False
+        else:
+            context['empty_qs'] = True
+        context['max_dt_prod'] = Vente.objects.latest('date').date
         return context
 
 class saleDetails(LoginRequiredMixin, DetailView):
@@ -278,10 +292,17 @@ class trsSummary(LoginRequiredMixin, ListView):
         else:
             date = datetime.date.today()
         context['date'] = date
+        context['Year'] = date.year
+        context['Month'] = date.month
         if self.request.GET.get('unit'):
             context['unit'] = self.request.GET.get('unit')
         context['count'] = self.get_queryset().count()
         context['req'] = 'Taux de rendement synthétique'.upper()
+        if context['count'] == 0:
+            context['empty_qs'] = False
+        else:
+            context['empty_qs'] = True
+        context['max_dt_prod'] = Trs.objects.latest('date').date
         return context
 
 class trsDetails(LoginRequiredMixin, DetailView):
@@ -416,6 +437,11 @@ class tcrSummary(LoginRequiredMixin, ListView):
             context['unit'] = self.request.GET.get('unit')
         context['req'] = 'TCR - '.upper() + datetime.date(year, month, 28).strftime('%B') + ' ' + datetime.date(year, month, 28).strftime('%Y')
         context['qs'] = self.get_queryset()
+        context['count'] = context['qs'].shape[1]
+        if context['count'] == 1:
+            context['empty_qs'] = False
+        else:
+            context['empty_qs'] = True
         return context
 
 def add_act_journ(request):
@@ -433,6 +459,44 @@ class AddAct(View):
             filename = fs.save(myfile.name, myfile)
             uploaded_file_path = fs.path(filename)
             new_act_journ = uploaded_file_path
+            month_crn = 0
+            year_crn = 0
+            if 'edit-tcr-month' in request.POST:
+                month_crn = int(request.POST['edit-tcr-month'])
+                year_crn = int(request.POST['edit-tcr-year'])
+                dte = datetime.date(year_crn, month_crn, 28)
+
+                # First check if le mois et l'année concerné match avec le mois et l'année concerné dans le nv fichier act journ
+                bg_df = pd.read_excel(new_act_journ, sheet_name='03 Prod Accessoires', skiprows=8, header=1)
+                bg_df.columns.values[0] = 'Unnamed: 0'
+                bg_df.columns.values[1] = 'Unnamed: 1'
+                bg_df.columns.values[2] = 'Unnamed: 2'
+                dfs = bg_df.index[bg_df['Unnamed: 0'].str.contains('Unité', na = False)].tolist()
+                for idx, val in enumerate(dfs):
+                    df = pd.DataFrame()
+                    # print(val, dfs[idx+1])
+                    try:
+                        df = bg_df.loc[val: dfs[idx+1]]
+                    except IndexError:
+                        df = bg_df.loc[val:]
+                    df = df.reset_index(drop=True)
+                    dte = df['Unnamed: 5'][1]
+                    # print(dte)
+                    if isinstance(dte, datetime.datetime):
+                        date = dte.date()
+                    else:
+                        match = re.search(r'\d{2}\s*/\d{2}\s*/\d{4}', dte)
+                        date = datetime.datetime.strptime(match.group(), '%d/%m/%Y').date()
+                    break
+                if month_crn != date.month or year_crn != date.year:
+                    messages.error(request, "Vous avez choisi de modifier l'activité du mois de " + str(calendar.month_name[month_crn]) + " " + str(year_crn) + ". Or, le fichier d'activité mentionné concerne " + str(calendar.month_name[date.month]) + " " + str(date.year) + ".")
+                    return redirect('core:prod-view')
+
+                # pylint: disable=no-member
+                Production.objects.filter(date__year = year_crn, date__month = month_crn).delete()
+                Vente.objects.filter(date__year = year_crn, date__month = month_crn).delete()
+                Trs.objects.filter(date__year = year_crn, date__month = month_crn).delete()
+            
 
             try:
                 # Order of exec
@@ -470,7 +534,7 @@ class AddAct(View):
                     if isinstance(dte, datetime.datetime):
                         date = dte.date()
                     else:
-                        match = re.search(r'\d{2}/\d{2}/\d{4}', dte)
+                        match = re.search(r'\d{2}\s*/\d{2}\s*/\d{4}', dte)
                         date = datetime.datetime.strptime(match.group(), '%d/%m/%Y').date()
                     # print(date)
                     if date > max_dt:
@@ -515,7 +579,7 @@ class AddAct(View):
                     if isinstance(dte, datetime.datetime):
                         date = dte.date()
                     else:
-                        match = re.search(r'\d{2}/\d{2}/\d{4}', dte)
+                        match = re.search(r'\d{2}\s*/\d{2}\s*/\d{4}', dte)
                         date = datetime.datetime.strptime(match.group(), '%d/%m/%Y').date()
                     # print(date)
                     if date > max_dt:
@@ -557,7 +621,7 @@ class AddAct(View):
                     if isinstance(dte, datetime.datetime):
                         date = dte.date()
                     else:
-                        match = re.search(r'\d{2}/\d{2}/\d{4}', dte)
+                        match = re.search(r'\d{2}\s*/\d{2}\s*/\d{4}', dte)
                         date = datetime.datetime.strptime(match.group(), '%d/%m/%Y').date()
                     if date > max_dt:
                         df = df.reset_index(drop=True)
@@ -631,7 +695,7 @@ class AddAct(View):
                     if isinstance(dte, datetime.datetime):
                         date = dte.date()
                     else:
-                        match = re.search(r'\d{2}/\d{2}/\d{4}', dte)
+                        match = re.search(r'\d{2}\s*/\d{2}\s*/\d{4}', dte)
                         date = datetime.datetime.strptime(match.group(), '%d/%m/%Y').date()
                     if date > max_dt:
                         df = df.reset_index(drop=True)
@@ -667,7 +731,7 @@ class AddAct(View):
                     if isinstance(dte, datetime.datetime):
                         date = dte.date()
                     else:
-                        match = re.search(r'\d{2}/\d{2}/\d{4}', dte)
+                        match = re.search(r'\d{2}\s*/\d{2}\s*/\d{4}', dte)
                         date = datetime.datetime.strptime(match.group(), '%d/%m/%Y').date()
                     if date > max_dt:
                         df = df.reset_index(drop=True)
