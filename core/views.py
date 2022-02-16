@@ -750,6 +750,7 @@ class AddAct(View):
             except UnboundLocalError:
                 messages.error(request, "Erreur ! Les données des dates concernées ont déjà été chargées.")
                 return redirect('core:add-act-journ')
+            fs.delete(uploaded_file_path)
         messages.success(request, "Le données ont été stockés avec succès !")
         return redirect('core:add-act-journ')
 
@@ -823,7 +824,8 @@ class AddTcr(View):
                 return redirect('core:add-tcr')
             if 'edit-tcr-month' in request.POST:
                 messages.success(request, "Le données ont été stockés avec succès !")
-                return redirect('core:tcr-view')    
-            messages.success(request, "Le données ont été stockés avec succès !")
-            return redirect('core:add-tcr')
+                return redirect('core:tcr-view')
+            fs.delete(uploaded_file_path)  
+        messages.success(request, "Le données ont été stockés avec succès !")
+        return redirect('core:add-tcr')
                     
