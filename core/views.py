@@ -879,7 +879,7 @@ class AddTcr(View):
             if 'edit-tcr-month' in request.POST:
                 messages.success(request, "Le données ont été stockés avec succès !")
                 return redirect('core:tcr-view')
-            fs.delete(uploaded_file_path)  
+            # fs.delete(uploaded_file_path)  
         messages.success(request, "Le données ont été stockés avec succès !")
         return redirect('core:add-tcr')
                     
