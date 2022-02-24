@@ -42,7 +42,7 @@
             {% endfor %}
         </select>
         <select class="custom-select col-3 mr-4" name="user" id="user">
-            <option value="all">Utiliateurs (All) </option>
+            <option value="all">Utilisateurs (All) </option>
             {% for usr in users %}
             <option value="{{usr}}" {% if user_n == usr.username %} selected {% endif %}>{{usr|get_username}}</option>
             {% endfor %}
@@ -65,7 +65,7 @@
 
 
 <div class="mb-4">
-    <p class="h5">Résultats trouvés : {{count}} {{user_n}} {{user}}</p>
+    <p class="h5">Résultats trouvés : {{count}}</p>
 </div>
 
 <div class="table-responsive">

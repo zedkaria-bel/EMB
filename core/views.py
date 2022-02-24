@@ -719,6 +719,7 @@ class AddAct(View):
                     cursor.execute('SELECT MAX("ID") FROM public."' + tab_name + '"')
                     max_id = cursor.fetchone()[0]
                     df_prod.insert(0, 'ID', range(int(max_id) + 1, 1 + int(max_id) + len(df_prod)))
+                df['Ligne'] = df['Ligne'].str.upper().strip()
                 df_prod.to_sql(tab_name, engine, if_exists='append', index=False)
 
                 # df_prod['date'] = df_prod['date'].dt.date
@@ -795,6 +796,7 @@ class AddAct(View):
                             cursor.execute('SELECT MAX("ID") FROM public."' + tab_name + '"')
                             max_id = cursor.fetchone()[0]
                             df.insert(0, 'ID', range(int(max_id) + 1, 1 + int(max_id) + len(df)))
+                        df['Ligne'] = df['Ligne'].str.upper().strip()
                         df.to_sql(tab_name, engine, if_exists='append', index=False)
             except (KeyError, pd.errors.ParserError):
                 messages.error(request, "Erreur ! Noms de feuilles Excel erronés, ou bien la structure du fichier ( d'un tableau ) a été modifiée.")
