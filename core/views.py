@@ -847,7 +847,7 @@ class AddTcr(View):
                         match = re.search(r'\w*\s(\w+)-(\d{4})', period)
                         month = dateparser.parse(match.group(1)).month
                         year = dateparser.parse(match.group(2)).year
-                        if datetime.date(year, month, 28) > max_dt.date() or (month == month_crn and year == year_crn):
+                        if (datetime.date(year, month, 28) > max_dt.date() or (month == month_crn and year == year_crn)) and datetime.date(year, month, 28) < datetime.datetime.today().date():
                             # print(month, year)
                             no_error = False
                             df = pd.read_excel(file_str, sheet_name=sheetname, header=1, skiprows=4)
