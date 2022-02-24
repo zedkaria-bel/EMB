@@ -131,7 +131,7 @@
                 {% else %}
                 <td class="py-2 align-middle" scope="row" {% if request.1|negative %} style="background-color: #e5baba; color: #a31f1f;" {% endif %} >
                     {% if 'EXER' in request.des or 'AJ' in request.des or 'BRUT' in request.des or 'RESULTAT' in request.des %}
-                    <b class=" font-weight-bold" style="font-size: 15px !important;">{{ request.1|floatformat:"2"|intcomma|space_digits }}</b>
+                    <b class=" font-weight-bold px-0" style="font-size: 15px !important;">{{ request.1|floatformat:"2"|intcomma|space_digits }}</b>
                     {% else %}
                     <b class="h6 font-weight-normal" >{{ request.1|floatformat:"2"|intcomma|space_digits }}</b>
                     {% endif %}
