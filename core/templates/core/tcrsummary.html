@@ -115,7 +115,7 @@
             <tr class="row_tab" {% if 'EXER' in request.des or 'AJ' in request.des or 'BRUT' in request.des or 'RESULTAT' in request.des %} style="background-color: #dedede !important; border-top: 1px black solid;"  {% endif %} >
                 <th class="py-2 align-middle" scope="row">
                     {% if 'EXER' in request.des or 'AJ' in request.des or 'BRUT' in request.des or 'RESULTAT' in request.des %}
-                    <b class="h5 font-weight-bold" >{{ request.des }}</b>
+                    <b class=" font-weight-bold" style="font-size: 15px !important;" >{{ request.des }}</b>
                     {% else %}
                     <b class="h6 font-weight-normal" >{{ request.des }}</b>
                     {% endif %}
@@ -123,7 +123,7 @@
                 {% if unit %}
                 <td class="py-2 align-middle" scope="row" {% if request.1|negative %} style="background-color: #e5baba; color: #a31f1f;" {% endif %} >
                     {% if 'EXER' in request.des or 'AJ' in request.des or 'BRUT' in request.des or 'RESULTAT' in request.des %}
-                    <b class="h5 font-weight-bold" >{{ request.1|floatformat:"2"|intcomma|space_digits }}</b>
+                    <b class=" font-weight-bold" style="font-size: 15px !important;" >{{ request.1|floatformat:"2"|intcomma|space_digits }}</b>
                     {% else %}
                     <b class="h6 font-weight-normal" >{{ request.1|floatformat:"2"|intcomma|space_digits }}</b>
                     {% endif %}
@@ -131,35 +131,35 @@
                 {% else %}
                 <td class="py-2 align-middle" scope="row" {% if request.1|negative %} style="background-color: #e5baba; color: #a31f1f;" {% endif %} >
                     {% if 'EXER' in request.des or 'AJ' in request.des or 'BRUT' in request.des or 'RESULTAT' in request.des %}
-                    <b class="h5 font-weight-bold" >{{ request.1|floatformat:"2"|intcomma|space_digits }}</b>
+                    <b class=" font-weight-bold" style="font-size: 15px !important;">{{ request.1|floatformat:"2"|intcomma|space_digits }}</b>
                     {% else %}
                     <b class="h6 font-weight-normal" >{{ request.1|floatformat:"2"|intcomma|space_digits }}</b>
                     {% endif %}
                 </td>
                 <td class="py-2 align-middle" scope="row" {% if request.2|negative %} style="background-color: #e5baba; color: #a31f1f;" {% endif %}>
                     {% if 'EXER' in request.des or 'AJ' in request.des or 'BRUT' in request.des or 'RESULTAT' in request.des %}
-                    <b class="h5 font-weight-bold" >{{ request.2|floatformat:"2"|intcomma|space_digits }}</b>
+                    <b class=" font-weight-bold" style="font-size: 15px !important;" >{{ request.2|floatformat:"2"|intcomma|space_digits }}</b>
                     {% else %}
                     <b class="h6 font-weight-normal" >{{ request.2|floatformat:"2"|intcomma|space_digits }}</b>
                     {% endif %}
                 </td>
                 <td class="py-2 align-middle" scope="row" {% if request.3|negative %} style="background-color: #e5baba; color: #a31f1f;" {% endif %}>
                     {% if 'EXER' in request.des or 'AJ' in request.des or 'BRUT' in request.des or 'RESULTAT' in request.des %}
-                    <b class="h5 font-weight-bold" >{{ request.3|floatformat:"2"|intcomma|space_digits }}</b>
+                    <b class=" font-weight-bold" style="font-size: 15px !important;">{{ request.3|floatformat:"2"|intcomma|space_digits }}</b>
                     {% else %}
                     <b class="h6 font-weight-normal" >{{ request.3|floatformat:"2"|intcomma|space_digits }}</b>
                     {% endif %}
                 </td>
                 <td class="py-2 align-middle" scope="row" {% if request.4|negative %} style="background-color: #e5baba; color: #a31f1f;" {% endif %}>
                     {% if 'EXER' in request.des or 'AJ' in request.des or 'BRUT' in request.des or 'RESULTAT' in request.des %}
-                    <b class="h5 font-weight-bold" >{{ request.4|floatformat:"2"|intcomma|space_digits }}</b>
+                    <b class=" font-weight-bold" style="font-size: 15px !important;" >{{ request.4|floatformat:"2"|intcomma|space_digits }}</b>
                     {% else %}
                     <b class="h6 font-weight-normal" >{{ request.4|floatformat:"2"|intcomma|space_digits }}</b>
                     {% endif %}
                 </td>
                 <td class="py-2 align-middle" scope="row" {% if request.5|negative %} style="background-color: #e5baba; color: #a31f1f;" {% endif %}>
                     {% if 'EXER' in request.des or 'AJ' in request.des or 'BRUT' in request.des or 'RESULTAT' in request.des %}
-                    <b class="h5 font-weight-bold" >{{ request.5|floatformat:"2"|intcomma|space_digits }}</b>
+                    <b class=" font-weight-bold" style="font-size: 15px !important;" >{{ request.5|floatformat:"2"|intcomma|space_digits }}</b>
                     {% else %}
                     <b class="h6 font-weight-normal" >{{ request.5|floatformat:"2"|intcomma|space_digits }}</b>
                     {% endif %}
