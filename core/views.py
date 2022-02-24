@@ -31,6 +31,7 @@ from .models import (
     Vente,
     Trs,
     Tcr,
+    AuditLog
 )
 from .flasah_test import get_prod_phy
 from .prod_val_boites import missing_prod_in_val, get_val_df
@@ -44,6 +45,54 @@ from sqlalchemy import func
 from urllib import parse
 from sqlalchemy.orm import sessionmaker
 from django.conf import settings
+from difflib import SequenceMatcher
+from django.apps import apps
+from django.contrib.auth.models import User
+
+def similar(a, b):
+    a_digit_seq = []
+    b_digit_seq = []
+    if (a is None) ^ (b is None):
+        return 0, False 
+    for c in a:
+        if c.isdigit():
+            a_digit_seq.append(c)
+    for c in b:
+        if c.isdigit():
+            b_digit_seq.append(c)
+    return SequenceMatcher(None, a, b).ratio(), a_digit_seq == b_digit_seq
+
+# CALCULATED FIELDS FOR DIFF TABS
+calc_fields_prod = ['brute_jour', 'taux_jour', 'brute_mois', 'conforme_mois', 'rebut_mois', 'taux_real', 'taux_rebut', 'montant_journee_coutrev', 'montantcumul_coutrev', 'montant_journee_prix_vente', 'montantcumul_prix_vente']
+no_calc_fields_trs = ['id', 'unite', 'ligne', 'arret_plan', 'arret_non_plan', 'capacite_theo', 'qte_conf', 'qte_rebut', 'temps_ouv', 'date']
+calc_fields_sale = ['qte_cumul', 'montant_journee', 'montant_cumul']
+
+# FIELDS PRETTY NAMING
+pretty_naming = {
+    'id': 'ID',
+    'unite': 'Unité',
+    'ligne': 'Ligne',
+    'des': 'Désignation',
+    'client': 'Client',
+    'obj': 'Objectif',
+    'capacite_jour': 'Capacité Jout',
+    'conforme_jour': 'Conforme Jour',
+    'rebut_jour': 'Rebut Jour',
+    'pu_cout_revient': 'PU - Avec coût de revient',
+    'pu_prix_vente': 'PU - Avec prix de vente',
+    'date': 'Date',
+    'volume': 'Volume',
+    'category': 'Catégorie',
+    'produit': 'Produit',
+    'arret_plan': 'Arrêts planifiés (Minutes)',
+    'arret_non_plan': 'Arrêts non planifiés (Minutes)',
+    'capacite_theo': 'Capacité théorique',
+    'qte_conf': 'Quantité conforme',
+    'qte_rebut': 'Quantité rebutée',
+    'temps_ouv': 'Temps d\'ouverture',
+    'qte_journ': 'Quantité journalière',
+    'pu' : 'Prix Unitaire',
+}
 
 con = psycopg2.connect(database=settings.DB, user=settings.DB_USER, password=settings.DB_PASSWORD, host=settings.DB_HOST, port=settings.DB_PORT)
 con.autocommit = True
@@ -131,11 +180,14 @@ class prodDetails(LoginRequiredMixin, DetailView):
         context['taux_rebut'] = round(context['obj'].taux_rebut * 100, 2)
         context['taux_real'] = round(context['obj'].taux_real * 100, 2)
         context['req'] = 'PRODUCTION'
+        context['cat_list'] = Vente.objects.values_list('category', flat=True).distinct().order_by('category')
+        context['title'] = 'Détails de production'
         return context
 
 class EditProd(View):
     def post(self, request):
         dic = dict(request.POST)
+        # print(request.POST)
         del dic['csrfmiddlewaretoken']
         dic_values = dic.items()
         for key, value in dic_values:
@@ -146,37 +198,37 @@ class EditProd(View):
                     dic[key] = float(value[0].strip())
                 except ValueError:
                     try:
-                        dic[key] = datetime.datetime.strptime(value[0].strip(), '%Y-%m-%d')
+                        dic[key] = datetime.datetime.strptime(value[0].strip(), '%Y-%m-%d').date()
                     except ValueError:
                         dic[key] = value[0].strip()
         # pylint: disable=unused-variable
         # pylint: disable=no-member
         # Get the old object before editing
-        # print(dic)
         old_obj = Production.objects.get(id = int(request.POST.get('id')))
+        dic['brute_jour'] = dic['conforme_jour'] + dic['rebut_jour']
+        dic['brute_mois'] = old_obj.brute_mois - old_obj.brute_jour + (dic['conforme_jour'] + dic['rebut_jour'])
+        dic['conforme_mois'] = old_obj.conforme_mois - old_obj.conforme_jour + dic['conforme_jour']
+        dic['rebut_mois'] = old_obj.rebut_mois - old_obj.rebut_jour + dic['rebut_jour']
+        # MAJ des champs calculé auto
+        try:
+            dic['taux_jour'] = dic['brute_jour'] / dic['capacite_jour']
+        except ZeroDivisionError:
+            dic['taux_jour'] = 0
+        try:
+            dic['taux_real'] = dic['brute_mois'] / dic['obj']
+            # print((dic['brute_mois'] / dic['obj']) / 100)
+        except ZeroDivisionError:
+            dic['taux_real'] = 0
+        try:
+            dic['taux_rebut'] = dic['rebut_mois'] / dic['brute_mois']
+        except ZeroDivisionError:
+            dic['taux_rebut'] = 0
+        # print(dic)
         obj, created = Production.objects.update_or_create(
             id = int(request.POST.get('id')),
             defaults = dic
         )
-        obj.brute_jour = obj.conforme_jour + obj.rebut_jour
-        obj.brute_mois = old_obj.brute_mois - old_obj.brute_jour + (obj.conforme_jour + obj.rebut_jour)
-        obj.conforme_mois = old_obj.conforme_mois - old_obj.conforme_jour + obj.conforme_jour
-        obj.rebut_mois = old_obj.rebut_mois - old_obj.rebut_jour + obj.rebut_jour
-        # MAJ des champs calculé auto
-        try:
-            obj.taux_jour = obj.brute_jour / obj.capacite_jour
-        except ZeroDivisionError:
-            obj.taux_jour = 0
-        try:
-            obj.taux_real = obj.brute_mois / obj.obj
-            # print((obj.brute_mois / obj.obj) / 100)
-        except ZeroDivisionError:
-            obj.taux_real = 0
-        try:
-            obj.taux_rebut = obj.rebut_mois / obj.brute_mois
-        except ZeroDivisionError:
-            obj.taux_rebut = 0
-        obj.save()
+        # print('save 2')
         messages.success(request, 'Modification effectuée avec succès!')
         return HttpResponseRedirect(reverse('core:prod-details', kwargs={
             'pk' : int(request.POST.get('id'))
@@ -234,10 +286,12 @@ class saleDetails(LoginRequiredMixin, DetailView):
         # pylint: disable=no-member
         context['obj'] = Vente.objects.get(id=self.get_object().pk)
         context['req'] = 'VENTE'
+        context['cat_list'] = Vente.objects.values_list('category', flat=True).distinct().order_by('category')
         return context
 
 class EditSale(View):
     def post(self, request):
+        # print(request.POST)
         dic = dict(request.POST)
         del dic['csrfmiddlewaretoken']
         dic_values = dic.items()
@@ -255,15 +309,15 @@ class EditSale(View):
         # pylint: disable=unused-variable
         # pylint: disable=no-member
         # Get the old object before editing
-        print(dic)
+        # print(dic)
         old_obj = Vente.objects.get(id = int(request.POST.get('id')))
+        dic['qte_cumul'] = dic['qte_cumul'] - old_obj.qte_journ + dic['qte_journ']
+        dic['montant_journee'] = dic['qte_journ'] * dic['pu']
+        dic['montant_cumul'] = dic['montant_cumul'] - old_obj.montant_journee + dic['montant_journee']
         obj, created = Vente.objects.update_or_create(
             id = int(request.POST.get('id')),
             defaults = dic
         )
-        obj.qte_cumul = obj.qte_cumul - old_obj.qte_journ + obj.qte_journ
-        obj.montant_cumul = obj.montant_cumul - old_obj.montant_journee + obj.montant_journee
-        obj.save()
         messages.success(request, 'Modification effectuée avec succès!')
         return HttpResponseRedirect(reverse('core:sale-details', kwargs={
             'pk' : int(request.POST.get('id'))
@@ -343,22 +397,20 @@ class EditTrs(View):
         # pylint: disable=unused-variable
         # pylint: disable=no-member
         # Get the old object before editing
-        old_obj = Trs.objects.get(id = int(request.POST.get('id')))
+        dic['qte_prod'] = dic['qte_conf'] + dic['qte_rebut']
+        dic['ecarts_cadences'] = dic['arret_non_plan'] + dic['arret_plan']
+        dic['temps_req'] = dic['temps_ouv'] - dic['arret_plan']
+        dic['temps_fct'] = dic['temps_req'] - dic['arret_non_plan']
+        dic['taux_dispo'] = dic['temps_fct'] / dic['temps_req']
+        dic['temps_net'] = dic['temps_fct'] - dic['ecarts_cadences']
+        dic['taux_perf'] = dic['temps_net'] / dic['temps_fct']
+        dic['temps_util'] = dic['temps_net'] - (dic['temps_ouv'] - (dic['temps_ouv'] * dic['qte_conf'] / dic['qte_prod']))
+        dic['taux_qualit'] = dic['temps_util'] / dic['temps_net']
+        dic['trs'] = dic['taux_dispo'] * dic['taux_perf'] * dic['taux_qualit']
         obj, created = Trs.objects.update_or_create(
             id = int(request.POST.get('id')),
             defaults = dic
-        )
-        obj.qte_prod = obj.qte_conf + obj.qte_rebut
-        obj.ecarts_cadences = obj.arret_non_plan + obj.arret_plan
-        obj.temps_req = obj.temps_ouv - obj.arret_plan
-        obj.temps_fct = obj.temps_req - obj.arret_non_plan
-        obj.taux_dispo = obj.temps_fct / obj.temps_req
-        obj.temps_net = obj.temps_fct - obj.ecarts_cadences
-        obj.taux_perf = obj.temps_net / obj.temps_fct
-        obj.temps_util = obj.temps_net - (obj.temps_ouv - (obj.temps_ouv * obj.qte_conf / obj.qte_prod))
-        obj.taux_qualit = obj.temps_util / obj.temps_net
-        obj.trs = obj.taux_dispo * obj.taux_perf * obj.taux_qualit
-        obj.save()
+        )        
         messages.success(request, 'Modification effectuée avec succès!')
         return HttpResponseRedirect(reverse('core:trs-details', kwargs={
             'pk' : int(request.POST.get('id'))
@@ -829,3 +881,254 @@ class AddTcr(View):
         messages.success(request, "Le données ont été stockés avec succès !")
         return redirect('core:add-tcr')
                     
+def add_act_journ_man(request):
+    # pylint: disable=no-member
+    dstc_cats = Production.objects.values_list('category', flat=True).distinct().order_by('category')
+    prod_lines = Production.objects.values_list('ligne', flat=True).distinct().order_by('ligne')
+    trs_lines = Trs.objects.values_list('ligne', flat=True).distinct().order_by('ligne')
+    cats = [i for i in dstc_cats if i]
+    prod_lines = [i for i in prod_lines if i]
+    trs_lines = [i for i in trs_lines if i]
+    context = {
+        'title' : "ACtivité journalière".upper(),
+        'req' : "ACtivité journalière".upper(),
+        'cats': cats,
+        'prod_lines': prod_lines,
+        'trs_lines': trs_lines,
+    }
+    # data = {}
+    # obj = Production.objects.get(id = 2)
+    # fields = Production._meta.get_fields()
+    # for field in fields:
+    #     data[field.name] = obj.field.name
+    # print(similar('Bidon SAUCE PIZZA', 'Bidon SAUCE PIZZA'))
+    return render(request, 'core/add_act_journ_man.html', context)
+
+class AddActMan(View):
+    def post(self, request):
+        dic = dict(request.POST)
+        del dic['csrfmiddlewaretoken']
+        dic_values = dic.items()
+        for key, value in dic_values:
+            dic[key] = value
+        nb_prod = len(dic['line'])
+        nb_sale = len(dic['qte_journ'])
+        nb_trs = len(dic['ligne'])
+        # print(dic)
+        # print('\n')
+
+        # pylint: disable=no-member
+        max_dt = Production.objects.earliest('date')
+        dt = datetime.datetime.strptime(dic['date'][0], '%Y-%m-%d').date()
+        if dt < max_dt.date:
+            messages.error(request, "La date renseignée est déjà couverte !")
+            return redirect('core:add-act-journ-manual')
+
+        # PRODUCTION
+        dic_prod = dict()
+        for i in range(0, nb_prod):
+            dic_prod['unite'] = dic['unit'][0]
+            dic_prod['ligne'] = dic['line'][i]
+            dic_prod['des'] = dic['des'][i]
+            dic_prod['client'] = dic['client'][i]
+            dic_prod['obj'] = int(dic['obj'][i])
+            dic_prod['capacite_jour'] = int(dic['capacite_jour'][i])
+            dic_prod['brute_jour'] = int(dic['conforme_jour'][i]) + int(dic['rebut_jour'][i])
+            dic_prod['conforme_jour'] = int(dic['conforme_jour'][i])
+            dic_prod['rebut_jour'] = int(dic['rebut_jour'][i])
+            try:
+                dic_prod['taux_jour'] = int(dic_prod['brute_jour']) / int(dic['capacite_jour'][i])
+            except ZeroDivisionError:
+                dic_prod['taux_jour'] = 0
+            # print(dic['unit'][0], dic['category'][i])
+            # pylint: disable=no-member
+            qs = Production.objects.filter(unite__icontains=dic['unit'][0], category__icontains=dic['category'][i]).order_by('-id')
+            # print(dic_prod['des'])
+            obj = None
+            for prod in qs:
+                sim_txt = similar(dic_prod['des'], prod.des)[0]
+                sim_dig = similar(dic_prod['des'], prod.des)[1]
+                if sim_txt > 0.9 and sim_dig:
+                    obj = prod
+                    # print(obj.id, obj.des, obj.date)
+                    break
+            conf_mois = 0
+            reb_mois = 0
+            if obj:
+                conf_mois = int(obj.conforme_mois)
+                reb_mois = int(obj.rebut_mois)
+            dic_prod['conforme_mois'] = conf_mois + int(dic_prod['conforme_jour'])
+            dic_prod['rebut_mois'] = reb_mois + int(dic_prod['rebut_jour'])
+            dic_prod['brute_mois'] = dic_prod['conforme_mois'] + dic_prod['rebut_mois']
+            try:
+                dic_prod['taux_real'] = int(dic_prod['brute_mois']) / int(dic['obj'][i])
+            except ZeroDivisionError:
+                dic_prod['taux_real'] = 0
+            try:
+                dic_prod['taux_rebut'] = int(dic_prod['rebut_mois']) / int(dic_prod['brute_mois'])
+            except ZeroDivisionError:
+                dic_prod['taux_rebut'] = 0
+            dic_prod['pu_cout_revient'] = float(dic['pu_cout_revient'][i])
+            dic_prod['montant_journee_coutrev'] = dic_prod['pu_cout_revient'] * dic_prod['conforme_jour']
+            dic_prod['montantcumul_coutrev'] = dic_prod['pu_cout_revient'] * dic_prod['conforme_mois']
+            dic_prod['pu_prix_vente'] = float(dic['pu_prix_vente'][i])
+            try:
+                dic_prod['montant_journee_prix_vente'] = dic_prod['pu_prix_vente'] * (dic_prod['montant_journee_coutrev'] / dic_prod['pu_cout_revient'])
+            except ZeroDivisionError:
+                dic_prod['montant_journee_prix_vente'] = 0
+            try:
+                dic_prod['montantcumul_prix_vente'] = dic_prod['pu_prix_vente'] * (dic_prod['montantcumul_coutrev'] / dic_prod['pu_cout_revient'])
+            except ZeroDivisionError:
+                dic_prod['montantcumul_prix_vente'] = 0
+            dic_prod['date'] = dic['date'][0]
+            dic_prod['volume'] = dic['volume'][i]
+            dic_prod['category'] = dic['category'][i]
+            dic_prod['produit'] = dic['produit'][i]
+            new_id = Production.objects.aggregate(Max('id')).get('id__max') + 1
+            obj, created = Production.objects.update_or_create(
+                id = new_id,
+                defaults = dic_prod
+            )
+
+        dic_sale = dict()
+        for i in range(0, nb_sale):
+            dic_sale['unite'] = dic['unit'][0]
+            dic_sale['des'] = dic['des'][i + nb_prod]
+            dic_sale['client'] = dic['client'][i + nb_prod]
+            dic_sale['qte_journ'] = int(dic['qte_journ'][i])
+            # pylint: disable=no-member
+            qs = Vente.objects.filter(unite__icontains=dic['unit'][0]).order_by('-id')
+            obj = None
+            for sale in qs:
+                # print(sale)
+                sim_des_txt = similar(dic_sale['des'], sale.des)[0]
+                sim_des_dig = similar(dic_sale['des'], sale.des)[1]
+                sim_client = similar(dic_sale['client'], sale.client)[0]
+                if sim_des_txt > 0.9 and sim_des_dig and sim_client > 0.93:
+                    obj = sale
+                    break
+            qte_cumul = 0
+            if obj:
+                qte_cumul = int(obj.qte_cumul)
+            dic_sale['qte_cumul'] = qte_cumul + dic_sale['qte_journ']
+            dic_sale['pu'] = float(dic['pu'][i])
+            dic_sale['montant_journee'] = dic_sale['pu'] * dic_sale['qte_journ']
+            dic_sale['montant_cumul'] = dic_sale['pu'] * dic_sale['qte_cumul']
+            dic_sale['date'] = dic['date'][0]
+            dic_sale['category'] = dic['category'][i + nb_prod]
+            new_id = Vente.objects.aggregate(Max('id')).get('id__max') + 1
+            obj, created = Vente.objects.update_or_create(
+                id = new_id,
+                defaults = dic_sale
+            )
+        
+        dic_trs = dict()
+        for i in range(0, nb_trs):
+            dic_trs['unite'] = dic['unit'][0]
+            dic_trs['ligne'] = dic['ligne'][i]
+            dic_trs['arret_plan'] = int(dic['arret_plan'][i])
+            dic_trs['arret_non_plan'] = int(dic['arret_non_plan'][i])
+            dic_trs['ecarts_cadences'] = dic_trs['arret_plan'] + dic_trs['arret_non_plan']
+            dic_trs['capacite_theo'] = int(dic['capacite_theo'][i])
+            dic_trs['qte_conf'] = int(dic['qte_conf'][i])
+            dic_trs['qte_rebut'] = int(dic['qte_rebut'][i])
+            dic_trs['qte_prod'] = dic_trs['qte_conf'] + dic_trs['qte_rebut']
+            dic_trs['temps_ouv'] = int(dic['temps_ouv'][i])
+            dic_trs['temps_req'] = dic_trs['temps_ouv'] - dic_trs['arret_plan']
+            dic_trs['temps_fct'] = dic_trs['temps_req'] - dic_trs['arret_non_plan']
+            try:
+                dic_trs['taux_dispo'] = dic_trs['temps_fct'] / dic_trs['temps_req']
+            except ZeroDivisionError:
+                dic_trs['taux_dispo'] = 0
+            dic_trs['temps_net'] = dic_trs['temps_fct'] - dic_trs['ecarts_cadences']
+            try:
+                dic_trs['taux_perf'] = dic_trs['temps_net'] / dic_trs['temps_fct']
+            except ZeroDivisionError:
+                dic_trs['taux_perf'] = 0
+            try:
+                dic_trs['temps_util'] = dic_trs['temps_net'] - (dic_trs['temps_ouv'] - (dic_trs['temps_ouv'] * dic_trs['qte_conf'] / dic_trs['qte_prod']))
+            except ZeroDivisionError:
+                dic_trs['temps_util'] = 0
+            try:
+                dic_trs['taux_qualit'] = dic_trs['temps_util'] / dic_trs['temps_net']
+            except ZeroDivisionError:
+                dic_trs['taux_qualit'] = 0
+            dic_trs['trs'] = dic_trs['taux_dispo'] * dic_trs['taux_perf'] * dic_trs['taux_qualit']
+            dic_trs['date'] = dic['date'][0]
+            new_id = Trs.objects.aggregate(Max('id')).get('id__max') + 1
+            obj, created = Trs.objects.update_or_create(
+                id = new_id,
+                defaults = dic_trs
+            )
+        messages.success(request, "Le données ont été traitées avec succès !")
+        return redirect('core:add-act-journ-manual')
+
+class AuditSummary(LoginRequiredMixin, ListView):
+    model = AuditLog
+    template_name = 'core/audit_summary.html'
+    paginate_by = 30
+    
+    def get_queryset(self):
+        # pylint: disable=no-member
+        qs = AuditLog.objects.all().order_by('-dt')
+        if self.request.GET.get('date'):
+            date = datetime.datetime.strptime(self.request.GET.get('date'), '%Y-%m-%d').date()
+            qs = qs.filter(dt__date = date)
+        if self.request.GET.get('tab') and self.request.GET.get('tab') != 'all':
+            qs = qs.filter(tab=self.request.GET.get('tab'))
+        if self.request.GET.get('op') and self.request.GET.get('op') != 'all':
+            qs = qs.filter(op=self.request.GET.get('op'))
+        if self.request.GET.get('user') and self.request.GET.get('user') != 'all':
+            user = User.objects.get(username=self.request.GET.get('user'))
+            qs = qs.filter(user=user)
+        return qs
+
+    def get_context_data(self, *args,**kwargs):
+        context = super(AuditSummary, self).get_context_data(*args, **kwargs)
+        context['title'] = 'historique des modifications'.upper()
+        context['req'] = 'historique des modifications'.upper()
+        context['count'] = self.get_queryset().count
+        # pylint: disable=no-member
+        context['tables'] = list(AuditLog.objects.values_list('tab', flat=True).distinct())
+        date = None
+        if self.request.GET.get('date'):
+            date = datetime.datetime.strptime(self.request.GET.get('date'), '%Y-%m-%d').date()
+        context['date'] = date
+        if self.request.GET.get('tab'):
+            context['table'] = self.request.GET.get('tab')
+        context['ops'] = list(AuditLog.objects.values_list('op', flat=True).distinct())
+        if self.request.GET.get('op'):
+            context['oper'] = self.request.GET.get('op')
+        context['users'] = list(User.objects.all())
+        if self.request.GET.get('user'):
+            context['user_n'] = self.request.GET.get('user')
+        return context
+
+class AuditDetails(LoginRequiredMixin, DetailView):
+    model = AuditLog
+    template_name = 'core/audit-details.html'
+
+    def get_context_data(self, *args,**kwargs):
+        context = super(AuditDetails, self).get_context_data(*args, **kwargs)
+        # pylint: disable=no-member
+        obj = AuditLog.objects.get(id=self.get_object().pk)
+        context['req'] = 'détails de l\'opération : '.upper() + obj.op
+        context['title'] = 'détails de l\'opération'.upper()
+        context['op'] = obj.op
+        calc_fields = []
+        if obj.tab == 'Production':
+            calc_fields = calc_fields_prod
+        elif obj.tab == 'Vente':
+            calc_fields = calc_fields_sale
+        else:
+            calc_fields = [f.name for f in Trs._meta.get_fields() if f.name not in no_calc_fields_trs ]
+        details = obj.details
+        details_edit = dict()
+        for key, val in details.items():
+            if key not in calc_fields:
+                for k, v in pretty_naming.items():
+                    if k == key:
+                        details_edit[v] = val
+        context['details'] = details_edit
+        context['obj'] = obj
+        return context

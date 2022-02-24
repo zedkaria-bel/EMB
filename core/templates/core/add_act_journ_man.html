@@ -1,0 +1,345 @@
+{% extends 'main/base.html' %}
+
+{% load static %}
+{% load hum_money %}
+{% load humanize %}
+{% block head_title %}{{title}} {% endblock %}
+
+{% block content %}
+
+{% if messages %}
+<div id="div-msg" class="mt-2 pb-0 pt-0" style="position:relative; top: -35px;">
+    {% for message in messages %}
+    <div id="exist" class="alert alert-{{ message.tags }} alert-dismissible fade show align-items-center" role="alert">
+        <p class="mb-0 msg h5"><b>{{ message }}</b></p>
+        <button type="button" class="close align-items-center mb-0" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<form method="POST" enctype="multipart/form-data" action="{% url 'core:process-new-act-man' %}" class="form" style="position:relative; top: -30px;">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-2">
+          <div class="list-group" id="list-tab" role="tablist">
+            <a class="list-group-item list-group-item-action active py-4 h5 m-0" id="list-inf-gen-list" data-toggle="list" href="#list-inf-gen" role="tab" aria-controls="inf-gen"><b><span id="txt-unit">Unité</span> - <span class="txt-date">Date</span></b></a>
+            <a class="list-group-item list-group-item-action py-4 h5 m-0" id="list-prod-list" data-toggle="list" href="#list-prod" role="tab" aria-controls="prod"><b>PRODUCTION (<span id="nb_prod">1</span>)</b></a>
+            <a class="list-group-item list-group-item-action py-4 h5 m-0" id="list-sale-list" data-toggle="list" href="#list-sale" role="tab" aria-controls="sale"><b>VENTE (<span id="nb_sale">1</span>)</b></a>
+            <a class="list-group-item list-group-item-action py-4 h5 m-0" id="list-trs-list" data-toggle="list" href="#list-trs" role="tab" aria-controls="trs"><b>TRS (<span id="nb_trs">1</span>)</b></a>
+          </div>
+        </div>
+        <div class="col-10">
+          <div class="tab-content" id="nav-tabContent">
+            <!-- INFO GENERAL -->
+            <div class="tab-pane fade show active" id="list-inf-gen" role="tabpanel" aria-labelledby="list-inf-gen-list">
+                <div class="shadow p-3 mb-5 bg-white rounded">
+                    <h4 style="font-weight: bolder !important;"><b>DATE ET UNITÉ</b></h4>
+                    <div class="form-row">
+                        <div class="form-group col-md-2">
+                            <label for="date" class="col-form-label"><b>Date</b></label>
+                            <input type="date" class="form-control chg" name="date" id="date" placeholder="Date" required>
+                        </div>
+                        <div class="form-group col-md-1">
+                            <label for="unit" class="col-form-label"><b>Unité</b></label>
+                            <select class="custom-select chg" name="unit" id="unit" required>
+                                <option value="KDU">KDU</option>
+                                <option value="AZDU">AZDU</option>
+                                <option value="SKDU">SKDU</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- PRODUCTION -->
+            <div class="tab-pane fade" id="list-prod" role="tabpanel" aria-labelledby="list-prod-list">
+                <div id="list-prod-container">
+                    <div class="shadow p-3 mb-5 bg-white rounded prod-case">
+                        <h4 style="font-weight: bolder !important;"><b>PRODUCTION</b></h4>
+                        <h5 style="font-weight: bolder !important; color: #878787;" class="mt-3"><b>INFORMATIONS GÉNÉRAL</b></h5>
+                        <hr class="my-0" style="color: #878787;">
+                        <!-- INFO GENERAL -->
+                        <div class="form-row">
+                            <div class="form-group col-md-2">
+                                <label for="line" class="col-form-label"><b>Ligne</b></label>
+                                <select class="custom-select" name="line" id="line" required>
+                                    {% for line in prod_lines %}
+                                    <option value={{line}}>{{line}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="des" class="col-form-label"><b>Désignation</b></label>
+                                <input type="text" class="form-control" name="des" id="des" placeholder="Désignation" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="client" class="col-form-label"><b>Client</b></label>
+                                <input type="text" class="form-control" name="client" id="client" placeholder="Client" required>
+                            </div>
+                            <div class="form-group col-md-1">
+                                <label for="volume" class="col-form-label"><b>Volume</b></label>
+                                <input type="text" class="form-control" name="volume" id="volume" placeholder="Volume" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="category" class="col-form-label"><b>Catégorie</b></label>
+                                <select class="custom-select" name="category" id="category" required>
+                                    {% for cat in cats %}
+                                    <option value={{cat}}>{{cat}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="produit" class="col-form-label"><b>Produit</b></label>
+                                <select class="custom-select" name="produit" id="produit" required>
+                                    <option value="Boite">Boite</option>
+                                    <option value="Accessoire">Accessoire</option>
+                                </select>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #878787;" class="mt-3"><b>PRODUCTION PHYSIQUE</b></h5>
+                        <hr class="my-0" style="color: #878787;">
+                        <!-- PROD PHYSIQUE -->
+                        <div class="form-row">
+                            <div class="form-group col-md-2">
+                                <label for="obj" class="col-form-label"><b>Objectif</b></label>
+                                <input type="number" class="form-control" value="0" name="obj" id="obj" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="capacite_jour" class="col-form-label"><b>Capacité jour</b></label>
+                                <input type="number" class="form-control" value="0" name="capacite_jour" id="capacite_jour" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="conforme_jour" class="col-form-label"><b>Conforme - <span class="txt-date">jour</span></b></label>
+                                <input type="number" class="form-control" value="0" name="conforme_jour" id="conforme_jour" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="rebut_jour" class="col-form-label"><b>Rebut - <span class="txt-date">jour</span></b></label>
+                                <input type="number" class="form-control" value="0" name="rebut_jour" id="rebut_jour" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #878787;" class="mt-3"><b>PRODUCTION VALORISÉE</b></h5>
+                        <hr class="my-0" style="color: #878787;">
+                        <!-- PROD VALORISEE -->
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="pu_cout_revient" class="col-form-label"><b>PU - Avec coût de revient</b></label>
+                                <input type="number" class="form-control" value="0" name="pu_cout_revient" id="pu_cout_revient" required>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="pu_prix_vente" class="col-form-label"><b>PU - Avec prix de vente</b></label>
+                                <input type="number" class="form-control" value="0" name="pu_prix_vente" id="pu_prix_vente" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <a id="add-prod" class="px-3 py-2 d-flex flex-row h5 justify-content-center align-items-center col-2 ml-auto" style="background-color: white; border-radius: 60px; transition: 0.5s; box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19) !important; color: #303be9;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z"/>
+                    </svg>
+                    <p class="mb-0 ml-2"><b>PRODUCTION</b></p>
+                </a>
+            </div>
+            <!-- VENTE -->
+            <div class="tab-pane fade" id="list-sale" role="tabpanel" aria-labelledby="list-sale-list">
+                <div id="list-sale-container">
+                    <div class="shadow p-3 mb-5 bg-white rounded sale-case">
+                        <h4 style="font-weight: bolder !important;"><b>VENTE</b></h4>
+                        <!-- INFO GENERAL -->
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="des" class="col-form-label"><b>Désignation</b></label>
+                                <input type="text" class="form-control" name="des" id="des" placeholder="Désignation" required>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="client" class="col-form-label"><b>Client</b></label>
+                                <input type="text" class="form-control" name="client" id="client" placeholder="Client" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="qte_journ" class="col-form-label"><b>Quantités journalières</b></label>
+                                <input type="number" class="form-control" value="0" name="qte_journ" id="qte_journ" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="pu" class="col-form-label"><b>PU - DZD/HT</b></label>
+                                <input type="number" class="form-control" name="pu" id="pu" value="0" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="category" class="col-form-label"><b>Catégorie</b></label>
+                                <select class="custom-select" name="category" id="category" required>
+                                    {% for cat in cats %}
+                                    <option value={{cat}}>{{cat}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <a id="add-sale" class="px-3 py-2 d-flex flex-row h5 justify-content-center align-items-center col-2 ml-auto" style="background-color: white; border-radius: 60px; transition: 0.5s; box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19) !important; color: #303be9;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z"/>
+                    </svg>
+                    <p class="mb-0 ml-2"><b>VENTE</b></p>
+                </a>
+            </div>
+            <!-- TRS -->
+            <div class="tab-pane fade" id="list-trs" role="tabpanel" aria-labelledby="list-trs-list">
+                <div id="list-trs-container">
+                    <div class="shadow p-3 mb-5 bg-white rounded trs-case">
+                        <h4 style="font-weight: bolder !important;"><b>TAUX DE RENDEMENT SYNTHÉTIQUE</b></h4>
+                        <h5 style="font-weight: bolder !important; color: #878787;" class="mt-3"><b>LIGNE ET ARRETS</b></h5>
+                        <hr class="my-0" style="color: #878787;">
+                        <!-- LIGNE ET ARRETS -->
+                        <div class="form-row">
+                            <div class="form-group col-md-2">
+                                <label for="ligne" class="col-form-label"><b>Ligne</b></label>
+                                <select class="custom-select" name="ligne" id="ligne" required>
+                                    {% for line in trs_lines %}
+                                    <option value={{line}}>{{line}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="arret_plan" class="col-form-label"><b>Arrets planifiés (Minutes)</b></label>
+                                <input type="number" class="form-control" name="arret_plan" value="0" id="arret_plan" placeholder="Min" required>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="arret_non_plan" class="col-form-label"><b>Arrets non-planifiés (Minutes)</b></label>
+                                <input type="number" class="form-control" name="arret_non_plan" value="0" id="arret_non_plan" placeholder="Min" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #878787;" class="mt-3"><b>PRODUCTION</b></h5>
+                        <hr class="my-0" style="color: #878787;">
+                        <!-- PRODUCTION -->
+                        <div class="form-row">
+                            <div class="form-group col-md-2">
+                                <label for="capacite_theo" class="col-form-label"><b>Capacité théorique</b></label>
+                                <input type="number" class="form-control" name="capacite_theo" id="capacite_theo" value="0" placeholder="Min" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="qte_conf" class="col-form-label"><b>Quantité conforme</b></label>
+                                <input type="number" class="form-control" name="qte_conf" id="qte_conf" value="0" placeholder="Min" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="qte_rebut" class="col-form-label"><b>Quantité rebutée</b></label>
+                                <input type="number" class="form-control" name="qte_rebut" id="qte_rebut" value="0" placeholder="Min" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="temps_ouv" class="col-form-label"><b>Temps d'ouverture</b></label>
+                                <input type="number" class="form-control" name="temps_ouv" id="temps_ouv" value="0" placeholder="Min" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <a id="add-trs" class="px-3 py-2 d-flex flex-row h5 justify-content-center align-items-center col-5 ml-auto" style="background-color: white; border-radius: 60px; transition: 0.5s; box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19) !important; color: #303be9;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z"/>
+                    </svg>
+                    <p class="mb-0 ml-2"><b>TAUX DE RENDEMENT SYNTHÉTIQUE</b></p>
+                </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button type="submit" id="submit-form" class="btn btn-lg ld-over" style="color: white !important; background-color: #0e385b !important;"><b>TRAITER</b></button>
+</form>
+
+
+<div id="loader" class="bg-modal d-flex justify-content-center align-items-center" style="display: none !important;">
+    <!-- <div class="spinner-grow text-light" role="status" style="width: 10em !important; height: 10em !important;">
+        <span id="spinner" class="sr-only">Loading...</span>
+    </div> -->
+    <div class="d-flex flex-column justify-content-center align-items-center">
+        <p class="h3" style="color: white;">Veuillez patienter</p>
+        <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+    </div> 
+</div>
+
+
+<script>
+
+    var cloneCount = 1;
+
+    $('form').on('submit', function(){
+        console.log('submit');
+        $('#loader').show();
+    });
+
+    $('.chg').on('change', function(){
+        var date = new Date($('#date').val())
+        var unit = $('#unit').val()
+        if(date != ''){
+            m = date.getMonth() + 1
+            console.log(m)
+            if( m < 10){
+                m = '0' + m
+            }
+            $('.txt-date').text(date.getDate() + '/' + m + '/' + date.getFullYear())
+        }
+        if(unit != ''){
+            $('#txt-unit').text(unit)
+        }
+    });
+
+    $('form').submit(function(e) {
+        $(':disabled').each(function(e) {
+            $(this).removeAttr('disabled');
+        })
+    });
+
+
+    $('#add-prod').on('click', function(){
+        console.log('ASXCDER')
+        $(".prod-case:last").clone(true, true).appendTo('#list-prod-container')
+        $('.prod-case:last input').each(function(){
+            $(this).attr('id', $(this).attr('id').slice(0,-1) + cloneCount.toString())
+        })
+        cloneCount++;
+        var nbprod = parseInt($('#nb_prod').text()) + 1
+        $('#nb_prod').text(nbprod.toString())
+    });
+
+    $('#add-sale').on('click', function(){
+        console.log('ASXCDER')
+        $(".sale-case:last").clone(true, true).appendTo('#list-sale-container')
+        $('.sale-case:last input').each(function(){
+            $(this).attr('id', $(this).attr('id').slice(0,-1) + cloneCount.toString())
+        })
+        cloneCount++;
+        var nbprod = parseInt($('#nb_sale').text()) + 1
+        $('#nb_sale').text(nbprod.toString())
+    });
+
+    $('#add-trs').on('click', function(){
+        console.log('ASXCDER')
+        $(".trs-case:last").clone(true, true).appendTo('#list-trs-container')
+        $('.trs-case:last input').each(function(){
+            $(this).attr('id', $(this).attr('id').slice(0,-1) + cloneCount.toString())
+        })
+        cloneCount++;
+        var nbprod = parseInt($('#nb_trs').text()) + 1
+        $('#nb_trs').text(nbprod.toString())
+    });
+
+
+    var $cache = $('#list-tab');
+
+    //store the initial position of the element
+    var vTop = $cache.offset().top - parseFloat($cache.css('marginTop').replace(/auto/, 0));
+    $(window).scroll(function (event) {
+        // what the y position of the scroll is
+        var y = $(this).scrollTop();
+
+        // whether that's below the form
+        if (y >= vTop) {
+        // if so, ad the fixed class
+        $cache.addClass('stuck');
+        } else {
+        // otherwise remove it
+        $cache.removeClass('stuck');
+        }
+    });
+
+  </script>
+
+{% endblock content %}

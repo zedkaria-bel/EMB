@@ -20,3 +20,7 @@ def month_name(month_number):
 def negative(num):
     if isinstance(num, int) or isinstance(num, float):
         return num < 0
+
+@register.filter
+def get_username(user):
+    return user.first_name.upper()[0] + user.first_name.lower()[1:] + ' ' + user.last_name.upper()

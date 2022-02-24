@@ -8,7 +8,7 @@
 <div id="div-msg" class="mt-2 pb-0 pt-0" style="position: relative; top: -30px;">
     {% for message in messages %}
     <div id="exist" class="alert alert-{{ message.tags }} alert-dismissible fade show align-items-center" role="alert">
-        <p class="mb-0 msg">{{ message }}</p>
+        <p class="mb-0 msg"><b>{{ message }}</b></p>
         <button type="button" class="close align-items-center mb-0" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>
@@ -34,28 +34,34 @@
 <input type="hidden" id='id' name="id" value="{{obj.id}}" class="form-control">
 
 <!-- INFORMATIONS GENERAL -->
-<div class="shadow p-3 mb-5 bg-white rounded w-100y" style="position:relative; top: -30px;">
-    <h3 class="mb-4" style="font-weight: bolder !important;"><b>INFORMATIONS GÉNÉRAL</b></h3>
-    <div class="form-row">
-        <div class="form-group col-md-1">
-            <label for="unit" class="col-form-label"><b>Unité</b></label>
-            <select class="custom-select" name="unit" id="unit" required disabled>
-                <option value="KDU" {% if obj.unit == 'KDU' %} selected {% endif %} >KDU</option>
-                <option value="AZDU" {% if obj.unit == 'AZDU' %} selected {% endif %}>AZDU</option>
-                <option value="SKDU" {% if obj.unit == 'SKDU' %} selected {% endif %}>SKDU</option>
-            </select>
-        </div>
-        <div class="form-group col-md-3">
-            <label for="des" class="col-form-label"><b>Désignation</b></label>
-            <input type="text" class="form-control" name="des" id="des" value="{% if obj.des %} {{obj.des}} {% else %} - {% endif %}" placeholder="Désignation" required disabled>
-        </div>
-        <div class="form-group col-md-3">
-            <label for="client" class="col-form-label"><b>Client</b></label>
-            <input type="text" class="form-control" name="client" id="client" value="{% if obj.client %} {{obj.client}} {% else %} - {% endif %}" placeholder="Client" required disabled>
-        </div>
-        <div class="form-group col-md-3">
-            <label for="category" class="col-form-label"><b>Catégorie</b></label>
-            <input type="text" class="form-control" name="category" id="category" value="{% if obj.category %} {{obj.category}} {% else %} - {% endif %}" placeholder="Catégorie" required disabled>
+<div class="gen">
+    <div class="shadow p-3 mb-5 bg-white rounded w-100y" style="position:relative; top: -30px;">
+        <h3 class="mb-4" style="font-weight: bolder !important;"><b>INFORMATIONS GÉNÉRAL</b></h3>
+        <div class="form-row">
+            <div class="form-group col-md-1">
+                <label for="unit" class="col-form-label"><b>Unité</b></label>
+                <select class="custom-select" name="unit" id="unit" required disabled>
+                    <option value="KDU" {% if obj.unit == 'KDU' %} selected {% endif %} >KDU</option>
+                    <option value="AZDU" {% if obj.unit == 'AZDU' %} selected {% endif %}>AZDU</option>
+                    <option value="SKDU" {% if obj.unit == 'SKDU' %} selected {% endif %}>SKDU</option>
+                </select>
+            </div>
+            <div class="form-group col-md-3">
+                <label for="des" class="col-form-label"><b>Désignation</b></label>
+                <input type="text" class="form-control" name="des" id="des" value="{% if obj.des %} {{obj.des}} {% else %} - {% endif %}" placeholder="Désignation" required disabled>
+            </div>
+            <div class="form-group col-md-3">
+                <label for="client" class="col-form-label"><b>Client</b></label>
+                <input type="text" class="form-control" name="client" id="client" value="{% if obj.client %} {{obj.client}} {% else %} - {% endif %}" placeholder="Client" required disabled>
+            </div>
+            <div class="form-group col-md-3">
+                <label for="category" class="col-form-label"><b>Catégorie </b></label>
+                <select class="custom-select" name="category" id="category" required disabled>
+                    {% for cat in cat_list %}
+                    <option value="{{cat}}" {% if obj.category == cat %} selected {% endif %} >{{cat}}</option>
+                    {% endfor %}
+                </select>
+            </div>
         </div>
     </div>
 </div>
@@ -100,22 +106,22 @@
 <script>
 
     $('.form').on('submit', function(){
-        $(':input').not('#locked').val(function(index, value) {
-                return value.replace(/ /g, '');
-            });
-            $(':input').not('#locked').not('input[name="csrfmiddlewaretoken"]').not('#id').prop('type', 'number');
+        $(':input').not('.gen input').not('#locked').val(function(index, value) {
+            return value.replace(/ /g, '');
+        });
+        $('input').not('.gen input').not('#locked').not('input[name="csrfmiddlewaretoken"]').not('#id').prop('type', 'number');
     });
 
     $('#locked').on('change', function(){
         var chk = $(this).is(':checked');
         if(!chk){
-            $(':input').not('#locked').not('#taux_jour').not('#taux_real').not('#taux_rebut').prop('disabled', false);
+            $(':input').not('#locked').not('#montant_cumul').not('#qte_cumul').prop('disabled', false);
             // $(':select').prop('disabled', false);
             $('#submit-form').prop('disabled', true);
-            $(':input').not('#locked').val(function(index, value) {
+            $(':input').not('.gen input').not('#locked').val(function(index, value) {
                 return value.replace(/ /g, '');
             });
-            $('input').not('#locked').not('input[name="csrfmiddlewaretoken"]').not('#id').not('#des').not('#client').not('#category').prop('type', 'number');
+            $('input').not('.gen input').not('#locked').not('input[name="csrfmiddlewaretoken"]').not('#id').not('#des').not('#client').not('#category').prop('type', 'number');
         }
         else{
             $(':input').not('#locked').not('input[name="csrfmiddlewaretoken"]').not('#id').prop('disabled', true);

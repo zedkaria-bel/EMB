@@ -8,7 +8,7 @@
 <div id="div-msg" class="mt-2 pb-0 pt-0" style="position: relative; top: -30px;">
     {% for message in messages %}
     <div id="exist" class="alert alert-{{ message.tags }} alert-dismissible fade show align-items-center" role="alert">
-        <p class="mb-0 msg">{{ message }}</p>
+        <p class="mb-0 msg"><b>{{ message }}</b></p>
         <button type="button" class="close align-items-center mb-0" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>
@@ -28,53 +28,59 @@
     </div>
 </div>
 
-<form method="POST" action="{% url 'core:edit-prod' %}" enctype="multipart/form-data" class="form">
+<form method="POST" enctype="multipart/form-data" action="{% url 'core:edit-prod' %}" class="form">
 {% csrf_token %}
 
 <input type="hidden" id='id' name="id" value="{{obj.id}}" class="form-control">
 
-<!-- INFORMATIONS GENERAL -->
-<div class="shadow p-3 mb-5 bg-white rounded w-100y" style="position:relative; top: -30px;">
-    <h3 class="mb-4" style="font-weight: bolder !important;"><b>INFORMATIONS GÉNÉRAL</b></h3>
-    <div class="form-row">
-        <div class="form-group col-md-1">
-            <label for="unit" class="col-form-label"><b>Unité</b></label>
-            <select class="custom-select" name="unit" id="unit" required disabled>
-                <option value="KDU" {% if obj.unit == 'KDU' %} selected {% endif %} >KDU</option>
-                <option value="AZDU" {% if obj.unit == 'AZDU' %} selected {% endif %}>AZDU</option>
-                <option value="SKDU" {% if obj.unit == 'SKDU' %} selected {% endif %}>SKDU</option>
-            </select>
-        </div>
-        <div class="form-group col-md-2">
-            <label for="line" class="col-form-label"><b>Date</b></label>
-            <input type="date" class="form-control" name="date" id="date" value="{{obj.date|date:'Y-m-d'}}" placeholder="Date" required disabled>
-        </div>
-        <div class="form-group col-md-2">
-            <label for="line" class="col-form-label"><b>Ligne</b></label>
-            <input type="text" class="form-control" name="line" id="line" value="{% if obj.ligne %} {{obj.ligne}} {% else %} - {% endif %}" placeholder="Ligne" required disabled>
-        </div>
-        <div class="form-group col-md-3">
-            <label for="des" class="col-form-label"><b>Désignation</b></label>
-            <input type="text" class="form-control" name="des" id="des" value="{% if obj.des %} {{obj.des}} {% else %} - {% endif %}" placeholder="Désignation" required disabled>
-        </div>
-        <div class="form-group col-md-3">
-            <label for="client" class="col-form-label"><b>Client</b></label>
-            <input type="text" class="form-control" name="client" id="client" value="{% if obj.client %} {{obj.client}} {% else %} - {% endif %}" placeholder="Client" required disabled>
-        </div>
-        <div class="form-group col-md-3">
-            <label for="volume" class="col-form-label"><b>Volume</b></label>
-            <input type="text" class="form-control" name="volume" id="volume" value="{% if obj.volume %} {{obj.volume}} {% else %} - {% endif %}" placeholder="Volume" required disabled>
-        </div>
-        <div class="form-group col-md-3">
-            <label for="category" class="col-form-label"><b>Catégorie</b></label>
-            <input type="text" class="form-control" name="category" id="category" value="{% if obj.category %} {{obj.category}} {% else %} - {% endif %}" placeholder="Catégorie" required disabled>
-        </div>
-        <div class="form-group col-md-3">
-            <label for="produit" class="col-form-label"><b>Produit</b></label>
-            <select class="custom-select" name="produit" id="produit" required disabled>
-                <option value="Boite" {% if obj.produit == 'Boite' %} selected {% endif %} >Boite</option>
-                <option value="Accessoire" {% if obj.produit == 'Accessoire' %} selected {% endif %}>Accessoire</option>
-            </select>
+<div class="gen">
+    <!-- INFORMATIONS GENERAL -->
+    <div class="shadow p-3 mb-5 bg-white rounded w-100y" style="position:relative; top: -30px;">
+        <h3 class="mb-4" style="font-weight: bolder !important;"><b>INFORMATIONS GÉNÉRAL </b></h3>
+        <div class="form-row">
+            <div class="form-group col-md-1">
+                <label for="unit" class="col-form-label"><b>Unité</b></label>
+                <select class="custom-select" name="unit" id="unit" required disabled>
+                    <option value="KDU" {% if obj.unit == 'KDU' %} selected {% endif %} >KDU</option>
+                    <option value="AZDU" {% if obj.unit == 'AZDU' %} selected {% endif %}>AZDU</option>
+                    <option value="SKDU" {% if obj.unit == 'SKDU' %} selected {% endif %}>SKDU</option>
+                </select>
+            </div>
+            <div class="form-group col-md-2">
+                <label for="line" class="col-form-label"><b>Date</b></label>
+                <input type="date" class="form-control" name="date" id="date" value="{{obj.date|date:'Y-m-d'}}" placeholder="Date" required disabled>
+            </div>
+            <div class="form-group col-md-2">
+                <label for="line" class="col-form-label"><b>Ligne</b></label>
+                <input type="text" class="form-control" name="line" id="line" value="{% if obj.ligne %} {{obj.ligne}} {% else %} - {% endif %}" placeholder="Ligne" required disabled>
+            </div>
+            <div class="form-group col-md-3">
+                <label for="des" class="col-form-label"><b>Désignation</b></label>
+                <input type="text" class="form-control" name="des" id="des" value="{% if obj.des %} {{obj.des}} {% else %} - {% endif %}" placeholder="Désignation" required disabled>
+            </div>
+            <div class="form-group col-md-3">
+                <label for="client" class="col-form-label"><b>Client</b></label>
+                <input type="text" class="form-control" name="client" id="client" value="{% if obj.client %} {{obj.client}} {% else %} - {% endif %}" placeholder="Client" required disabled>
+            </div>
+            <div class="form-group col-md-3">
+                <label for="volume" class="col-form-label"><b>Volume</b></label>
+                <input type="text" class="form-control" name="volume" id="volume" value="{% if obj.volume %} {{obj.volume}} {% else %} - {% endif %}" placeholder="Volume" required disabled>
+            </div>
+            <div class="form-group col-md-3">
+                <label for="category" class="col-form-label"><b>Catégorie</b></label>
+                <select class="custom-select" name="category" id="category" required disabled>
+                    {% for cat in cat_list %}
+                    <option value="{{cat}}" {% if obj.category == cat %} selected {% endif %} >{{cat}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group col-md-3">
+                <label for="produit" class="col-form-label"><b>Produit</b></label>
+                <select class="custom-select" name="produit" id="produit" required disabled>
+                    <option value="Boite" {% if obj.produit == 'Boite' %} selected {% endif %} >Boite</option>
+                    <option value="Accessoire" {% if obj.produit == 'Accessoire' %} selected {% endif %}>Accessoire</option>
+                </select>
+            </div>
         </div>
     </div>
 </div>
@@ -171,6 +177,7 @@
     </div>
 </div>
 
+
 <button type="submit" id="submit-form" class="btn" style="color: white !important; background-color: #0e385b !important; position: relative; top: -30px;"><b class="h5">Modifier</b></button>
 
 </form>
@@ -178,25 +185,25 @@
 <script>
 
     $('.form').on('submit', function(){
-        $(':input').not('#locked').val(function(index, value) {
-                return value.replace(/ /g, '');
-            });
-            $(':input').not('#locked').not('input[name="csrfmiddlewaretoken"]').not('#id').prop('type', 'number');
+        $(':input').not('.gen input').not('#locked').val(function(index, value) {
+            return value.replace(/ /g, '');
+        });
+        $('input').not('.gen input').not('#locked').not('input[name="csrfmiddlewaretoken"]').not('#id').prop('type', 'number');
     });
 
     $('#locked').on('change', function(){
         var chk = $(this).is(':checked');
         if(!chk){
-            $(':input').not('#locked').not('#taux_jour').not('#taux_real').not('#taux_rebut').prop('disabled', false);
+            $(':input').not('input[name="csrfmiddlewaretoken"]').not('#locked').not('#taux_jour').not('#taux_real').not('#taux_rebut').prop('disabled', false);
             // $(':select').prop('disabled', false);
             $('#submit-form').prop('disabled', true);
-            $(':input').not('#locked').val(function(index, value) {
+            $(':input').not('.gen input').not('input[name="csrfmiddlewaretoken"]').not('#locked').val(function(index, value) {
                 return value.replace(/ /g, '');
             });
-            $(':input').not('#locked').not('input[name="csrfmiddlewaretoken"]').not('#id').prop('type', 'number');
+            $('input').not('.gen input').not('#locked').not('input[name="csrfmiddlewaretoken"]').not('#id').prop("type", "number");
         }
         else{
-            $(':input').not('#locked').not('#taux_jour').not('#taux_real').not('#taux_rebut').prop('disabled', true);
+            $(':input').not('input[name="csrfmiddlewaretoken"]').not('#locked').not('#taux_jour').not('#taux_real').not('#taux_rebut').prop('disabled', true);
             // $(':select').prop('disabled', true);
             $('#submit-form').prop('disabled', false);
         }

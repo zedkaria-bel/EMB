@@ -107,3 +107,38 @@
   background-color: white !important;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19) !important;
 }
+
+
+#add_act_man:hover{
+  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2), 0 12px 40px 0 rgba(0, 0, 0, 0.19) !important
+}
+
+#list-tab.stuck {
+  position:fixed;
+  top:0;
+  width: 13.120% !important;
+}
+
+#table-audit-cases thead tr th b,
+#table-audit-cases tbody tr th b,
+#table-audit-cases tbody tr td b,
+#table-audit-details thead tr th b,
+#table-audit-details tbody tr th b,
+#table-audit-details tbody tr td b{
+  font-size: 13.5px !important;
+}
+
+
+table.table-bordered{
+  border:1px solid #cbcbcb !important;
+  margin-top:20px !important;
+}
+table.table-bordered > thead > tr > th,
+table.table-bordered > tbody > tr > td,
+table.table-bordered > tbody > tr > th{
+  border:1px solid #cbcbcb !important;
+}
+
+table.table-bordered > thead > tr{
+  background-color: #e9e9e9 !important;
+}

@@ -7,14 +7,55 @@
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
 from django.shortcuts import reverse
+import json
+from django.dispatch import receiver
+# pylint: disable=import-error
+from django_model_changes import ChangesMixin
+from django_model_changes import post_change
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+import datetime
+from django.apps import apps
+from embapp.middleware import get_current_user
+
+op_choices = (
+    (1, 'AJOUT'),
+    (2, 'MODIFICATION'),
+    (3, 'SUPPRESSION')
+)
+
+# Class for Audit
+class AuditLog(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    tab = models.TextField(null=True, blank=True)
+    line_id = models.TextField(null=True, blank=True)
+    op = models.TextField(blank=True, null=True, choices=op_choices)
+    dt = models.DateTimeField(blank=True, null=True)
+    user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
+    details = models.JSONField()
+
+    class Meta:
+        db_table = 'AuditLog'
+    
+    def get_line_url(self):
+        # pylint: disable=no-member
+        model = apps.get_model('core', self.tab)
+        obj = model.objects.get(
+            id = int(self.line_id)
+        )
+        return obj.get_absolute_url()
+    
+    def get_absolute_url(self):
+        return reverse('core:audit-details', kwargs = {
+            'pk' : self.pk
+        })
 
 class AggPrevAnn(models.Model):
 
     class Meta:
         db_table = 'Agg_Prev_Ann'
 
-
-class Production(models.Model):
+class Production(ChangesMixin, models.Model):
     id = models.IntegerField(db_column='ID', primary_key=True)  # Field name made lowercase.
     unite = models.TextField(db_column='Unité', blank=True, null=True)  # Field name made lowercase.
     ligne = models.TextField(db_column='Ligne', blank=True, null=True)  # Field name made lowercase.
@@ -49,7 +90,9 @@ class Production(models.Model):
         return reverse('core:prod-details', kwargs = {
             'pk' : self.pk
         })
-
+    
+    def get_user(self, request):
+        return request.user
 
 class Tcr(models.Model):
     id = models.TextField(db_column='ID', primary_key=True)  # Field name made lowercase.
@@ -93,8 +136,7 @@ class Tcr(models.Model):
     class Meta:
         db_table = 'TCR'
 
-
-class Trs(models.Model):
+class Trs(ChangesMixin, models.Model):
     id = models.IntegerField(db_column='ID', primary_key=True)  # Field name made lowercase.
     unite = models.TextField(db_column='Unité', blank=True, null=True)  # Field name made lowercase.
     ligne = models.TextField(db_column='Ligne', blank=True, null=True)  # Field name made lowercase.
@@ -124,8 +166,7 @@ class Trs(models.Model):
             'pk' : self.pk
         })
 
-
-class Vente(models.Model):
+class Vente(ChangesMixin, models.Model):
     id = models.IntegerField(db_column='ID', primary_key=True)  # Field name made lowercase.
     unite = models.TextField(db_column='Unité', blank=True, null=True)  # Field name made lowercase.
     des = models.TextField(db_column='Désignation', blank=True, null=True)  # Field name made lowercase.
@@ -145,3 +186,49 @@ class Vente(models.Model):
         return reverse('core:sale-details', kwargs = {
             'pk' : self.pk
         })
+    
+    def get_user(self, request):
+        return request.user
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete = models.CASCADE)
+    poste = models.TextField(null=True, blank = True)
+
+    class Meta:
+        db_table = 'Profile'
+
+@receiver(post_save, sender=User)
+def update_user_profile(sender, instance, created, **kwargs):
+    if created:
+        # pylint: disable=E1101
+        Profile.objects.create(user=instance)
+        instance.profile.save()
+
+def do_something_if_changed(sender, instance, **kwargs):
+    max_id = sender.objects.latest('id').id
+    obj = sender.objects.get(pk=instance.pk)
+    tab = sender._meta.db_table
+    line_id = str(instance.pk)
+    dt = datetime.datetime.now()
+    user = get_current_user()
+    # user = user.first_name.upper()[0] + user.first_name.lower()[1:] + ' ' + user.last_name.upper()
+    if max_id == instance.pk:
+        op = op_choices[0][1]
+        details = obj.previous_state()
+        details['date'] = str(details['date'])
+    else:
+        op = op_choices[1][1]
+        details = instance.old_changes()
+    # pylint: disable=no-member
+    obj = AuditLog.objects.create(
+        tab = tab,
+        line_id = line_id,
+        op = op,
+        dt = dt,
+        user = user,
+        details = details
+    )
+
+post_change.connect(do_something_if_changed, Production)
+post_change.connect(do_something_if_changed, Vente)
+post_change.connect(do_something_if_changed, Trs)

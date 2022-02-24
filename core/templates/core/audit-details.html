@@ -1,0 +1,70 @@
+{% extends 'main/base.html' %}
+
+{% load static %}
+{% load hum_money %}
+{% load humanize %}
+{% block head_title %}{{title}} {% endblock %}
+
+{% block content %}
+
+{% if messages %}
+<div id="div-msg" class="mt-2 pb-0 pt-0">
+    {% for message in messages %}
+    <div id="exist" class="alert alert-{{ message.tags }} alert-dismissible fade show align-items-center" role="alert" style="position:relative; top: -30px;">
+        <p class="mb-0 msg h5"><b>{{ message }}</b></p>
+        <button type="button" class="close align-items-center mb-0" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="mb-4" style="position:relative; top: -30px;">
+    <div class="d-flex flex-row justify-content-between">
+        <p class="h4">Utilisateur : <b>{{obj.user|get_username}}</b> </p>
+        <p class="h4">Table concernée : <b>{{obj.tab}}</b> </p>
+    </div>
+    <div class="d-flex flex-row justify-content-between">
+        <p class="h4">Date : <b>{{obj.dt|date:'d/m/Y - H:i'}}</b> </p>
+        <p class="h4">Entrée concernée : <b>
+            <a href="{{request.get_line_url}}" target="_blank" class="ml-2 align-items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-box-arrow-right mr-3" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/>
+                    <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/>
+                </svg>
+                {{ obj.line_id }}
+            </a>
+        </b> </p>
+    </div>
+</div>
+
+<table id="table-audit-cases" class="table table-bordered" style="position:relative; top: -30px;">
+    <thead class="thead">
+      <tr>
+        <th class="py-3 align-middle" scope="col"><b>#</b></th>
+        <th class="py-3 align-middle" scope="col"><b>Champ</b></th>
+        {% if op == 'MODIFICATION' %}
+        <th class="py-3 align-middle" scope="col"><b>Ancienne valeur</b></th>
+        {% endif %}
+        <th class="py-3 align-middle" scope="col"><b>Nouvelle valeur</b></th>
+      </tr>
+    </thead>
+    <tbody id="tbody">
+        {% for key, val in details.items %}
+        <tr class="row_tab">
+            <th class="py-3 align-middle" scope="row"><b class="font-weight-bold" >{{ forloop.counter }}</b></th>
+            <td class="py-3 align-middle" scope="row"><b class="font-weight-bold" >{{ key }}</b></td>
+            {% if op == 'MODIFICATION' %}
+            <td class="py-3 align-middle" scope="row"><b class="font-weight-bold" >{{ val.0 }}</b></td>
+            <td class="py-3 align-middle" scope="row"><b class="font-weight-bold" >{{ val.1 }}</b></td>
+            {% else %}
+            <td class="py-3 align-middle" scope="row"><b class="font-weight-bold" >{{ val }}</b></td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+{% endblock content %}
