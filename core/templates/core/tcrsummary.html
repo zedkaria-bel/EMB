@@ -129,7 +129,7 @@
                     {% endif %}
                 </td>
                 {% else %}
-                <td class="py-2 align-middle px-1" scope="row" {% if request.1|negative %} style="background-color: #e5baba; color: #a31f1f;" {% endif %} >
+                <td class="py-2 align-middle" scope="row" {% if request.1|negative %} style="background-color: #e5baba; color: #a31f1f;" {% endif %} >
                     {% if 'EXER' in request.des or 'AJ' in request.des or 'BRUT' in request.des or 'RESULTAT' in request.des %}
                     <b class=" font-weight-bold" style="font-size: 15px !important;">{{ request.1|floatformat:"2"|intcomma|space_digits }}</b>
                     {% else %}
