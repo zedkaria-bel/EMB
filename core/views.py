@@ -10,6 +10,7 @@ from django.db.models import Max, Min, Sum, Q
 from django.shortcuts import reverse
 from django.contrib import messages
 from django.core.files.storage import FileSystemStorage
+from django.db import models
 import datetime
 from django.utils import timezone
 from django.template.loader import render_to_string
@@ -696,11 +697,11 @@ class AddAct(View):
                 df_prod[['PU_cout_revient', 'montant_journee_coutRev', 'MontantCumul_coutRev', 'PU_prix_vente', 'montant_journee_prix_vente', 'MontantCumul_prix_vente']] = df[['PU_coutRev', 'montant_journee_coutRev', 'MontantCumul_coutRev', 'PU_prix_vente', 'montant_journee_prix_vente', 'MontantCumul_prix_vente']]
                 df_prod = df_prod.reset_index(drop=True)
 
-                print(df_prod.loc[df_prod['Ligne'].str.contains('Pails')])
+                # print(df_prod.loc[df_prod['Ligne'].str.contains('Pails')])
                 # Last reglage : unify strings : Pails 10l => Pails 10 L
                 idx = df_prod.index[df_prod['Ligne'].str.startswith('Pails')].tolist()
                 for x in idx:
-                    print(df_prod.at[x, 'Ligne'])
+                    # print(df_prod.at[x, 'Ligne'])
                     match = re.search(r'Pails (\d{2})\s*([l|L])', df_prod['Ligne'][x])
                     if match:
                         df_prod.at[x, 'Ligne'] = 'Pails ' + str(match.group(1)) + ' ' + str(match.group(2)).upper()
@@ -719,13 +720,12 @@ class AddAct(View):
                     cursor.execute('SELECT MAX("ID") FROM public."' + tab_name + '"')
                     max_id = cursor.fetchone()[0]
                     df_prod.insert(0, 'ID', range(int(max_id) + 1, 1 + int(max_id) + len(df_prod)))
-                df['Ligne'] = df['Ligne'].str.upper().strip()
+                df_prod['Ligne'] = df_prod['Ligne'].str.upper().strip()
                 df_prod.to_sql(tab_name, engine, if_exists='append', index=False)
 
                 # df_prod['date'] = df_prod['date'].dt.date
                 # print(df_prod)
                 print(df_prod.shape)
-
 
                 # Vente
 
@@ -897,12 +897,6 @@ def add_act_journ_man(request):
         'prod_lines': prod_lines,
         'trs_lines': trs_lines,
     }
-    # data = {}
-    # obj = Production.objects.get(id = 2)
-    # fields = Production._meta.get_fields()
-    # for field in fields:
-    #     data[field.name] = obj.field.name
-    # print(similar('Bidon SAUCE PIZZA', 'Bidon SAUCE PIZZA'))
     return render(request, 'core/add_act_journ_man.html', context)
 
 class AddActMan(View):
@@ -1133,3 +1127,90 @@ class AuditDetails(LoginRequiredMixin, DetailView):
         context['details'] = details_edit
         context['obj'] = obj
         return context
+
+def add_tcr_man(request):
+    # pylint: disable=no-member
+    years = list(Tcr.objects.values_list('date__year', flat=True).distinct())
+    if datetime.datetime.today().month == 2:
+        years.append(datetime.datetime.today().year)
+    context = {
+        'title' : "nouveau tcr".upper(),
+        'req' : "nouveau tcr".upper(),
+        'years': years,
+        'nb_years': len(years)
+    }
+    return render(request, 'core/add_tcr_man.html', context)
+
+class AddTcrMan(View):
+    def post(self, request):
+        dic = dict(request.POST)
+        del dic['csrfmiddlewaretoken']
+        dic_values = dic.items()
+        for key, value in dic_values:
+            val = list()
+            for v in value:
+                try:
+                    val.append(int(v))
+                except ValueError:
+                    try:
+                        val.append(float(v))
+                    except ValueError:
+                        val.append(v)
+            dic[key] = val
+        month = int(dic['month'][0])
+        year = int(dic['year'][0])
+        dt = datetime.datetime(year, month, 28, 0, 0, 0)
+        # pylint: disable=no-member
+        if Tcr.objects.filter(date__date = dt.date()).count() > 0:
+            messages.error(request, "Le TCR " + calendar.month_name[month].upper() + " " + str(year) + " existe déjà ! Veuillez le modifier si vous désirez ainsi.")
+            return redirect('core:add-tcr-man')
+        del dic['month']
+        del dic['year']
+        for unit in range(0, len(dic['unite'])):
+            dic_tcr = dict()
+            id = dic['unite'][unit] + '_' + str(month) + '_' + str(year)
+            dic_tcr['id'] = id
+            for key, val in dic.items():
+                dic_tcr[key] = dic[key][unit]
+            dic_tcr['prod_exerc'] = dic_tcr['ca'] + dic_tcr['cessions_et_produits'] + dic_tcr['var_stock_fini_encours'] + dic_tcr['prod_immob'] + dic_tcr['subv_expl']
+            dic_tcr['consom_exerc'] = dic_tcr['achats_consom'] + dic_tcr['serv_ext_other_consom'] + dic_tcr['consom_inter_unit']
+            dic_tcr['v_ajoute'] = dic_tcr['prod_exerc'] - dic_tcr['consom_exerc']
+            dic_tcr['exced_brut_exploit'] = dic_tcr['v_ajoute'] - dic_tcr['charge_pers'] - dic_tcr['impot_tax_vers_ass']
+            dic_tcr['res_op'] = dic_tcr['exced_brut_exploit'] + dic_tcr['other_prod_op'] + dic_tcr['repr_pert_val_prov'] - (dic_tcr['other_charge_op'] + dic_tcr['prod_inter_unit'] + dic_tcr['charge_inter_unit'] + dic_tcr['dot_amort_prov_pert_val'])
+            dic_tcr['res_financ'] = dic_tcr['prod_fin'] - dic_tcr['charge_financ']
+            dic_tcr['res_ord_pre_impot'] = dic_tcr['res_op'] + dic_tcr['res_financ']
+            dic_tcr['tot_prod_act_ord'] = dic_tcr['prod_exerc'] + dic_tcr['other_prod_op'] + dic_tcr['prod_fin'] + dic_tcr['repr_pert_val_prov']
+            dic_tcr['tot_charge_act_ord'] = dic_tcr['consom_exerc'] + dic_tcr['charge_pers'] + dic_tcr['impot_tax_vers_ass'] + dic_tcr['dot_amort_prov_pert_val'] + dic_tcr['other_charge_op'] + dic_tcr['charge_financ'] + dic_tcr['impot_diff_res_ord'] + dic_tcr['impot_exig_res_ord']
+            dic_tcr['res_net_act_ord'] = dic_tcr['tot_prod_act_ord'] - dic_tcr['tot_charge_act_ord']
+            dic_tcr['res_extraord'] = dic_tcr['elem_extraord_prod'] - dic_tcr['elem_extraord_charge']
+            dic_tcr['res_net_exerc'] = dic_tcr['res_net_act_ord'] + dic_tcr['res_extraord']
+            dic_tcr['date'] = dt
+            # pylint: disable=no-member
+            obj, created = Tcr.objects.update_or_create(
+                id = id,
+                defaults = dic_tcr
+            )
+        unit = 'ENTREPRISE'
+        id = unit + '_' + str(month) + '_' + str(year)
+        dic_tcr = {}
+        dic_tcr['id'] = id
+        dic_tcr['unite'] = unit
+        # dt = datetime.datetime(2021, 12, 28, 0, 0, 0)
+        dic_tcr['date'] = dt
+        # pylint: disable=no-member
+        fields = Tcr._meta.get_fields()
+        qs = Tcr.objects.filter(date__date=dt.date()).exclude(unite = unit)
+        for field in fields:
+            if field.name != 'id' and field.name != 'unite' and field.name != 'date':
+                dic_tcr[field.name] = qs.aggregate(Sum(field.name)).get(field.name + '__sum')
+        # print(dic_tcr)
+        print(dic_tcr)
+        obj, created = Tcr.objects.update_or_create(
+            id = id,
+            defaults = dic_tcr
+        )
+        messages.success(request, "L'opération s'est terminé avec succès !")
+        return redirect('core:add-tcr-man')
+
+
+        

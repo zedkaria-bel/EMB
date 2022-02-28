@@ -1,6 +1,9 @@
 from django import template
 import calendar
 import os
+import locale
+
+locale.setlocale(locale.LC_ALL, 'fr_FR')
 
 register = template.Library()
 
@@ -14,7 +17,7 @@ def times(number):
 
 @register.filter
 def month_name(month_number):
-    return calendar.month_name[month_number]
+    return calendar.month_name[month_number].upper()
 
 @register.filter
 def negative(num):

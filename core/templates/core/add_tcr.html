@@ -42,7 +42,16 @@
             </div>
         </div>
     </div>
-    <button type="submit" id="submit-form" class="btn btn-lg ld-over" style="color: white !important; background-color: #0e385b !important;" disabled><b>TRAITER</b></button>
+    <div class="d-flex flex-row justify-content-between">
+        <button type="submit" id="submit-form" class="btn btn-lg ld-over" style="color: white !important; background-color: #0e385b !important;" disabled><b>TRAITER</b></button>
+        <div class="ld ld-ring ld-spin"></div>
+        <a href="{% url 'core:add-tcr-man' %}" id="add_act_man" target="_blank" class="px-3 py-2 d-flex flex-row h5 justify-content-center align-items-center shadow" style="background-color: white; border-radius: 60px; transition: 0.5s; color: #303be9;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z"/>
+            </svg>
+            <p class="mb-0 ml-2"><b>AJOUTER MANUELLEMENT</b></p>
+        </a>
+    </div>
     <div class="ld ld-ring ld-spin"></div>
 </form>
 

@@ -20,6 +20,8 @@ from .views import (
     AddActMan,
     AuditSummary,
     AuditDetails,
+    add_tcr_man,
+    AddTcrMan,
 )
 
 app_name = 'core'
@@ -39,9 +41,11 @@ urlpatterns = [
     path('add-daily-activity/', add_act_journ, name = 'add-act-journ'),
     path('add-daily-activity/process-new-act/', AddAct.as_view(), name = 'process-new-act'),
     path('add-tcr/', add_tcr, name = 'add-tcr'),
+    path('add-tcr/manual/', add_tcr_man, name = 'add-tcr-man'),
     path('add-tcr/process-new-tcr/', AddTcr.as_view(), name = 'process-new-tcr'),
     path('add-daily-activity/add-manual/', add_act_journ_man, name = 'add-act-journ-manual'),
     path('add-daily-activity/process-new-act-manual/', AddActMan.as_view(), name = 'process-new-act-man'),
     path('audit-summary/', AuditSummary.as_view(), name = 'audit-summary'),
     path('audit-summary/audit-details/<int:pk>/', AuditDetails.as_view(), name = 'audit-details'),
+    path('add-tcr/process-tcr-manual/', AddTcrMan.as_view(), name = 'process-new-tcr-man'),
 ]

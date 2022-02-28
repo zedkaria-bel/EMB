@@ -1,0 +1,657 @@
+{% extends 'main/base.html' %}
+
+{% load static %}
+{% load hum_money %}
+{% load humanize %}
+{% load i18n %}
+{% block head_title %}{{title}} {% endblock %}
+
+{% block content %}
+
+{% if messages %}
+<div id="div-msg" class="mt-2 pb-0 pt-0" style="position:relative; top: -35px;">
+    {% for message in messages %}
+    <div id="exist" class="alert alert-{{ message.tags }} alert-dismissible fade show align-items-center" role="alert">
+        <p class="mb-0 msg h5"><b>{{ message }}</b></p>
+        <button type="button" class="close align-items-center mb-0" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<form method="POST" enctype="multipart/form-data" action="{% url 'core:process-new-tcr-man' %}" class="form" style="position:relative; top: -30px;">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-2">
+          <div class="list-group mb-4" id="list-tab" role="tablist">
+            <a class="list-group-item list-group-item-action active py-4 h5 m-0" id="list-month" data-toggle="list" href="#month-form" role="tab" aria-controls="month"><b><span id="txt-unit">MOIS CONCERNÉ</span></b></a>
+            <a class="list-group-item list-group-item-action py-4 h5 m-0" id="list-siege" data-toggle="list" href="#siege_form" role="tab" aria-controls="siege"><b>SIÈGE</b></a>
+            <a class="list-group-item list-group-item-action py-4 h5 m-0" id="list-kdu" data-toggle="list" href="#kdu_form" role="tab" aria-controls="kdu"><b>KDU</b></a>
+            <a class="list-group-item list-group-item-action py-4 h5 m-0" id="list-azdu" data-toggle="list" href="#azdu_form" role="tab" aria-controls="azdu"><b>AZDU</b></a>
+            <a class="list-group-item list-group-item-action py-4 h5 m-0" id="list-skdu" data-toggle="list" href="#skdu_form" role="tab" aria-controls="skdu"><b>SKDU</b></a>
+          </div>
+        </div>
+        <div class="col-10">
+          <div class="tab-content" id="nav-tabContent">
+            <!-- INFO GENERAL -->
+            <div class="tab-pane fade show active" id="month-form" role="tabpanel" aria-labelledby="list-month">
+                <div class="shadow p-3 mb-5 bg-white rounded">
+                    <div class="form-row d-flex justify-content-center align-items-center m-5">
+                        <select class="custom-select col-3 mr-4" style="font-size:2rem;" name="month" id="month">
+                            <option style="font-size: 1rem;" value="--" selected disabled hidden>Mois</option>
+                            {% language 'fr' %}
+                            {% for month in 13|times %}
+                            <option style="font-size: 1rem;" value="{{month}}" class="py-2">{{month|month_name}}</option>
+                            {% endfor %}
+                            {% endlanguage %}
+                        </select>
+                        <select class="custom-select col-2 mr-4" style="font-size:2rem;" name="year" id="year">
+                            <option style="font-size: 1rem;" value="--" selected disabled hidden>Année</option>
+                            {% for year in years %}
+                            <option style="font-size: 1rem;" value="{{year}}" >{{year}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <!-- SIEGE -->
+            <input type="hidden" name="unite" value="SIEGE">
+            <div class="tab-pane fade" id="siege_form" role="tabpanel" aria-labelledby="list-siege">
+                <div id="list-siege-container">
+                    <div class="shadow p-3 mb-5 bg-white rounded prod-case">
+                        <h4 style="font-weight: bolder !important;"><b>UNITÉ : SIÈGE</b></h4>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>PRODUCTION DE L'EXERCICE</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!-- PROD EXERC -->
+                        <div class="form-row">
+                            <div class="form-group col-md-2">
+                                <label for="ca" class="col-form-label"><b>Chiffre d'affaire</b></label>
+                                <input type="number" step="0.001" class="form-control" name="ca" id="ca" value="0" placeholder="Chiffre d'affaire" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="cessions_et_produits" class="col-form-label"><b>Cessions et produits</b></label>
+                                <input type="number" step="0.001" class="form-control" name="cessions_et_produits" value="0" id="cessions_et_produits" placeholder="Cessions et produits" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="var_stock_fini_encours" class="col-form-label"><b>Variation stocks prod. finis / en cours</b></label>
+                                <input type="number" step="0.001" class="form-control" name="var_stock_fini_encours" id="var_stock_fini_encours" value="0" placeholder="Variation stocks produits finis et en cours" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="prod_immob" class="col-form-label"><b>Production immobilisée</b></label>
+                                <input type="number" step="0.001" class="form-control" name="prod_immob" id="prod_immob" value="0" placeholder="Production immobilisée" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="subv_expl" class="col-form-label"><b>Subvention d'exploitation</b></label>
+                                <input type="number" step="0.001" class="form-control" name="subv_expl" id="subv_expl" value="0" placeholder="Subvention d'exploitation" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>CONSOMMATIONS DE L'EXERCICE</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!-- CONSOMM EXERC -->
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="achats_consom" class="col-form-label"><b>Achats consommés</b></label>
+                                <input type="number" step="0.001" class="form-control" name="achats_consom" id="achats_consom" value="0" placeholder="Achats consommés" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="serv_ext_other_consom" class="col-form-label"><b>Services extérieurs et Autres consommation</b></label>
+                                <input type="number" step="0.001" class="form-control" name="serv_ext_other_consom" id="serv_ext_other_consom" value="0" placeholder="Services extérieurs et Autres consommation" required>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="consom_inter_unit" class="col-form-label"><b>Consommation inter-unités</b></label>
+                                <input type="number" step="0.001" class="form-control" name="consom_inter_unit" id="consom_inter_unit" value="0" placeholder="Consommation inter-unités" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>EXCEDENT BRUT D'EXPLOITATION</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!--  EXCEDENT BRUT D'EXPLOITATION -->
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="charge_pers" class="col-form-label"><b>Charges de personnel</b></label>
+                                <input type="number" step="0.001" class="form-control" name="charge_pers" id="charge_pers" value="0" placeholder="Charges de personnel" required>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="impot_tax_vers_ass" class="col-form-label"><b>Impôts, taxes et versements assimiles</b></label>
+                                <input type="number" step="0.001" class="form-control" name="impot_tax_vers_ass" id="impot_tax_vers_ass" value="0" placeholder="Impôts, taxes et versements assimiles" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>RESULTAT OPERATIONNEL</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!--  RESULTAT OPERATIONNEL -->
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="other_prod_op" class="col-form-label"><b>Autres produits opérationnels</b></label>
+                                <input type="number" step="0.001" class="form-control" name="other_prod_op" id="other_prod_op" value="0" placeholder="Autres produits opérationnels" required>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="other_charge_op" class="col-form-label"><b>Autres charges opérationnelles</b></label>
+                                <input type="number" step="0.001" class="form-control" name="other_charge_op" id="other_charge_op" value="0" placeholder="Autres charges opérationnelles" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="prod_inter_unit" class="col-form-label"><b>Produits inter unités</b></label>
+                                <input type="number" step="0.001" class="form-control" name="prod_inter_unit" id="prod_inter_unit" value="0" placeholder="Produits inter unités" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="charge_inter_unit" class="col-form-label"><b>Charges inter unités</b></label>
+                                <input type="number" step="0.001" class="form-control" name="charge_inter_unit" id="charge_inter_unit" value="0" placeholder="Charges inter unités" required>
+                            </div>
+                            <div class="form-group col-md-5">
+                                <label for="dot_amort_prov_pert_val" class="col-form-label"><b>Dotation aux amortissements, provisions et pertes de valeur </b></label>
+                                <input type="number" step="0.001" class="form-control" name="dot_amort_prov_pert_val" id="dot_amort_prov_pert_val" value="0" placeholder="Dotation aux amortissements, provisions et pertes de valeur " required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="repr_pert_val_prov" class="col-form-label"><b>Reprise sur pertes de valeur et provisions</b></label>
+                                <input type="number" step="0.001" class="form-control" name="repr_pert_val_prov" id="repr_pert_val_prov" value="0" placeholder="Reprise sur pertes de valeur et provisions" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>RESULTAT FINANCIER</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!--  RESULTAT FINANCIER -->
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="prod_fin" class="col-form-label"><b>Produits financiers</b></label>
+                                <input type="number" step="0.001" class="form-control" name="prod_fin" id="prod_fin" value="0" placeholder="Produits financiers" required>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="charge_financ" class="col-form-label"><b>Charges financières</b></label>
+                                <input type="number" step="0.001" class="form-control" name="charge_financ" id="charge_financ" value="0" placeholder="Charges financières" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>RESULTAT NET DES ACTIVITÉS ORDINAIRES</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!--  RESULTAT FINANCIER -->
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="impot_exig_res_ord" class="col-form-label"><b>Impôts exigibles sur résultats ordinaires</b></label>
+                                <input type="number" step="0.001" class="form-control" name="impot_exig_res_ord" id="impot_exig_res_ord" value="0" placeholder="Impôts exigibles sur résultats ordinaires" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="impot_diff_res_ord" class="col-form-label"><b>Impôts différés (variations) sur résultats ordinaires</b></label>
+                                <input type="number" step="0.001" class="form-control" name="impot_diff_res_ord" id="impot_diff_res_ord" value="0" placeholder="Impôts différés (variations) sur résultats ordinaires" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>RESULTAT EXTRAORDINAIRE</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!--  RESULTAT EXTRAORDINAIRE -->
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="elem_extraord_prod" class="col-form-label"><b>Eléments extraordinaire produits</b></label>
+                                <input type="number" step="0.001" class="form-control" name="elem_extraord_prod" id="elem_extraord_prod" value="0" placeholder="Eléments extraordinaire produits" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="elem_extraord_charge" class="col-form-label"><b>Eléments extraordinaire charges</b></label>
+                                <input type="number" step="0.001" class="form-control" name="elem_extraord_charge" id="elem_extraord_charge" value="0" placeholder="Eléments extraordinaire charges" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- KDU -->
+            <input type="hidden" name="unite" value="KDU">
+            <div class="tab-pane fade" id="kdu_form" role="tabpanel" aria-labelledby="list-kdu">
+                <div id="list-kdu-container">
+                    <div class="shadow p-3 mb-5 bg-white rounded prod-case">
+                        <h4 style="font-weight: bolder !important;"><b>UNITÉ : KDU</b></h4>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>PRODUCTION DE L'EXERCICE</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!-- PROD EXERC -->
+                        <div class="form-row">
+                            <div class="form-group col-md-2">
+                                <label for="ca" class="col-form-label"><b>Chiffre d'affaire</b></label>
+                                <input type="number" step="0.001" class="form-control" name="ca" id="ca" value="0" placeholder="Chiffre d'affaire" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="cessions_et_produits" class="col-form-label"><b>Cessions et produits</b></label>
+                                <input type="number" step="0.001" class="form-control" name="cessions_et_produits" value="0" id="cessions_et_produits" placeholder="Cessions et produits" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="var_stock_fini_encours" class="col-form-label"><b>Variation stocks prod. finis / en cours</b></label>
+                                <input type="number" step="0.001" class="form-control" name="var_stock_fini_encours" id="var_stock_fini_encours" value="0" placeholder="Variation stocks produits finis et en cours" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="prod_immob" class="col-form-label"><b>Production immobilisée</b></label>
+                                <input type="number" step="0.001" class="form-control" name="prod_immob" id="prod_immob" value="0" placeholder="Production immobilisée" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="subv_expl" class="col-form-label"><b>Subvention d'exploitation</b></label>
+                                <input type="number" step="0.001" class="form-control" name="subv_expl" id="subv_expl" value="0" placeholder="Subvention d'exploitation" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>CONSOMMATIONS DE L'EXERCICE</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!-- CONSOMM EXERC -->
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="achats_consom" class="col-form-label"><b>Achats consommés</b></label>
+                                <input type="number" step="0.001" class="form-control" name="achats_consom" id="achats_consom" value="0" placeholder="Achats consommés" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="serv_ext_other_consom" class="col-form-label"><b>Services extérieurs et Autres consommation</b></label>
+                                <input type="number" step="0.001" class="form-control" name="serv_ext_other_consom" id="serv_ext_other_consom" value="0" placeholder="Services extérieurs et Autres consommation" required>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="consom_inter_unit" class="col-form-label"><b>Consommation inter-unités</b></label>
+                                <input type="number" step="0.001" class="form-control" name="consom_inter_unit" id="consom_inter_unit" value="0" placeholder="Consommation inter-unités" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>EXCEDENT BRUT D'EXPLOITATION</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!--  EXCEDENT BRUT D'EXPLOITATION -->
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="charge_pers" class="col-form-label"><b>Charges de personnel</b></label>
+                                <input type="number" step="0.001" class="form-control" name="charge_pers" id="charge_pers" value="0" placeholder="Charges de personnel" required>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="impot_tax_vers_ass" class="col-form-label"><b>Impôts, taxes et versements assimiles</b></label>
+                                <input type="number" step="0.001" class="form-control" name="impot_tax_vers_ass" id="impot_tax_vers_ass" value="0" placeholder="Impôts, taxes et versements assimiles" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>RESULTAT OPERATIONNEL</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!--  RESULTAT OPERATIONNEL -->
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="other_prod_op" class="col-form-label"><b>Autres produits opérationnels</b></label>
+                                <input type="number" step="0.001" class="form-control" name="other_prod_op" id="other_prod_op" value="0" placeholder="Autres produits opérationnels" required>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="other_charge_op" class="col-form-label"><b>Autres charges opérationnelles</b></label>
+                                <input type="number" step="0.001" class="form-control" name="other_charge_op" id="other_charge_op" value="0" placeholder="Autres charges opérationnelles" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="prod_inter_unit" class="col-form-label"><b>Produits inter unités</b></label>
+                                <input type="number" step="0.001" class="form-control" name="prod_inter_unit" id="prod_inter_unit" value="0" placeholder="Produits inter unités" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="charge_inter_unit" class="col-form-label"><b>Charges inter unités</b></label>
+                                <input type="number" step="0.001" class="form-control" name="charge_inter_unit" id="charge_inter_unit" value="0" placeholder="Charges inter unités" required>
+                            </div>
+                            <div class="form-group col-md-5">
+                                <label for="dot_amort_prov_pert_val" class="col-form-label"><b>Dotation aux amortissements, provisions et pertes de valeur </b></label>
+                                <input type="number" step="0.001" class="form-control" name="dot_amort_prov_pert_val" id="dot_amort_prov_pert_val" value="0" placeholder="Dotation aux amortissements, provisions et pertes de valeur " required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="repr_pert_val_prov" class="col-form-label"><b>Reprise sur pertes de valeur et provisions</b></label>
+                                <input type="number" step="0.001" class="form-control" name="repr_pert_val_prov" id="repr_pert_val_prov" value="0" placeholder="Reprise sur pertes de valeur et provisions" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>RESULTAT FINANCIER</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!--  RESULTAT FINANCIER -->
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="prod_fin" class="col-form-label"><b>Produits financiers</b></label>
+                                <input type="number" step="0.001" class="form-control" name="prod_fin" id="prod_fin" value="0" placeholder="Produits financiers" required>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="charge_financ" class="col-form-label"><b>Charges financières</b></label>
+                                <input type="number" step="0.001" class="form-control" name="charge_financ" id="charge_financ" value="0" placeholder="Charges financières" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>RESULTAT NET DES ACTIVITÉS ORDINAIRES</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!--  RESULTAT FINANCIER -->
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="impot_exig_res_ord" class="col-form-label"><b>Impôts exigibles sur résultats ordinaires</b></label>
+                                <input type="number" step="0.001" class="form-control" name="impot_exig_res_ord" id="impot_exig_res_ord" value="0" placeholder="Impôts exigibles sur résultats ordinaires" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="impot_diff_res_ord" class="col-form-label"><b>Impôts différés (variations) sur résultats ordinaires</b></label>
+                                <input type="number" step="0.001" class="form-control" name="impot_diff_res_ord" id="impot_diff_res_ord" value="0" placeholder="Impôts différés (variations) sur résultats ordinaires" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>RESULTAT EXTRAORDINAIRE</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!--  RESULTAT EXTRAORDINAIRE -->
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="elem_extraord_prod" class="col-form-label"><b>Eléments extraordinaire produits</b></label>
+                                <input type="number" step="0.001" class="form-control" name="elem_extraord_prod" id="elem_extraord_prod" value="0" placeholder="Eléments extraordinaire produits" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="elem_extraord_charge" class="col-form-label"><b>Eléments extraordinaire charges</b></label>
+                                <input type="number" step="0.001" class="form-control" name="elem_extraord_charge" id="elem_extraord_charge" value="0" placeholder="Eléments extraordinaire charges" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- AZDU -->
+            <input type="hidden" name="unite" value="AZDU">
+            <div class="tab-pane fade" id="azdu_form" role="tabpanel" aria-labelledby="list-azdu">
+                <div id="list-azdu-container">
+                    <div class="shadow p-3 mb-5 bg-white rounded prod-case">
+                        <h4 style="font-weight: bolder !important;"><b>UNITÉ : AZDU</b></h4>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>PRODUCTION DE L'EXERCICE</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!-- PROD EXERC -->
+                        <div class="form-row">
+                            <div class="form-group col-md-2">
+                                <label for="ca" class="col-form-label"><b>Chiffre d'affaire</b></label>
+                                <input type="number" step="0.001" class="form-control" name="ca" id="ca" value="0" placeholder="Chiffre d'affaire" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="cessions_et_produits" class="col-form-label"><b>Cessions et produits</b></label>
+                                <input type="number" step="0.001" class="form-control" name="cessions_et_produits" value="0" id="cessions_et_produits" placeholder="Cessions et produits" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="var_stock_fini_encours" class="col-form-label"><b>Variation stocks prod. finis / en cours</b></label>
+                                <input type="number" step="0.001" class="form-control" name="var_stock_fini_encours" id="var_stock_fini_encours" value="0" placeholder="Variation stocks produits finis et en cours" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="prod_immob" class="col-form-label"><b>Production immobilisée</b></label>
+                                <input type="number" step="0.001" class="form-control" name="prod_immob" id="prod_immob" value="0" placeholder="Production immobilisée" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="subv_expl" class="col-form-label"><b>Subvention d'exploitation</b></label>
+                                <input type="number" step="0.001" class="form-control" name="subv_expl" id="subv_expl" value="0" placeholder="Subvention d'exploitation" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>CONSOMMATIONS DE L'EXERCICE</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!-- CONSOMM EXERC -->
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="achats_consom" class="col-form-label"><b>Achats consommés</b></label>
+                                <input type="number" step="0.001" class="form-control" name="achats_consom" id="achats_consom" value="0" placeholder="Achats consommés" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="serv_ext_other_consom" class="col-form-label"><b>Services extérieurs et Autres consommation</b></label>
+                                <input type="number" step="0.001" class="form-control" name="serv_ext_other_consom" id="serv_ext_other_consom" value="0" placeholder="Services extérieurs et Autres consommation" required>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="consom_inter_unit" class="col-form-label"><b>Consommation inter-unités</b></label>
+                                <input type="number" step="0.001" class="form-control" name="consom_inter_unit" id="consom_inter_unit" value="0" placeholder="Consommation inter-unités" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>EXCEDENT BRUT D'EXPLOITATION</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!--  EXCEDENT BRUT D'EXPLOITATION -->
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="charge_pers" class="col-form-label"><b>Charges de personnel</b></label>
+                                <input type="number" step="0.001" class="form-control" name="charge_pers" id="charge_pers" value="0" placeholder="Charges de personnel" required>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="impot_tax_vers_ass" class="col-form-label"><b>Impôts, taxes et versements assimiles</b></label>
+                                <input type="number" step="0.001" class="form-control" name="impot_tax_vers_ass" id="impot_tax_vers_ass" value="0" placeholder="Impôts, taxes et versements assimiles" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>RESULTAT OPERATIONNEL</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!--  RESULTAT OPERATIONNEL -->
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="other_prod_op" class="col-form-label"><b>Autres produits opérationnels</b></label>
+                                <input type="number" step="0.001" class="form-control" name="other_prod_op" id="other_prod_op" value="0" placeholder="Autres produits opérationnels" required>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="other_charge_op" class="col-form-label"><b>Autres charges opérationnelles</b></label>
+                                <input type="number" step="0.001" class="form-control" name="other_charge_op" id="other_charge_op" value="0" placeholder="Autres charges opérationnelles" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="prod_inter_unit" class="col-form-label"><b>Produits inter unités</b></label>
+                                <input type="number" step="0.001" class="form-control" name="prod_inter_unit" id="prod_inter_unit" value="0" placeholder="Produits inter unités" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="charge_inter_unit" class="col-form-label"><b>Charges inter unités</b></label>
+                                <input type="number" step="0.001" class="form-control" name="charge_inter_unit" id="charge_inter_unit" value="0" placeholder="Charges inter unités" required>
+                            </div>
+                            <div class="form-group col-md-5">
+                                <label for="dot_amort_prov_pert_val" class="col-form-label"><b>Dotation aux amortissements, provisions et pertes de valeur </b></label>
+                                <input type="number" step="0.001" class="form-control" name="dot_amort_prov_pert_val" id="dot_amort_prov_pert_val" value="0" placeholder="Dotation aux amortissements, provisions et pertes de valeur " required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="repr_pert_val_prov" class="col-form-label"><b>Reprise sur pertes de valeur et provisions</b></label>
+                                <input type="number" step="0.001" class="form-control" name="repr_pert_val_prov" id="repr_pert_val_prov" value="0" placeholder="Reprise sur pertes de valeur et provisions" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>RESULTAT FINANCIER</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!--  RESULTAT FINANCIER -->
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="prod_fin" class="col-form-label"><b>Produits financiers</b></label>
+                                <input type="number" step="0.001" class="form-control" name="prod_fin" id="prod_fin" value="0" placeholder="Produits financiers" required>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="charge_financ" class="col-form-label"><b>Charges financières</b></label>
+                                <input type="number" step="0.001" class="form-control" name="charge_financ" id="charge_financ" value="0" placeholder="Charges financières" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>RESULTAT NET DES ACTIVITÉS ORDINAIRES</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!--  RESULTAT FINANCIER -->
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="impot_exig_res_ord" class="col-form-label"><b>Impôts exigibles sur résultats ordinaires</b></label>
+                                <input type="number" step="0.001" class="form-control" name="impot_exig_res_ord" id="impot_exig_res_ord" value="0" placeholder="Impôts exigibles sur résultats ordinaires" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="impot_diff_res_ord" class="col-form-label"><b>Impôts différés (variations) sur résultats ordinaires</b></label>
+                                <input type="number" step="0.001" class="form-control" name="impot_diff_res_ord" id="impot_diff_res_ord" value="0" placeholder="Impôts différés (variations) sur résultats ordinaires" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>RESULTAT EXTRAORDINAIRE</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!--  RESULTAT EXTRAORDINAIRE -->
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="elem_extraord_prod" class="col-form-label"><b>Eléments extraordinaire produits</b></label>
+                                <input type="number" step="0.001" class="form-control" name="elem_extraord_prod" id="elem_extraord_prod" value="0" placeholder="Eléments extraordinaire produits" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="elem_extraord_charge" class="col-form-label"><b>Eléments extraordinaire charges</b></label>
+                                <input type="number" step="0.001" class="form-control" name="elem_extraord_charge" id="elem_extraord_charge" value="0" placeholder="Eléments extraordinaire charges" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- SKDU -->
+            <input type="hidden" name="unite" value="SKDU">
+            <div class="tab-pane fade" id="skdu_form" role="tabpanel" aria-labelledby="list-skdu">
+                <div id="list-skdu-container">
+                    <div class="shadow p-3 mb-5 bg-white rounded prod-case">
+                        <h4 style="font-weight: bolder !important;"><b>UNITÉ : SKDU</b></h4>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>PRODUCTION DE L'EXERCICE</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!-- PROD EXERC -->
+                        <div class="form-row">
+                            <div class="form-group col-md-2">
+                                <label for="ca" class="col-form-label"><b>Chiffre d'affaire</b></label>
+                                <input type="number" step="0.001" class="form-control" name="ca" id="ca" value="0" placeholder="Chiffre d'affaire" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="cessions_et_produits" class="col-form-label"><b>Cessions et produits</b></label>
+                                <input type="number" step="0.001" class="form-control" name="cessions_et_produits" value="0" id="cessions_et_produits" placeholder="Cessions et produits" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="var_stock_fini_encours" class="col-form-label"><b>Variation stocks prod. finis / en cours</b></label>
+                                <input type="number" step="0.001" class="form-control" name="var_stock_fini_encours" id="var_stock_fini_encours" value="0" placeholder="Variation stocks produits finis et en cours" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="prod_immob" class="col-form-label"><b>Production immobilisée</b></label>
+                                <input type="number" step="0.001" class="form-control" name="prod_immob" id="prod_immob" value="0" placeholder="Production immobilisée" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="subv_expl" class="col-form-label"><b>Subvention d'exploitation</b></label>
+                                <input type="number" step="0.001" class="form-control" name="subv_expl" id="subv_expl" value="0" placeholder="Subvention d'exploitation" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>CONSOMMATIONS DE L'EXERCICE</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!-- CONSOMM EXERC -->
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="achats_consom" class="col-form-label"><b>Achats consommés</b></label>
+                                <input type="number" step="0.001" class="form-control" name="achats_consom" id="achats_consom" value="0" placeholder="Achats consommés" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="serv_ext_other_consom" class="col-form-label"><b>Services extérieurs et Autres consommation</b></label>
+                                <input type="number" step="0.001" class="form-control" name="serv_ext_other_consom" id="serv_ext_other_consom" value="0" placeholder="Services extérieurs et Autres consommation" required>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="consom_inter_unit" class="col-form-label"><b>Consommation inter-unités</b></label>
+                                <input type="number" step="0.001" class="form-control" name="consom_inter_unit" id="consom_inter_unit" value="0" placeholder="Consommation inter-unités" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>EXCEDENT BRUT D'EXPLOITATION</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!--  EXCEDENT BRUT D'EXPLOITATION -->
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="charge_pers" class="col-form-label"><b>Charges de personnel</b></label>
+                                <input type="number" step="0.001" class="form-control" name="charge_pers" id="charge_pers" value="0" placeholder="Charges de personnel" required>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="impot_tax_vers_ass" class="col-form-label"><b>Impôts, taxes et versements assimiles</b></label>
+                                <input type="number" step="0.001" class="form-control" name="impot_tax_vers_ass" id="impot_tax_vers_ass" value="0" placeholder="Impôts, taxes et versements assimiles" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>RESULTAT OPERATIONNEL</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!--  RESULTAT OPERATIONNEL -->
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="other_prod_op" class="col-form-label"><b>Autres produits opérationnels</b></label>
+                                <input type="number" step="0.001" class="form-control" name="other_prod_op" id="other_prod_op" value="0" placeholder="Autres produits opérationnels" required>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="other_charge_op" class="col-form-label"><b>Autres charges opérationnelles</b></label>
+                                <input type="number" step="0.001" class="form-control" name="other_charge_op" id="other_charge_op" value="0" placeholder="Autres charges opérationnelles" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="prod_inter_unit" class="col-form-label"><b>Produits inter unités</b></label>
+                                <input type="number" step="0.001" class="form-control" name="prod_inter_unit" id="prod_inter_unit" value="0" placeholder="Produits inter unités" required>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="charge_inter_unit" class="col-form-label"><b>Charges inter unités</b></label>
+                                <input type="number" step="0.001" class="form-control" name="charge_inter_unit" id="charge_inter_unit" value="0" placeholder="Charges inter unités" required>
+                            </div>
+                            <div class="form-group col-md-5">
+                                <label for="dot_amort_prov_pert_val" class="col-form-label"><b>Dotation aux amortissements, provisions et pertes de valeur </b></label>
+                                <input type="number" step="0.001" class="form-control" name="dot_amort_prov_pert_val" id="dot_amort_prov_pert_val" value="0" placeholder="Dotation aux amortissements, provisions et pertes de valeur " required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="repr_pert_val_prov" class="col-form-label"><b>Reprise sur pertes de valeur et provisions</b></label>
+                                <input type="number" step="0.001" class="form-control" name="repr_pert_val_prov" id="repr_pert_val_prov" value="0" placeholder="Reprise sur pertes de valeur et provisions" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>RESULTAT FINANCIER</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!--  RESULTAT FINANCIER -->
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="prod_fin" class="col-form-label"><b>Produits financiers</b></label>
+                                <input type="number" step="0.001" class="form-control" name="prod_fin" id="prod_fin" value="0" placeholder="Produits financiers" required>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="charge_financ" class="col-form-label"><b>Charges financières</b></label>
+                                <input type="number" step="0.001" class="form-control" name="charge_financ" id="charge_financ" value="0" placeholder="Charges financières" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>RESULTAT NET DES ACTIVITÉS ORDINAIRES</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!--  RESULTAT FINANCIER -->
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="impot_exig_res_ord" class="col-form-label"><b>Impôts exigibles sur résultats ordinaires</b></label>
+                                <input type="number" step="0.001" class="form-control" name="impot_exig_res_ord" id="impot_exig_res_ord" value="0" placeholder="Impôts exigibles sur résultats ordinaires" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="impot_diff_res_ord" class="col-form-label"><b>Impôts différés (variations) sur résultats ordinaires</b></label>
+                                <input type="number" step="0.001" class="form-control" name="impot_diff_res_ord" id="impot_diff_res_ord" value="0" placeholder="Impôts différés (variations) sur résultats ordinaires" required>
+                            </div>
+                        </div>
+                        <h5 style="font-weight: bolder !important; color: #484fb2;" class="mt-3"><b>RESULTAT EXTRAORDINAIRE</b></h5>
+                        <hr class="my-0" style="color: #484fb2;">
+                        <!--  RESULTAT EXTRAORDINAIRE -->
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="elem_extraord_prod" class="col-form-label"><b>Eléments extraordinaire produits</b></label>
+                                <input type="number" step="0.001" class="form-control" name="elem_extraord_prod" id="elem_extraord_prod" value="0" placeholder="Eléments extraordinaire produits" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="elem_extraord_charge" class="col-form-label"><b>Eléments extraordinaire charges</b></label>
+                                <input type="number" step="0.001" class="form-control" name="elem_extraord_charge" id="elem_extraord_charge" value="0" placeholder="Eléments extraordinaire charges" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button type="submit" id="submit-form" class="btn btn-lg ld-over" style="color: white !important; background-color: #0e385b !important;"><b>TRAITER</b></button>
+</form>
+
+
+<div id="loader" class="bg-modal d-flex justify-content-center align-items-center" style="display: none !important;">
+    <!-- <div class="spinner-grow text-light" role="status" style="width: 10em !important; height: 10em !important;">
+        <span id="spinner" class="sr-only">Loading...</span>
+    </div> -->
+    <div class="d-flex flex-column justify-content-center align-items-center">
+        <p class="h3" style="color: white;">Veuillez patienter</p>
+        <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+    </div> 
+</div>
+
+
+<script>
+
+    var cloneCount = 1;
+
+    $('form').on('submit', function(){
+        console.log('submit');
+        $('#loader').show();
+    });
+
+    $('.chg').on('change', function(){
+        var date = new Date($('#date').val())
+        var unit = $('#unit').val()
+        if(date != ''){
+            m = date.getMonth() + 1
+            console.log(m)
+            if( m < 10){
+                m = '0' + m
+            }
+            $('.txt-date').text(date.getDate() + '/' + m + '/' + date.getFullYear())
+        }
+        if(unit != ''){
+            $('#txt-unit').text(unit)
+        }
+    });
+
+    $('form').submit(function(e) {
+        $(':disabled').each(function(e) {
+            $(this).removeAttr('disabled');
+        })
+    });
+
+
+    var $cache = $('#list-tab');
+
+    //store the initial position of the element
+    var vTop = $cache.offset().top - parseFloat($cache.css('marginTop').replace(/auto/, 0));
+    $(window).scroll(function (event) {
+        // what the y position of the scroll is
+        var y = $(this).scrollTop();
+
+        // whether that's below the form
+        if (y >= vTop) {
+        // if so, ad the fixed class
+        $cache.addClass('stuck');
+        } else {
+        // otherwise remove it
+        $cache.removeClass('stuck');
+        }
+    });
+
+  </script>
+
+{% endblock content %}
