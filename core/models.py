@@ -94,7 +94,7 @@ class Production(ChangesMixin, models.Model):
     def get_user(self, request):
         return request.user
 
-class Tcr(models.Model):
+class Tcr(ChangesMixin, models.Model):
     id = models.TextField(db_column='ID', primary_key=True)  # Field name made lowercase.
     unite = models.TextField(db_column='Unité', blank=True, null=True)  # Field name made lowercase.
     ca = models.FloatField(db_column="Chiffre d'affaires", blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
@@ -232,3 +232,4 @@ def do_something_if_changed(sender, instance, **kwargs):
 post_change.connect(do_something_if_changed, Production)
 post_change.connect(do_something_if_changed, Vente)
 post_change.connect(do_something_if_changed, Trs)
+post_change.connect(do_something_if_changed, Tcr)
