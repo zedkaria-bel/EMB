@@ -720,7 +720,7 @@ class AddAct(View):
                     cursor.execute('SELECT MAX("ID") FROM public."' + tab_name + '"')
                     max_id = cursor.fetchone()[0]
                     df_prod.insert(0, 'ID', range(int(max_id) + 1, 1 + int(max_id) + len(df_prod)))
-                df_prod['Ligne'] = df_prod['Ligne'].str.upper().strip()
+                df_prod['Ligne'] = df_prod['Ligne'].str.upper().str.strip()
                 df_prod.to_sql(tab_name, engine, if_exists='append', index=False)
 
                 # df_prod['date'] = df_prod['date'].dt.date
