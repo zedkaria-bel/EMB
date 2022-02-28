@@ -491,7 +491,7 @@ class tcrSummary(LoginRequiredMixin, ListView):
         context['Month'] = month
         if self.request.GET.get('unit') and self.request.GET.get('unit') != 'all':
             context['unit'] = self.request.GET.get('unit')
-        context['req'] = 'TCR - '.upper() + datetime.date(year, month, 28).strftime('%B') + ' ' + datetime.date(year, month, 28).strftime('%Y')
+        context['req'] = 'TCR - '.upper() + datetime.date(year, month, 28).strftime('%B').upper() + ' ' + datetime.date(year, month, 28).strftime('%Y')
         context['qs'] = self.get_queryset()
         context['count'] = context['qs'].shape[1]
         if context['count'] == 1:

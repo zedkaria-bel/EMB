@@ -71,6 +71,7 @@
     $('form').on('submit', function(){
         console.log('submit');
         $('#loader').show();
+        $('body').css('overflow-y', 'hidden');
     });
 
     $('.chg').on('change', function(){
