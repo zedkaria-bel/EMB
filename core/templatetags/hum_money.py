@@ -2,6 +2,7 @@ from django import template
 import calendar
 import os
 import locale
+from ..models import Tcr, User
 
 locale.setlocale(locale.LC_ALL, 'fr_FR')
 
@@ -25,5 +26,21 @@ def negative(num):
         return num < 0
 
 @register.filter
-def get_username(user):
+def get_raw_username(username):
+    usr = User.objects.get(username=username)
+    return usr.first_name.upper()[0] + usr.first_name.lower()[1:] + ' ' + usr.last_name.upper()
+
+@register.filter
+def get_username(usr):
+    # pylint: disable=no-member
+    # print(usr)
+    user = User.objects.get(username=usr)
     return user.first_name.upper()[0] + user.first_name.lower()[1:] + ' ' + user.last_name.upper()
+
+@register.filter
+def get_tcr(audit):
+    return Tcr.objects.get(id = int(audit.line_id))
+
+@register.filter
+def get_tcr_info(obj):
+    return obj.date.date().strftime('%B').upper() + ' ' + obj.date.date().strftime('%Y')

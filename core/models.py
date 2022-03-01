@@ -95,7 +95,7 @@ class Production(ChangesMixin, models.Model):
         return request.user
 
 class Tcr(ChangesMixin, models.Model):
-    id = models.TextField(db_column='ID', primary_key=True)  # Field name made lowercase.
+    id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
     unite = models.TextField(db_column='Unité', blank=True, null=True)  # Field name made lowercase.
     ca = models.FloatField(db_column="Chiffre d'affaires", blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
     cessions_et_produits = models.BigIntegerField(db_column='Cessions et produits', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
@@ -135,6 +135,7 @@ class Tcr(ChangesMixin, models.Model):
 
     class Meta:
         db_table = 'TCR'
+
 
 class Trs(ChangesMixin, models.Model):
     id = models.IntegerField(db_column='ID', primary_key=True)  # Field name made lowercase.
@@ -205,13 +206,16 @@ def update_user_profile(sender, instance, created, **kwargs):
         instance.profile.save()
 
 def do_something_if_changed(sender, instance, **kwargs):
+    print('iiinnn')
+    tab = sender._meta.db_table
     max_id = sender.objects.latest('id').id
     obj = sender.objects.get(pk=instance.pk)
-    tab = sender._meta.db_table
     line_id = str(instance.pk)
     dt = datetime.datetime.now()
     user = get_current_user()
-    # user = user.first_name.upper()[0] + user.first_name.lower()[1:] + ' ' + user.last_name.upper()
+    print(max_id, instance.pk)
+    if tab == 'TCR':
+        max_id = instance.pk
     if max_id == instance.pk:
         op = op_choices[0][1]
         details = obj.previous_state()

@@ -67,6 +67,7 @@ def similar(a, b):
 calc_fields_prod = ['brute_jour', 'taux_jour', 'brute_mois', 'conforme_mois', 'rebut_mois', 'taux_real', 'taux_rebut', 'montant_journee_coutrev', 'montantcumul_coutrev', 'montant_journee_prix_vente', 'montantcumul_prix_vente']
 no_calc_fields_trs = ['id', 'unite', 'ligne', 'arret_plan', 'arret_non_plan', 'capacite_theo', 'qte_conf', 'qte_rebut', 'temps_ouv', 'date']
 calc_fields_sale = ['qte_cumul', 'montant_journee', 'montant_cumul']
+calc_fields_tcr = ['prod_exerc', 'consom_exerc', 'v_ajoute', 'exced_brut_exploit', 'res_financ', 'res_ord_pre_impot', 'tot_prod_act_ord', 'tot_charge_act_ord', 'res_net_act_ord', 'res_extraord', 'res_net_exerc']
 
 # FIELDS PRETTY NAMING
 pretty_naming = {
@@ -93,6 +94,28 @@ pretty_naming = {
     'temps_ouv': 'Temps d\'ouverture',
     'qte_journ': 'Quantité journalière',
     'pu' : 'Prix Unitaire',
+    'ca': 'Chiffre d\'affaire',
+    'cessions_et_produits': 'Cessions et produits',
+    'var_stock_fini_encours': 'Variations stocks produits finis et en cours',
+    'prod_immob': 'Production immobilisée',
+    'subv_expl': 'Subvention d\'exploitation',
+    'achats_consom': 'Achats consommés',
+    'serv_ext_other_consom': 'Service exterieurs et autres consommations',
+    'consom_inter_unit': 'Consommation inter-unités',
+    'charge_pers': 'Charges du personnel',
+    'impot_tax_vers_ass': 'Impôts, taxes et versements assimilés',
+    'other_prod_op': 'Autres produits opérationnels',
+    'other_charge_op': 'Autres charges opérationnels',
+    'prod_inter_unit': 'Produits inter-unité',
+    'charge_inter_unit': 'Charges inter-unité',
+    'dot_amort_prov_pert_val': 'Dotation aux amortissement, provisions et pertes de valeur',
+    'repr_pert_val_prov': 'Reprise sur perte de valeurs',
+    'prod_fin': 'Produits financiers',
+    'charge_financ': 'Charges financiers',
+    'impot_exig_res_ord': 'Impôts exigibles sur résultats ordinaire',
+    'impot_diff_res_ord': 'Impôts différés sur résultats ordinaire',
+    'elem_extraord_prod': 'Eléments extraordinaire produits',
+    'elem_extraord_charges': 'Eléments extraordinaire charges',
 }
 
 con = psycopg2.connect(database=settings.DB, user=settings.DB_USER, password=settings.DB_PASSWORD, host=settings.DB_HOST, port=settings.DB_PORT)
@@ -725,6 +748,8 @@ class AddAct(View):
 
                 # df_prod['date'] = df_prod['date'].dt.date
                 # print(df_prod)
+                last_obj = Production.objects.latest('id')
+                last_obj.save()
                 print(df_prod.shape)
 
                 # Vente
@@ -761,6 +786,8 @@ class AddAct(View):
                             max_id = cursor.fetchone()[0]
                             df.insert(0, 'ID', range(int(max_id) + 1, 1 + int(max_id) + len(df)))
                         df.to_sql(tab_name, engine, if_exists='append', index=False)
+                        last_obj = Vente.objects.latest('id')
+                        last_obj.save()
                         # print(df)
 
 
@@ -798,6 +825,8 @@ class AddAct(View):
                             df.insert(0, 'ID', range(int(max_id) + 1, 1 + int(max_id) + len(df)))
                         df['Ligne'] = df['Ligne'].str.upper().str.strip()
                         df.to_sql(tab_name, engine, if_exists='append', index=False)
+                        last_obj = Trs.objects.latest('id')
+                        last_obj.save()
             except (KeyError, pd.errors.ParserError):
                 messages.error(request, "Erreur ! Noms de feuilles Excel erronés, ou bien la structure du fichier ( d'un tableau ) a été modifiée.")
                 return redirect('core:add-act-journ')
@@ -865,9 +894,14 @@ class AddTcr(View):
                                 month = str(month)
                             df.reset_index(level=0, inplace=True)
                             df.rename(columns={ df.columns[0]: "Unité" }, inplace = True)
-                            df.insert(0, 'ID', '')
-                            df['ID'] = df.apply (lambda row: row['Unité'] + '_' + str(row['date'].month) + '_' + str(row['date'].year), axis=1)
+                            # df.insert(0, 'ID', '')
+                            # df['ID'] = df.apply (lambda row: row['Unité'] + '_' + str(row['date'].month) + '_' + str(row['date'].year), axis=1)
                             df.to_sql(tab_name, engine, if_exists='append', index=False)
+                            for i in range(0, 5):
+                                max_id = Tcr.objects.latest('id').id - i
+                                # pylint: disable=no-member
+                                obj = Tcr.objects.get(id = max_id)
+                                obj.save()
                 if no_error:
                     raise UnboundLocalError('Data already processed.')
             except (KeyError, pd.errors.ParserError):
@@ -1068,6 +1102,7 @@ class AuditSummary(LoginRequiredMixin, ListView):
         qs = AuditLog.objects.all().order_by('-dt')
         if self.request.GET.get('date'):
             date = datetime.datetime.strptime(self.request.GET.get('date'), '%Y-%m-%d').date()
+            print(date)
             qs = qs.filter(dt__date = date)
         if self.request.GET.get('tab') and self.request.GET.get('tab') != 'all':
             qs = qs.filter(tab=self.request.GET.get('tab'))
@@ -1107,6 +1142,8 @@ class AuditDetails(LoginRequiredMixin, DetailView):
         context = super(AuditDetails, self).get_context_data(*args, **kwargs)
         # pylint: disable=no-member
         obj = AuditLog.objects.get(id=self.get_object().pk)
+        if obj.tab == 'TCR':
+            context['obj_rel'] = Tcr.objects.get(id = obj.line_id)
         context['req'] = 'détails de l\'opération : '.upper() + obj.op
         context['title'] = 'détails de l\'opération'.upper()
         context['op'] = obj.op
@@ -1115,6 +1152,8 @@ class AuditDetails(LoginRequiredMixin, DetailView):
             calc_fields = calc_fields_prod
         elif obj.tab == 'Vente':
             calc_fields = calc_fields_sale
+        elif obj.tab == 'TCR':
+            calc_fields = calc_fields_tcr
         else:
             calc_fields = [f.name for f in Trs._meta.get_fields() if f.name not in no_calc_fields_trs ]
         details = obj.details
@@ -1168,8 +1207,8 @@ class AddTcrMan(View):
         del dic['year']
         for unit in range(0, len(dic['unite'])):
             dic_tcr = dict()
-            id = dic['unite'][unit] + '_' + str(month) + '_' + str(year)
-            dic_tcr['id'] = id
+            # id = dic['unite'][unit] + '_' + str(month) + '_' + str(year)
+            # dic_tcr['id'] = id
             for key, val in dic.items():
                 dic_tcr[key] = dic[key][unit]
             dic_tcr['prod_exerc'] = dic_tcr['ca'] + dic_tcr['cessions_et_produits'] + dic_tcr['var_stock_fini_encours'] + dic_tcr['prod_immob'] + dic_tcr['subv_expl']
@@ -1191,9 +1230,9 @@ class AddTcrMan(View):
                 defaults = dic_tcr
             )
         unit = 'ENTREPRISE'
-        id = unit + '_' + str(month) + '_' + str(year)
+        # id = unit + '_' + str(month) + '_' + str(year)
         dic_tcr = {}
-        dic_tcr['id'] = id
+        # dic_tcr['id'] = id
         dic_tcr['unite'] = unit
         # dt = datetime.datetime(2021, 12, 28, 0, 0, 0)
         dic_tcr['date'] = dt
@@ -1211,6 +1250,3 @@ class AddTcrMan(View):
         )
         messages.success(request, "L'opération s'est terminé avec succès !")
         return redirect('core:add-tcr-man')
-
-
-        
