@@ -32,7 +32,8 @@ from .models import (
     Vente,
     Trs,
     Tcr,
-    AuditLog
+    AuditLog,
+    ObjectifCapaciteProduction,
 )
 from .flasah_test import get_prod_phy
 from .prod_val_boites import missing_prod_in_val, get_val_df
@@ -621,7 +622,37 @@ class AddAct(View):
                         # df = df.iloc[3: , :]
                         df.drop(df.tail(1).index,inplace=True)
                         # break
-                        acc_df = get_acc_df(df)
+                        acc_df, obj_cap_acc_df = get_acc_df(df)
+                        indexNames = acc_df[acc_df['Conforme_mois'] == 0].index
+                        acc_df.drop(indexNames , inplace=True)
+
+                        # OBJECTIF AND CAPACITE PART
+                        tab_name = 'OBJ_CAP_PRODUCTION'
+                        # REPLACE THE OBJ AND CAPACITE FOR THE CURRENT MONTH
+                        # pylint: disable=no-member
+                        ObjectifCapaciteProduction.objects.filter(produit='Accessoire', date__year = date.year, date__month = date.month).delete()
+
+                        cursor.execute('SELECT MAX("ID") FROM public."' + tab_name + '"')
+                        max_id = cursor.fetchone()[0]
+                        if not max_id:
+                            max_id = 0
+                        obj_cap_acc_df = obj_cap_acc_df[['Unité', 'Objectif', 'Capacité jour', 'date', 'Volume', 'category', 'produit']]
+                        obj_cap_acc_df.insert(0, 'ID', range(int(max_id) + 1, 1 + int(max_id) + len(obj_cap_acc_df)))
+                        # obj_cap_acc_df['Ligne'] = obj_cap_acc_df['Ligne'].str.upper().str.strip()
+                        obj_cap_acc_df.to_sql(tab_name, engine, if_exists='append', index=False)
+
+                        acc_df['Ligne'] = acc_df['Ligne'].str.upper().str.strip()
+                        pails_idx = acc_df.index[~acc_df['Ligne'].isnull()].tolist()
+                        # print(pails_idx)
+                        for x in pails_idx:
+                            # print(acc_df['Ligne'][x])
+                            match = re.search(r'(\w+)\s*(\d{1,2})\s*(L|OZ)', acc_df['Ligne'][x])
+                            if match:
+                                acc_df.at[x, 'Ligne'] = str(match.group(1)) + ' ' + str(match.group(2)) + ' ' + str(match.group(3)).upper()
+                            match = re.search(r'(\w+)\s*Ø\s*(\d+)', acc_df['Ligne'][x])
+                            if match:
+                                acc_df.at[x, 'Ligne'] = str(match.group(1)) + ' Ø ' + str(match.group(2))
+
                         frames.append(acc_df)
                         result = pd.concat(frames)
                         # print(acc_df)
@@ -668,7 +699,23 @@ class AddAct(View):
                         # if last line, then remove last meaningless lines
                         # if val == dfs[-1]:
                         # print(date)
-                        df_prod = get_prod_phy(df)
+                        df_prod, obj_cap_prod_df = get_prod_phy(df)
+                        # indexNames = df_prod[df_prod['Brute_mois'] == 0].index
+                        # df_prod.drop(indexNames , inplace=True)
+
+                        # OBJECTIF AND CAPACITE PART
+                        tab_name = 'OBJ_CAP_PRODUCTION'
+                        # REPLACE THE OBJ AND CAPACITE FOR THE CURRENT MONTH
+                        # pylint: disable=no-member
+                        ObjectifCapaciteProduction.objects.filter(produit='Boite', date__year = date.year, date__month = date.month).delete()
+                        obj_cap_prod_df = obj_cap_prod_df[['Unité', 'Objectif', 'Capacité jour', 'date', 'Volume', 'category', 'produit']]
+                        cursor.execute('SELECT MAX("ID") FROM public."' + tab_name + '"')
+                        max_id = cursor.fetchone()[0]
+                        if not max_id:
+                            max_id = 0
+                        obj_cap_prod_df.insert(0, 'ID', range(int(max_id) + 1, 1 + int(max_id) + len(obj_cap_prod_df)))
+                        obj_cap_prod_df.to_sql(tab_name, engine, if_exists='append', index=False)
+                        
                         frames.append(df_prod)
                         result = pd.concat(frames)
                         # print(df_prod)
@@ -712,22 +759,34 @@ class AddAct(View):
                         # print(result)
 
 
+                idx = (result['Unité'] != 'KDU') & (result['Unité'] != 'AZDU') & (result['Unité'] != 'SKDU')
+                # print(idx)
+                result.loc[idx, 'Unité'] = 'KDU'
                 # print(result)
                 # print(result.shape)
                 df = pd.DataFrame()
+                # print(df_prod)
                 df = missing_prod_in_val(df_prod, result)
                 df = df.reset_index(drop = True)
-                df_prod[['PU_cout_revient', 'montant_journee_coutRev', 'MontantCumul_coutRev', 'PU_prix_vente', 'montant_journee_prix_vente', 'MontantCumul_prix_vente']] = df[['PU_coutRev', 'montant_journee_coutRev', 'MontantCumul_coutRev', 'PU_prix_vente', 'montant_journee_prix_vente', 'MontantCumul_prix_vente']]
+                # print(df)
                 df_prod = df_prod.reset_index(drop=True)
+                df_prod[['PU_cout_revient', 'montant_journee_coutRev', 'MontantCumul_coutRev', 'PU_prix_vente', 'montant_journee_prix_vente', 'MontantCumul_prix_vente']] = df[['PU_coutRev', 'montant_journee_coutRev', 'MontantCumul_coutRev', 'PU_prix_vente', 'montant_journee_prix_vente', 'MontantCumul_prix_vente']]
 
-                # print(df_prod.loc[df_prod['Ligne'].str.contains('Pails')])
-                # Last reglage : unify strings : Pails 10l => Pails 10 L
-                idx = df_prod.index[df_prod['Ligne'].str.startswith('Pails')].tolist()
-                for x in idx:
+                df_prod['Ligne'] = df_prod['Ligne'].str.upper().str.strip()
+
+                pails_idx = df_prod.index.tolist()
+                # print(pails_idx)
+                for x in pails_idx:
                     # print(df_prod.at[x, 'Ligne'])
-                    match = re.search(r'Pails (\d{2})\s*([l|L])', df_prod['Ligne'][x])
+                    match = re.search(r'(\w+)\s*(\d{1,2})\s*(L|OZ)', df_prod['Ligne'][x])
                     if match:
-                        df_prod.at[x, 'Ligne'] = 'Pails ' + str(match.group(1)) + ' ' + str(match.group(2)).upper()
+                        df_prod.at[x, 'Ligne'] = str(match.group(1)) + ' ' + str(match.group(2)) + ' ' + str(match.group(3)).upper()
+                    match = re.search(r'^(\w{1})\s*(\d{1})(\s*-\s*(\d{1})\s*/(\d{1}))*', df_prod['Ligne'][x])
+                    if match:
+                        if match.group(4):
+                            df_prod.at[x, 'Ligne'] = str(match.group(1)) + str(match.group(2)) + ' - ' + str(match.group(4)) + '/' + str(match.group(5))
+                        else:
+                            df_prod.at[x, 'Ligne'] = str(match.group(1)) + str(match.group(2))
                     # print('loop idx')
 
 
@@ -745,6 +804,7 @@ class AddAct(View):
                     df_prod.insert(0, 'ID', range(int(max_id) + 1, 1 + int(max_id) + len(df_prod)))
                 df_prod['Ligne'] = df_prod['Ligne'].str.upper().str.strip()
                 df_prod.to_sql(tab_name, engine, if_exists='append', index=False)
+                df_prod.to_excel(r'C:\Users\zaki1\Desktop\Controle de Gestion\Scripts\PROD_02_2022.xlsx', index = False)
 
                 # df_prod['date'] = df_prod['date'].dt.date
                 # print(df_prod)
@@ -758,6 +818,7 @@ class AddAct(View):
 
                 cursor.execute('SELECT MAX("date") FROM public."' + tab_name + '"')
                 max_dt = cursor.fetchone()[0]
+                print('VENTEEEE')
                 print(max_dt)
 
                 bg_df = pd.read_excel(new_act_journ, sheet_name='04 Ventes', skiprows=8, header=1)
@@ -779,11 +840,14 @@ class AddAct(View):
                         match = re.search(r'\d{2}\s*/\d{2}\s*/\d{4}', dte)
                         date = datetime.datetime.strptime(match.group(), '%d/%m/%Y').date()
                     if date > max_dt:
+                        print('in if')
                         df = df.reset_index(drop=True)
                         df = get_vente_df(df)
+                        print('after get vente')
                         if tab_name != 'TCR':
                             cursor.execute('SELECT MAX("ID") FROM public."' + tab_name + '"')
                             max_id = cursor.fetchone()[0]
+                            print('about to insert')
                             df.insert(0, 'ID', range(int(max_id) + 1, 1 + int(max_id) + len(df)))
                         df.to_sql(tab_name, engine, if_exists='append', index=False)
                         last_obj = Vente.objects.latest('id')
@@ -794,7 +858,7 @@ class AddAct(View):
                 # TRS
 
                 tab_name = 'TRS'
-
+                print('TRSSSSS')
                 cursor.execute('SELECT MAX("date") FROM public."' + tab_name + '"')
                 max_dt = cursor.fetchone()[0]
                 print(max_dt)
@@ -816,12 +880,16 @@ class AddAct(View):
                     else:
                         match = re.search(r'\d{2}\s*/\d{2}\s*/\d{4}', dte)
                         date = datetime.datetime.strptime(match.group(), '%d/%m/%Y').date()
+                    if not max_dt:
+                        max_dt = datetime.date(2018, 1, 1)
                     if date > max_dt:
                         df = df.reset_index(drop=True)
                         df = get_trs_df(df)
                         if tab_name != 'TCR':
                             cursor.execute('SELECT MAX("ID") FROM public."' + tab_name + '"')
                             max_id = cursor.fetchone()[0]
+                            if not max_id:
+                                max_id = 0
                             df.insert(0, 'ID', range(int(max_id) + 1, 1 + int(max_id) + len(df)))
                         df['Ligne'] = df['Ligne'].str.upper().str.strip()
                         df.to_sql(tab_name, engine, if_exists='append', index=False)
@@ -829,9 +897,13 @@ class AddAct(View):
                         last_obj.save()
             except (KeyError, pd.errors.ParserError):
                 messages.error(request, "Erreur ! Noms de feuilles Excel erronés, ou bien la structure du fichier ( d'un tableau ) a été modifiée.")
+                print(str(KeyError))
                 return redirect('core:add-act-journ')
             except UnboundLocalError:
                 messages.error(request, "Erreur ! Les données des dates concernées ont déjà été chargées.")
+                return redirect('core:add-act-journ')
+            except ValueError as v:
+                messages.error(request, str(v))
                 return redirect('core:add-act-journ')
             fs.delete(uploaded_file_path)
         messages.success(request, "Le données ont été stockés avec succès !")

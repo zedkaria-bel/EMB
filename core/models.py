@@ -55,14 +55,23 @@ class AggPrevAnn(models.Model):
     class Meta:
         db_table = 'Agg_Prev_Ann'
 
-class Production(ChangesMixin, models.Model):
+class AbstractProduction(models.Model):
     id = models.IntegerField(db_column='ID', primary_key=True)  # Field name made lowercase.
     unite = models.TextField(db_column='Unité', blank=True, null=True)  # Field name made lowercase.
+    obj = models.BigIntegerField(db_column='Objectif', blank=True, null=True)  # Field name made lowercase.
+    capacite_jour = models.BigIntegerField(db_column='Capacité jour', blank=True, null=True)
+    date = models.DateField(blank=True, null=True)
+    volume = models.TextField(db_column='Volume', blank=True, null=True)  # Field name made lowercase.
+    category = models.TextField(blank=True, null=True)
+    produit = models.TextField(blank=True, null=True)
+
+    class Meta:
+        abstract = True
+
+class Production(ChangesMixin, AbstractProduction):
     ligne = models.TextField(db_column='Ligne', blank=True, null=True)  # Field name made lowercase.
     des = models.TextField(db_column='Désignation', blank=True, null=True)  # Field name made lowercase.
     client = models.TextField(db_column='Client', blank=True, null=True)  # Field name made lowercase.
-    obj = models.BigIntegerField(db_column='Objectif', blank=True, null=True)  # Field name made lowercase.
-    capacite_jour = models.BigIntegerField(db_column='Capacité jour', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters. 
     brute_jour = models.BigIntegerField(db_column='Brute_jour', blank=True, null=True)  # Field name made lowercase.
     conforme_jour = models.BigIntegerField(db_column='Conforme_jour', blank=True, null=True)  # Field name made lowercase.
     rebut_jour = models.BigIntegerField(db_column='Rebut_jour', blank=True, null=True)  # Field name made lowercase.
@@ -78,12 +87,8 @@ class Production(ChangesMixin, models.Model):
     pu_prix_vente = models.FloatField(db_column='PU_prix_vente', blank=True, null=True)  # Field name made lowercase.
     montant_journee_prix_vente = models.FloatField(blank=True, null=True)
     montantcumul_prix_vente = models.FloatField(db_column='MontantCumul_prix_vente', blank=True, null=True)  # Field name made lowercase.
-    date = models.DateField(blank=True, null=True)
-    volume = models.TextField(db_column='Volume', blank=True, null=True)  # Field name made lowercase.
-    category = models.TextField(blank=True, null=True)
-    produit = models.TextField(blank=True, null=True)
 
-    class Meta:
+    class Meta(AbstractProduction.Meta):
         db_table = 'Production'
     
     def get_absolute_url(self):
@@ -93,6 +98,10 @@ class Production(ChangesMixin, models.Model):
     
     def get_user(self, request):
         return request.user
+
+class ObjectifCapaciteProduction(AbstractProduction):
+    class Meta(AbstractProduction.Meta):
+        db_table = 'OBJ_CAP_PRODUCTION'
 
 class Tcr(ChangesMixin, models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
@@ -135,7 +144,6 @@ class Tcr(ChangesMixin, models.Model):
 
     class Meta:
         db_table = 'TCR'
-
 
 class Trs(ChangesMixin, models.Model):
     id = models.IntegerField(db_column='ID', primary_key=True)  # Field name made lowercase.
@@ -206,14 +214,12 @@ def update_user_profile(sender, instance, created, **kwargs):
         instance.profile.save()
 
 def do_something_if_changed(sender, instance, **kwargs):
-    print('iiinnn')
     tab = sender._meta.db_table
     max_id = sender.objects.latest('id').id
     obj = sender.objects.get(pk=instance.pk)
     line_id = str(instance.pk)
     dt = datetime.datetime.now()
     user = get_current_user()
-    print(max_id, instance.pk)
     if tab == 'TCR':
         max_id = instance.pk
     if max_id == instance.pk:

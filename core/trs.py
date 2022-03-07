@@ -67,6 +67,7 @@ def get_trs_df(df):
     #         # print(sheetname, writer.sheets[sheetname].max_row)
     #         df.to_excel(writer,sheet_name=sheetname, startrow=writer.sheets[sheetname].max_row, index = False,header= False)
     #     writer.save()
+    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
     print(df.shape)
     # print(df.iloc[:, :6])
     return df

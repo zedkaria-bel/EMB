@@ -47,21 +47,42 @@ def missing_prod_in_val(df_prod, result):
                     # Adding the last one ( the last one was ommitted due to the drag )
                     # Correct for the non-last ones.
                     # print(df_prod_svg_unit.iloc[-1])
-                    dict = {
-                        'Unité': df_prod_svg_unit['Unité'].iloc[-1],
-                        'Ligne': df_prod_svg_unit['Ligne'].iloc[-1],
-                        'Désignation': df_prod_svg_unit['Désignation'].iloc[-1],
-                        'Client': df_prod_svg_unit['Client'].iloc[-1],
-                        'PU_coutRev': 0,
-                        'montant_journee_coutRev': 0,
-                        'MontantCumul_coutRev': 0,
-                        'PU_prix_vente': 0,
-                        'montant_journee_prix_vente': 0,
-                        'MontantCumul_prix_vente': 0,
-                    }
-                    df_res_svg_unit = df_res_svg_unit.append(dict, ignore_index = True)
-                    frames = frames[:-1]
-                    frames.append(df_res_svg_unit)
+                    if df_prod_svg_unit.shape[0] > df_res_svg_unit.shape[0]:
+                        dict = {
+                            'Unité': df_prod_svg_unit['Unité'].iloc[-1],
+                            'Ligne': df_prod_svg_unit['Ligne'].iloc[-1],
+                            'Désignation': df_prod_svg_unit['Désignation'].iloc[-1],
+                            'Client': df_prod_svg_unit['Client'].iloc[-1],
+                            'PU_coutRev': 0,
+                            'montant_journee_coutRev': 0,
+                            'MontantCumul_coutRev': 0,
+                            'PU_prix_vente': 0,
+                            'montant_journee_prix_vente': 0,
+                            'MontantCumul_prix_vente': 0,
+                        }
+                        df_res_svg_unit = df_res_svg_unit.append(dict, ignore_index = True)
+                        frames = frames[:-1]
+                        frames.append(df_res_svg_unit)
+                    else:
+                        df_res_svg_unit = pd.DataFrame()
+                        print('start loop')
+                        for idx, row in df_prod_svg_unit.iterrows():
+                            dict = {
+                                'Unité': df_prod_svg_unit.loc[idx, 'Unité'],
+                                'Ligne': df_prod_svg_unit.loc[idx, 'Ligne'],
+                                'Désignation': df_prod_svg_unit.loc[idx, 'Désignation'],
+                                'Client': df_prod_svg_unit.loc[idx, 'Client'],
+                                'PU_coutRev': 0,
+                                'montant_journee_coutRev': 0,
+                                'MontantCumul_coutRev': 0,
+                                'PU_prix_vente': 0,
+                                'montant_journee_prix_vente': 0,
+                                'MontantCumul_prix_vente': 0,
+                            }
+                            df_res_svg_unit = df_res_svg_unit.append(dict, ignore_index = True)
+                            frames = frames[:-1]
+                            frames.append(df_res_svg_unit)
+                        # raise ValueError('Erreur! Les données production/valorisation ne correspondent pas (Date : ' + str(dt) + ', Unité : ' + unit + ', Ligne : ' + line + ')')
                     # print(dt, unit, line, df_prod_svg_unit['Désignation'].iloc[-1])
     result_fin = pd.concat(frames)
     subdf = result_fin.iloc[: , 4:10]
@@ -104,7 +125,11 @@ def get_val_df(df):
     df.drop(indexNames , inplace=True)
     indexNames = df[(df['Client'].str.contains('TOTAL', na = False))].index
     df.drop(indexNames , inplace=True)
-    df.dropna(subset = ['Désignation'], inplace=True)
+    # indexNames = df[df['MontantCumul_coutRev'] == 0].index
+    # df.drop(indexNames , inplace=True)
+    # df.dropna(subset = ['Désignation'], inplace=True)
+    indexNames = df[(df['Désignation'].isnull()) & (df['PU_coutRev'].isnull())].index
+    df.drop(indexNames , inplace=True)
     df.loc[df['Unité'].str.contains('1', na = False), 'Unité'] = 'KDU'
     subdf = df.iloc[: , 4:10]
     subdf =  df.iloc[: , :]

@@ -54,6 +54,34 @@ def get_prod_phy(df):
     df['Unnamed: 1'].fillna(method='ffill', inplace = True)
     # df['Unnamed: 14'].fillna(method='ffill', inplace = True)
     df['date'] = date
+
+    # OBJECTIF ET CAPACITE
+    df_copy = df.copy()
+    df_copy.loc[(df_copy['Unnamed: 1'].str.contains('total', na = False, flags = re.IGNORECASE)) & (~df_copy['Unnamed: 2'].isnull()), 'Unnamed: 1'] = np.nan
+    df_copy.loc[df_copy['Unnamed: 1'].str.contains('total', na = False, flags = re.IGNORECASE), 'Unnamed: 0'] = np.nan
+    df_copy['Unnamed: 1'] = df_copy['Unnamed: 1'].str.upper().str.strip()
+    df_copy['Unnamed: 0'].fillna(method='ffill', inplace = True)
+    df_copy = df_copy.loc[(df_copy['Unnamed: 1'].str.contains('total', na = False, flags = re.IGNORECASE)) & (~df_copy['Unnamed: 1'].str.contains('KDU', na = False)) & (~df_copy['Unnamed: 1'].str.contains('AZDU', na = False)) & (~df_copy['Unnamed: 1'].str.contains('SKDU', na = False)) & (~df_copy['Unnamed: 1'].str.contains('general', flags = re.IGNORECASE, na = False))]
+    df_copy['Volume'] = np.nan
+    df_copy.loc[(df_copy['Unnamed: 1'].str.contains('CONSE')) | (df_copy['Unnamed: 1'].str.contains('DIVER')), 'category'] = df_copy['Unnamed: 1'].str.split().str[1]
+    df_copy.loc[(~df_copy['Unnamed: 1'].str.contains('CONSE')) & (~df_copy['Unnamed: 1'].str.contains('DIVER')), 'Volume'] = df_copy['Unnamed: 1'].str.partition(' ')[2]
+    df_copy = df_copy.reset_index(drop=True)
+    idx_cat = df_copy[df_copy['category'].notnull()].index.tolist()
+    stop = 0
+    end = idx_cat[-1]
+    for idx in idx_cat:
+        cat = df_copy.at[idx, 'category']
+        for i in range(stop, idx):
+            df_copy.at[i, 'category'] = cat
+        stop = idx + 1
+        if idx == end:
+            break
+    df_copy['produit'] = 'Boite'
+    df_copy = df_copy.loc[df_copy['Volume'].notnull()]
+    df_copy['Unnamed: 5'].fillna(0, inplace=True)
+    df_copy['Unnamed: 4'].fillna(0, inplace=True)
+    print(df_copy)
+
     indexNames = df[(df['Unnamed: 1'].str.contains('TOTAL')) & (df['Unnamed: 1'].str.contains('KDU') | df['Unnamed: 1'].str.contains('AZDU') | df['Unnamed: 1'].str.contains('SKDU') | df['Unnamed: 1'].str.contains('GENERAL'))].index
     df.drop(indexNames , inplace=True)
     df['Volume'] = np.nan
@@ -111,6 +139,23 @@ def get_prod_phy(df):
     # rename the fields
     # print(df.columns)
     df.rename(columns = {
+        'Unnamed: 0': 'Unité',
+        'Unnamed: 1': 'Ligne',
+        'Unnamed: 2': 'Désignation',
+        'Unnamed: 3': 'Client',
+        'Unnamed: 4': 'Objectif',
+        'Unnamed: 5': 'Capacité jour',
+        'Unnamed: 6': 'Brute_jour',
+        'Unnamed: 7': 'Conforme_jour',
+        'Unnamed: 8': 'Rebut_jour',
+        'Unnamed: 9': 'Taux_jour',
+        'Unnamed: 10': 'Brute_mois',
+        'Unnamed: 11': 'Conforme_mois',
+        'Unnamed: 12': 'Rebut_mois',
+        'Unnamed: 13': 'Taux_real',
+        'Unnamed: 14': 'Taux_rebut',
+    }, inplace = True)
+    df_copy.rename(columns = {
         'Unnamed: 0': 'Unité',
         'Unnamed: 1': 'Ligne',
         'Unnamed: 2': 'Désignation',
@@ -211,10 +256,11 @@ def get_prod_phy(df):
     #     writer.save()
     # print(df)
     # print(date)
+    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
     print(df.shape)
     # print(df.head())
     # print(df['Taux_real'])
-    return df
+    return df, df_copy
 
 if __name__ == '__main__':
     bg_df = pd.read_excel(file_str, sheet_name='01 Prod Physique Boites', skiprows=7, header=1)

@@ -21,7 +21,7 @@ def get_vente_df(df):
     df['Unnamed: 0'].fillna(method='ffill', inplace = True)
     df['date'] = date
     df['category'] = np.nan
-    df.drop(['Unnamed: 9', 'Unnamed: 10'], axis=1, inplace = True)
+    # df.drop(['Unnamed: 9', 'Unnamed: 10'], axis=1, inplace = True)
     df.rename(columns = {
         'Unnamed: 0': 'Unité',
         'Unnamed: 1': 'Ligne',
@@ -76,8 +76,11 @@ def get_vente_df(df):
         if col != 'Client' and col != 'Désignation':
             df[col].fillna(0, inplace=True)
     # print(df)
-    df.drop(['Unnamed: 11'], axis=1, inplace = True)
-    df.drop(['Unnamed: 12'], axis=1, inplace = True)
+    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+    
+    indexNames = df[df['Qte_Cumul'] == 0].index
+    df.drop(indexNames , inplace=True)
+    df.loc[df['category'].str.contains('diver', flags=re.IGNORECASE, na = False), 'category'] = 'DIVERSE'
     # file_name = 'Ventes_' + str(date.month) + '_' + str(date.year) + '.xlsx'
     # if not os.path.isfile(r'C:\Users\zaki1\Desktop\Controle de Gestion\Scripts\Ventes_' + str(date.month) + '_' + str(date.year) + '.xlsx'):
     #     # print('New file !')

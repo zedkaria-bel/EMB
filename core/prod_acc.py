@@ -25,6 +25,18 @@ def get_acc_df(df):
     df['Unnamed: 1'].fillna(method='ffill', inplace = True)
     df['date'] = date
     # print(df)
+
+    # OBJECTIF ET CAPACITE
+    df_copy = df.copy()
+    df_copy.loc[(df_copy['Unnamed: 1'].str.contains('total', na = False, flags = re.IGNORECASE)) & (~df_copy['Unnamed: 2'].isnull()), 'Unnamed: 1'] = np.nan
+    df_copy.loc[df_copy['Unnamed: 1'].str.contains('total', na = False, flags = re.IGNORECASE), 'Unnamed: 0'] = np.nan
+    df_copy.loc[(~df_copy['Unnamed: 1'].str.contains('total', na = False, flags = re.IGNORECASE) & (~df_copy['Unnamed: 1'].isnull())), 'Unnamed: 0'] = 'SKDU'
+    df_copy['Unnamed: 0'].fillna(method='ffill', inplace = True)
+    df_copy = df_copy.loc[(df_copy['Unnamed: 1'].str.contains('total', na = False, flags = re.IGNORECASE)) & (~df_copy['Unnamed: 1'].str.contains('KDU', na = False)) & (~df_copy['Unnamed: 1'].str.contains('AZDU', na = False)) & (~df_copy['Unnamed: 1'].str.contains('SKDU', na = False)) & (~df_copy['Unnamed: 1'].str.contains('general', flags = re.IGNORECASE, na = False))]
+    df_copy['Volume'] = np.nan
+    df_copy['category'] = df_copy['Unnamed: 1'].str.split().str[1]
+    df_copy['produit'] = 'Accessoire'
+
     indexNames = df[(df['Unnamed: 1'].str.contains('TOTAL')) & (df['Unnamed: 1'].str.contains('KDU') | df['Unnamed: 1'].str.contains('AZDU') | df['Unnamed: 1'].str.contains('SKDU') | df['Unnamed: 1'].str.contains('GENERAL')) & df['Unnamed: 2'].isnull()].index
     df.drop(indexNames , inplace=True)
     df['Volume'] = np.nan
@@ -88,14 +100,37 @@ def get_acc_df(df):
         'Unnamed: 11': 'Rebut_mois',
         'Unnamed: 12': 'Taux_real',
         'Unnamed: 13': 'Taux_rebut',
-        'Unnamed: 14': 'PU_coutRev',
+        'Unnamed: 14': 'PU_cout_revient',
+        'Unnamed: 15': 'montant_journee_coutRev',
+        'Unnamed: 16': 'MontantCumul_coutRev',
+    }, inplace = True)
+    df_copy.rename(columns = {
+        'Unnamed: 0': 'Unité',
+        'Unnamed: 1': 'Ligne',
+        'Unnamed: 2': 'Désignation',
+        'Unnamed: 3': 'Objectif',
+        'Unnamed: 4': 'Capacité jour',
+        'Unnamed: 5': 'Brute_jour',
+        'Unnamed: 6': 'Conforme_jour',
+        'Unnamed: 7': 'Rebut_jour',
+        'Unnamed: 8': 'Taux_jour',
+        'Unnamed: 9': 'Brute_mois',
+        'Unnamed: 10': 'Conforme_mois',
+        'Unnamed: 11': 'Rebut_mois',
+        'Unnamed: 12': 'Taux_real',
+        'Unnamed: 13': 'Taux_rebut',
+        'Unnamed: 14': 'PU_cout_revient',
         'Unnamed: 15': 'montant_journee_coutRev',
         'Unnamed: 16': 'MontantCumul_coutRev',
     }, inplace = True)
     df = df.replace(['-'],0)
+    df_copy = df_copy.replace(['-'],0)
     for col in df.columns:
         if col != 'Ligne' and col != 'Volume' and col != 'Désignation':
             df[col].fillna(0, inplace=True)
+    for col in df_copy.columns:
+        if col != 'Ligne' and col != 'Volume' and col != 'Désignation':
+            df_copy[col].fillna(0, inplace=True)
     df.loc[df['Ligne'].str.contains('TOTAL', na = False), 'Ligne'] = np.nan
     df = df[df['Désignation'].notna()]
     # if date.day < 10:
@@ -113,6 +148,11 @@ def get_acc_df(df):
     df.insert(18, 'PU_prix_vente', 0)
     df.insert(19, 'montant_journee_prix_vente', 0)
     df.insert(20, 'MontantCumul_prix_vente', 0)
+
+    df_copy.insert(3, 'Client', np.nan)
+    df_copy.insert(18, 'PU_prix_vente', 0)
+    df_copy.insert(19, 'montant_journee_prix_vente', 0)
+    df_copy.insert(20, 'MontantCumul_prix_vente', 0)
 
     # For the new files only
     df.loc[df['Ligne'].notna(), 'Unité'] = 'SKDU'
@@ -138,8 +178,10 @@ def get_acc_df(df):
     #         df.to_excel(writer,sheet_name=sheetname, startrow=writer.sheets[sheetname].max_row, index = False,header= False)
     #     writer.save()
     # print(df)
+    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+    df_copy = df_copy.loc[:, ~df_copy.columns.str.contains('^Unnamed')]
     print(df.shape)
-    return df
+    return df, df_copy
 
 # df = get_acc_df(r'C:\Users\zaki1\Downloads\prod_acc_19122021.xlsx')
 
