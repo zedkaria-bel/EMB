@@ -128,7 +128,7 @@
                     -
                     {% endif %}
                 </b></td>
-                <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.brute_jour }}</b></td>
+                <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.brute_jour|intcomma|space_digits }}</b></td>
                 <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.rebut_jour }}</b></td>
                 <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.pu_cout_revient|floatformat:"2" }} DZD</b></td>
                 <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.category }}</b></td>

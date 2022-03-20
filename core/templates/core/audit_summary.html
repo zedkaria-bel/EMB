@@ -30,13 +30,12 @@
         {% csrf_token %}
         <input type="date" id='date_filter' name="date" placeholder="Date" value="{{date|date:'Y-m-d'}}" class="form-control col-2 mr-4">
         <select class="custom-select col-2 mr-4" name="tab" id="tab">
-            <option value="all" {% if table == 'all' %} selected {% endif %} >Tables (All)</option>
             {% for tab in tables %}
             <option value="{{tab}}" {% if tab == table %} selected {% endif %} >{{tab}}</option>
             {% endfor %}
         </select>
         <select class="custom-select col-2 mr-4" name="op" id="op">
-            <option value="all">Opérations (All)</option>
+            <option value="all">Opérations (All) {{oper}} </option>
             {% for op in ops %}
             <option value="{{op}}" {% if oper == op %} selected {% endif %}>{{op|upper}}</option>
             {% endfor %}
@@ -44,7 +43,7 @@
         <select class="custom-select col-3 mr-4" name="user" id="user">
             <option value="all">Utilisateurs (All) </option>
             {% for usr in users %}
-            <option value="{{usr}}" {% if user_n == usr.username %} selected {% endif %}>{{usr|get_username}}</option>
+            <option value="{{usr}}" {% if user_n == usr %} selected {% endif %}>{{usr|get_username}}</option>
             {% endfor %}
         </select>
         <button type="submit" id="submit-form" class="btn d-flex flex-row py-2 px-3 mr-3" style="color: white !important; background-color: #0e385b !important;">

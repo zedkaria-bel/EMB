@@ -18,6 +18,8 @@ def times(number):
 
 @register.filter
 def month_name(month_number):
+    if isinstance(month_number, str):
+        month_number = int(month_number)
     return calendar.month_name[month_number].upper()
 
 @register.filter
@@ -44,3 +46,30 @@ def get_tcr(audit):
 @register.filter
 def get_tcr_info(obj):
     return obj.date.date().strftime('%B').upper() + ' ' + obj.date.date().strftime('%Y')
+
+@register.filter
+def to_int(str):
+    try:
+        return int(str)
+    except ValueError:
+        pass
+
+@register.filter
+def filter_unit(qs, unit):
+    return qs.filter(unite = unit)
+
+@register.simple_tag
+def filter_cat(qs, unit, cat):
+    return qs.filter(unite = unit, category = cat)
+
+@register.filter
+def count(qs):
+    return len(qs)
+
+@register.filter
+def get_unit_qs(qs, unit):
+    return qs.get(unite = unit)
+
+@register.filter
+def get_field(row, field):
+    return getattr(row, field)

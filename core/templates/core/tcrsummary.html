@@ -74,7 +74,9 @@
         <!-- <p id="close_div" class="h1 ml-auto mr-3 p-3" style="color: black; transform: rotate(45deg); cursor: pointer; transition: 0.5s !important; border-radius: 50% !important; background-color:#efefef;">+</p> -->
         <form method="POST" enctype="multipart/form-data" action="{% url 'core:process-new-tcr' %}" class="form mx-5 my-4">
             {% csrf_token %}
-            <h5 style="font-weight: bolder !important;">AJOUTER UN NOUVEAU FICHIER EXCEL POUR METTRE À JOUR LE &nbsp; <u><b>TCR - {{Month|month_name}} {{Year}}</b></b></u> </h5>
+            <h5 class="mb-4" style="font-weight: bolder !important;">Procéder à la mise à jour <b>manuelle</b>, <a href="{% url 'core:edit-tcr-man' year=Year month=Month %}" target="_blank">en cliquant ici.</a></h5>
+            <hr class="mb-3" style="height: 2px;">
+            <h5 style="font-weight: bolder !important;">OU BIEN, AJOUTER UN NOUVEAU FICHIER EXCEL POUR METTRE À JOUR LE &nbsp; <u><b>TCR - {{Month|month_name}} {{Year}}</b></b></u> </h5>
             <div class="form-row">
                 <div class="form-group col-md-12">
                     <input type="hidden" name="edit-tcr-month" value="{{Month}}">

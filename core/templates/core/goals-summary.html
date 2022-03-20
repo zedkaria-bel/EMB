@@ -1,0 +1,394 @@
+{% extends 'main/base.html' %}
+
+{% load static %}
+{% load hum_money %}
+{% load humanize %}
+{% block head_title %}{{title}} {% endblock %}
+
+{% block content %}
+
+{% if messages %}
+<div id="div-msg" class="mt-2 pb-0 pt-0">
+    {% for message in messages %}
+    <div id="exist" class="alert alert-{{ message.tags }} alert-dismissible fade show align-items-center" role="alert" style="position:relative; top: -30px;">
+        <p class="mb-0 msg h5"><b>{{ message }}</b></p>
+        <button type="button" class="close align-items-center mb-0" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="d-flex flex-row {% if mode == 'edit' %} justify-content-between {% else %} justify-content-center {% endif %} align-items-center" style="position: relative; top: -30px;">
+    <!-- Default switch -->
+    <a id="chg_mode" href="{% if mode == 'edit' %} {% url 'core:goals-summary' mode='add' %} {% else %} {% url 'core:goals-summary' mode='edit' %} {% endif %}" target="_blank" class="px-4 py-2 d-flex flex-row h5 align-items-center" style="background-color: white; border-radius: 60px; transition: 0.5s; color: #303be9;">
+        {% if mode == 'edit' %}
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-folder-plus" viewBox="0 0 16 16">
+            <path d="m.5 3 .04.87a1.99 1.99 0 0 0-.342 1.311l.637 7A2 2 0 0 0 2.826 14H9v-1H2.826a1 1 0 0 1-.995-.91l-.637-7A1 1 0 0 1 2.19 4h11.62a1 1 0 0 1 .996 1.09L14.54 8h1.005l.256-2.819A2 2 0 0 0 13.81 3H9.828a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 6.172 1H2.5a2 2 0 0 0-2 2zm5.672-1a1 1 0 0 1 .707.293L7.586 3H2.19c-.24 0-.47.042-.683.12L1.5 2.98a1 1 0 0 1 1-.98h3.672z"/>
+            <path d="M13.5 10a.5.5 0 0 1 .5.5V12h1.5a.5.5 0 1 1 0 1H14v1.5a.5.5 0 1 1-1 0V13h-1.5a.5.5 0 0 1 0-1H13v-1.5a.5.5 0 0 1 .5-.5z"/>
+        </svg>
+        <p class="mb-0 ml-4 h5"><b>AJOUTER DES OBJECTIFS</b></p>
+        {% else %}
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+            <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+            <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
+          </svg>
+        <p class="mb-0 ml-4 h5"><b>MODIFIER LES OBJECTIFS</b></p>
+        {% endif %}
+    </a>
+    {% if mode == 'edit' %}
+    <form method="GET" action="{% url 'core:goals-summary' mode='edit' %}" id="form" class="col-6 d-flex flex-row" style="display: flex; justify-content: center; align-items: center;">
+        {% csrf_token %}
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="prod" id="inlineRadio1" value="Boite" {% if prod == 'Boite' %} checked {% endif %} >
+            <label class="form-check-label" for="inlineRadio1"><b class="h5">Boite</b></label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="prod" id="inlineRadio2" value="Accessoire" {% if prod == 'Accessoire' %} checked {% endif %}>
+            <label class="form-check-label" for="inlineRadio2"><b class="h5">Accessoire</b></label>
+          </div>
+          <input type="hidden" id="dt-goals" name="date">
+    </form>
+    <!-- LOCK FORM -->
+    <div class="d-flex">
+        <div class="form-group ml-auto mt-2">
+            <input type="checkbox" class="form-check-input align-self-center mt-2" id="locked" checked>
+            <label class="form-check-label h3 mr-3 mb-0 align-self-center" for="locked"><b>LOCKED</b></label>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-lock-fill align-self-center mb-2" viewBox="0 0 16 16">
+                <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+            </svg>
+        </div>
+    </div>
+    {% endif %}
+    
+</div>
+
+
+
+<div class="row">
+
+
+        {% if mode == 'edit' %}
+        <div class="col-2">
+            <div class="list-group mb-4" id="list-tab" role="tablist" style="max-height: 40vh;
+                overflow-y:auto;">
+                {% for date in dates %}
+                    <a class="list-group-item list-group-item-action {% if date|date:'m'|to_int == first_dt.0 and date|date:'Y'|to_int == first_dt.1 %} active {% endif %} py-4 h5 m-0" id="list-{{date|date:'m'|to_int}}-{{date|date:'Y'|to_int}}" data-toggle="list" href="{{date|date:'m'|to_int}}-{{date|date:'Y'|to_int}}_form" role="tab" aria-controls="{{date|date:'m'|to_int}}-{{date|date:'Y'|to_int}}"><b>{{ date|date:'m'|month_name }} {{date|date:'Y'}}</b></a>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div class="col-sm-2 shadow" style="border-radius: 4px; background-color: white; height: min-content;">
+            <form method="GET" action="{% url 'core:process-goals' %}" id="form" class="d-flex flex-column">
+                {% csrf_token %}
+                <label for="unit" class="col-form-label h5"><b>Année</b></label>
+                <select class="custom-select mr-4 mb-4" name="year" id="year">
+                    {% for year in years %}
+                    <option value="{{year}}">{{year}}</option>
+                    {% endfor %}
+                </select>
+                <label for="month" class="col-form-label h5"><b>Mois</b></label>
+                <select class="custom-select mr-4 mb-4" name="month" id="month">
+                    {% for month in 13|times %}
+                    <option value="{{month}}">{{month|month_name}}</option>
+                    {% endfor %}
+                </select>
+                <label for="prod" class="col-form-label h5"><b>Produit</b></label>
+                <select class="custom-select mr-4 mb-4" name="prod" id="prod">
+                    <option value="Boite">Boite</option>
+                    <option value="Accessoire">Accessoire</option>
+                </select>
+            </form>
+        </div>
+        {% endif %}
+    <div class="col-10">
+        <div class="tab-content" id="nav-tabContent">
+            {% if mode == 'edit' %}
+                {% for date in dates %}
+                <div class="tab-pane fade show {% if date|date:'m'|to_int == first_dt.0 and date|date:'Y'|to_int == first_dt.1 %} active {% endif %} " id="{{first_dt.0|to_int}}-{{first_dt.1|to_int}}-form" role="tabpanel" aria-labelledby="list-{{first_dt.0|to_int}}-{{first_dt.1|to_int}}">
+                    <div class="shadow p-0 mb-5 bg-white rounded" style="overflow: hidden;">
+                        <form action="{% url 'core:process-goals' %}" method="POST" id="form-obj">
+                        {% csrf_token %}
+                        <input type="hidden" id="mode" name="mode" value="edit">
+                        <input type="hidden" id="date-obj" name="date-obj">
+                        <input type="hidden" id="prod-obj" name="prod-obj">
+                        {% regroup qs by unite as units %}
+                        {% for unit in units %}
+                        <div class="row">
+                            <div class="col-2 d-flex justify-content-center align-items-center p-0" style="border-right: 1px solid #b5b5b5;">
+                                <p class="h2 mb-0 align-self-center"><b>{{unit.grouper}}</b></p>
+                            </div>
+                            <div class="d-flex flex-column col-10 p-0">
+                                {% regroup qs|filter_unit:unit.grouper by category as cats %}
+                                {% for cat in cats %}
+                                <div class="row">
+                                    <div class="col-2 align-self-center">
+                                        <p class="h5 mb-0 p-3"><b>{{cat.grouper}}</b></p>
+                                    </div>
+                                    {% if prod == 'Boite' %}
+                                    <div class="d-flex flex-column justify-content-center align-items-center col-2 p-0" style="border-left: 1px solid #c8c8c8; border-right: 1px solid #c8c8c8;">
+                                        {% for vol in cat.list %}
+                                            <p class="h5 mb-0 p-3"><b>{{vol.volume}}</b></p>
+                                            {% if cat.list|count > 1 and forloop.counter != cat.list|count %}
+                                            <hr class="m-0" style="color: black; width: 100%; height: 0.75px;">   
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    <div class="col-8 d-flex flex-column justify-content-center align-items-center p-0">
+                                        {% for vol in cat.list %}
+                                        <input type="hidden" id="unit-obj" name="unit-obj" value="{{vol.unite}}">
+                                        <input type="hidden" id="volume-obj" name="volume-obj" value="{{vol.volume}}">
+                                        <input type="hidden" id="category-obj" name="category-obj" value="{{vol.category}}">
+                                        <div class="form-inline col-12 d-flex align-items-center">
+                                            <div class="form-group p-2 col-6">
+                                                <label for="obj" class="col-form-label mr-2"><b>Objectif</b></label>
+                                                <input type="number" class="form-control" name="obj" id="obj" value="{{vol.obj}}" placeholder="Objectif" required disabled>
+                                            </div>
+                                            <div class="form-group p-2 col-6">
+                                                <label for="capacite_jour" class="col-form-label mr-2"><b>Capacité</b></label>
+                                                <input type="number" class="form-control" name="capacite_jour" id="capacite_jour" value="{{vol.capacite_jour}}" placeholder="Capacité" required disabled>
+                                            </div>
+                                        </div>
+                                        {% if cat.list|count > 1 and forloop.counter != cat.list|count %}
+                                        <hr class="m-0" style="color: black; width: 100%; height: 0.5px;">   
+                                        {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% if cats|count > 1 and forloop.counter != cats|count %}
+                                <hr class="m-0" style="color: black; width: 100%; height: 0.5px;">   
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% if unit.grouper != 'SKDU' %}
+                        <hr class="m-0" style="color: black; width: 100%; height: 0.5px;">
+                        {% endif %}
+                        {% endfor %}
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="tab-pane fade show active obj-list" id="{{first_dt.0|to_int}}-{{first_dt.1|to_int}}-form" role="tabpanel" aria-labelledby="list-{{first_dt.0|to_int}}-{{first_dt.1|to_int}}">
+                <form action="{% url 'core:process-goals' %}" method="POST" id="form-obj" class="form-obj">
+                    {% csrf_token %}
+                    <input type="hidden" id="mode" name="mode" value="add">
+                    <input type="hidden" id="month-obj" name="month-obj">
+                    <input type="hidden" id="year-obj" name="year-obj">
+                    <input type="hidden" id="prod-obj" name="prod-obj">
+                    <div class="shadow p-3 mb-5 bg-white rounded obj-case" style="overflow: hidden;" id="test">
+                        <div class="close d-flex justify-content-end p-2" style="background-color: #d7d7d7; border-radius: 50%; cursor: pointer; display: none !important;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-x-lg mb-0" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M13.854 2.146a.5.5 0 0 1 0 .708l-11 11a.5.5 0 0 1-.708-.708l11-11a.5.5 0 0 1 .708 0Z"/>
+                                <path fill-rule="evenodd" d="M2.146 2.146a.5.5 0 0 0 0 .708l11 11a.5.5 0 0 0 .708-.708l-11-11a.5.5 0 0 0-.708 0Z"/>
+                              </svg>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-1">
+                                <label for="unit-obj" class="col-form-label"><b>Unité</b></label>
+                                <select class="custom-select" name="unit-obj" id="unit-obj" required>
+                                    <option value="KDU">KDU</option>
+                                    <option value="AZDU">AZDU</option>
+                                    <option value="SKDU">SKDU</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-2">
+                                <label for="category-obj" class="col-form-label"><b>Catégorie</b></label>
+                                <select class="custom-select" name="category-obj" id="category-obj" required>
+                                    <option value="CONSERVE">CONSERVE</option>
+                                    <option value="DIVERSE">DIVERSE</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-2 volume-obj">
+                                <label for="volume-obj" class="col-form-label"><b>Volume</b></label>
+                                <select class="custom-select" name="volume-obj" id="volume-obj" required>
+                                    {% for vol in volumes %}
+                                        <option value="{{vol}}">{{vol}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group col-3">
+                                <label for="volume" class="col-form-label"><b>Objectif</b></label>
+                                <input type="number" class="form-control" name="obj" id="obj" value="0" placeholder="Volume" required>
+                            </div>
+                            <div class="form-group col-3">
+                                <label for="capacite_jour" class="col-form-label"><b>Capacité</b></label>
+                                <input type="number" class="form-control" name="capacite_jour" id="capacite_jour" placeholder="Capacité" value="0" required>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <a id="add-obj" class="px-3 py-2 d-flex flex-row h5 justify-content-center align-items-center col-2 ml-auto" style="background-color: white; border-radius: 60px; transition: 0.5s; box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19) !important; color: #303be9;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z"/>
+                    </svg>
+                    <p class="mb-0 ml-2"><b>OBJECTIF</b></p>
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="d-flex flex-row justify-content-center">
+    <button id="submit-form" class="btn btn-lg ld-over" style="color: white !important; background-color: #0e385b !important; width: 20%;"><b>
+        {% if mode == 'edit' %}
+        MODIFIER
+        {% else %}
+        AJOUTER
+        {% endif %}
+    </b></button>
+</div>
+
+<!-- <div class="mb-4">
+    <p class="h5">Résultats trouvés : {{count}} </p>
+</div> -->
+
+
+
+<script>
+
+    var putThousandsSeparators;
+
+    putThousandsSeparators = function(value, sep) {
+    if (sep == null) {
+        sep = ',';
+    }
+    // check if it needs formatting
+    if (value.toString() === value.toLocaleString()) {
+        // split decimals
+        var parts = value.toString().split('.')
+        // format whole numbers
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, sep);
+        // put them back together
+        value = parts[1] ? parts.join('.') : parts[0];
+    } else {
+        value = value.toLocaleString('cs-CZ');
+    }
+    return value;
+    };
+
+    $(document).ready(function(){
+        $('.form-inline > .form-group > input').each(function(){
+            $(this).prop('type', 'text');
+            $(this).val(putThousandsSeparators(parseFloat($(this).val())));
+        })
+    })
+    
+    $('input[type=radio]').on('change', function(){
+        $(this).closest("form").submit();
+    })
+
+    $('.list-group-item').on('click', function(){
+        $('#dt-goals').val($(this).attr('aria-controls'))
+        $('#form').submit();
+    })
+
+    $('#locked').on('change', function(){
+        var chk = $(this).is(':checked');
+        if(!chk){
+            $('.form-inline > .form-group > input').prop('disabled', false);
+            // $(':select').prop('disabled', false);
+            $('#submit-form').prop('disabled', true);
+            $('.form-inline > .form-group > input').val(function(index, value) {
+                // console.log(value.replace(/\s/g, ''))
+                return value.replace(/\s/g, '').replace(',', '.');
+            });
+            $('.form-inline > .form-group > input').prop("type", "number");
+        }
+        else{
+            $('.form-inline > .form-group > input').prop('disabled', true);
+            $('.form-inline > .form-group > input').each(function(){
+                $(this).prop('type', 'text');
+                $(this).val(putThousandsSeparators(parseFloat($(this).val())));
+            })
+            // $(':select').prop('disabled', true);
+            $('#submit-form').prop('disabled', false);
+        }
+    });
+
+    $('#submit-form').on('click', function(){
+        if($('#mode').val() == 'add'){
+            $('#prod-obj').val($('#prod').val());
+            $('#month-obj').val($('#month').val());
+            $('#year-obj').val($('#year').val());
+        }
+        else{
+            $('#prod-obj').val($('input[name="prod"]:checked', '#form').val())
+            $('#date-obj').val($('.list-group > .active').attr('aria-controls'))
+        }
+        $('#form-obj').submit()
+    })
+
+    $('form').submit(function(e) {
+        $(':disabled').each(function(e) {
+            $(this).removeAttr('disabled');
+        })
+        // $('input[type="hidden"]').each(function(e) {
+        //     $(this).prop('type', 'text');
+        // })
+    });
+
+    if($('#list-tab').length){
+        var $cache = $('#list-tab');
+
+        //store the initial position of the element
+        var vTop = $cache.offset().top - parseFloat($cache.css('marginTop').replace(/auto/, 0));
+        $(window).scroll(function (event) {
+            // what the y position of the scroll is
+            var y = $(this).scrollTop();
+
+            // whether that's below the form
+            if (y >= vTop) {
+            // if so, ad the fixed class
+            $cache.addClass('stuck');
+            } else {
+            // otherwise remove it
+            $cache.removeClass('stuck');
+            }
+        });
+    }
+
+
+    var cloneCount = 1;
+    
+    $('#add-obj').on('click', function(){
+        var clone = $(".obj-case:last").clone(true, true).hide()
+        clone.appendTo('#form-obj')
+        clone.slideToggle('slow')
+        // appendTo('#form-obj')
+        $(".obj-case:last").find('.close').css('display', 'block');
+        $('.obj-case:last input').each(function(){
+            if($(this).attr('name') != 'csrfmiddlewaretoken'){
+                $(this).attr('id', $(this).attr('id').slice(0,-1) + cloneCount.toString())
+            }
+        })
+        cloneCount++;
+    });
+
+
+    $(document).on('click', '.close', function(){
+        $(this).closest(".rounded").slideToggle('slow', function(){
+            $(this).closest(".rounded").remove()
+        });
+    })
+
+    $('#prod').on('change', function(){
+        if($('#prod').val() == 'Accessoire'){
+            $('.volume-obj').each(function(){
+                $(this).slideToggle('slow');
+            })
+        }
+        else{
+            $('.volume-obj').each(function(){
+                $(this).slideToggle('slow');
+            })
+        }
+    })
+</script>
+
+
+{% endblock content %}

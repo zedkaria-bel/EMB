@@ -311,6 +311,7 @@ class saleDetails(LoginRequiredMixin, DetailView):
         # pylint: disable=no-member
         context['obj'] = Vente.objects.get(id=self.get_object().pk)
         context['req'] = 'VENTE'
+        context['title'] = 'VENTE'
         context['cat_list'] = Vente.objects.values_list('category', flat=True).distinct().order_by('category')
         return context
 
@@ -396,6 +397,7 @@ class trsDetails(LoginRequiredMixin, DetailView):
         # pylint: disable=no-member
         context['obj'] = Trs.objects.get(id=self.get_object().pk)
         context['req'] = 'Taux de rendement synthétique'.upper()
+        context['title'] = 'Taux de rendement synthétique'.upper()
         context['taux_dispo'] = context['obj'].taux_dispo * 100
         context['taux_perf'] = context['obj'].taux_perf * 100
         context['taux_qualit'] = context['obj'].taux_qualit * 100
@@ -459,7 +461,13 @@ class tcrSummary(LoginRequiredMixin, ListView):
         # print(df)
         # print(df.T)
         df = df.T
+        df.columns = df.loc['unite']
         df = df.iloc[2: , :]
+        print(df.head())
+        if not df.empty and len(df.columns) > 1:
+            cols = ['SIEGE', 'KDU', 'SKDU', 'AZDU', 'ENTREPRISE']
+            df = df[cols]
+        # print(df.head())
         df['des'] = df.index
         df['des'] = df['des'].str.replace('ca', 'Chiffre d\'affaires')
         df['des'] = df['des'].str.replace('cessions_et_produits', 'Cessions et produits')
@@ -495,7 +503,7 @@ class tcrSummary(LoginRequiredMixin, ListView):
         df['des'] = df['des'].str.replace('elem_extraord_charge', 'Eléments extraordinaires charges')
         df['des'] = df['des'].str.replace('res_extraord', 'RESULTAT EXTRAORDINAIRE')
         df['des'] = df['des'].str.replace('res_net_exerc', 'RESULTAT NET DE L\'EXERCICE')
-        # print(df)
+        # df = df[[4, 3, 2, 1, 0, 'des']]
         return df
     
     def get_context_data(self, *args,**kwargs):
@@ -804,13 +812,14 @@ class AddAct(View):
                     df_prod.insert(0, 'ID', range(int(max_id) + 1, 1 + int(max_id) + len(df_prod)))
                 df_prod['Ligne'] = df_prod['Ligne'].str.upper().str.strip()
                 df_prod.to_sql(tab_name, engine, if_exists='append', index=False)
-                df_prod.to_excel(r'C:\Users\zaki1\Desktop\Controle de Gestion\Scripts\PROD_02_2022.xlsx', index = False)
+                # df_prod.to_excel(r'C:\Users\zaki1\Desktop\Controle de Gestion\Scripts\PROD_02_2022.xlsx', index = False)
 
                 # df_prod['date'] = df_prod['date'].dt.date
                 # print(df_prod)
                 last_obj = Production.objects.latest('id')
                 last_obj.save()
                 print(df_prod.shape)
+                print('END PROD')
 
                 # Vente
 
@@ -880,8 +889,7 @@ class AddAct(View):
                     else:
                         match = re.search(r'\d{2}\s*/\d{2}\s*/\d{4}', dte)
                         date = datetime.datetime.strptime(match.group(), '%d/%m/%Y').date()
-                    if not max_dt:
-                        max_dt = datetime.date(2018, 1, 1)
+                    print(date, max_dt)
                     if date > max_dt:
                         df = df.reset_index(drop=True)
                         df = get_trs_df(df)
@@ -990,18 +998,21 @@ class AddTcr(View):
                     
 def add_act_journ_man(request):
     # pylint: disable=no-member
+    dstc_volumes = list(Production.objects.values_list('volume', flat=True).distinct().order_by('volume'))
     dstc_cats = Production.objects.values_list('category', flat=True).distinct().order_by('category')
     prod_lines = Production.objects.values_list('ligne', flat=True).distinct().order_by('ligne')
     trs_lines = Trs.objects.values_list('ligne', flat=True).distinct().order_by('ligne')
     cats = [i for i in dstc_cats if i]
     prod_lines = [i for i in prod_lines if i]
     trs_lines = [i for i in trs_lines if i]
+    volumes = [i for i in dstc_volumes if i]
     context = {
         'title' : "ACtivité journalière".upper(),
         'req' : "ACtivité journalière".upper(),
         'cats': cats,
         'prod_lines': prod_lines,
         'trs_lines': trs_lines,
+        'volumes': volumes,
     }
     return render(request, 'core/add_act_journ_man.html', context)
 
@@ -1172,17 +1183,20 @@ class AuditSummary(LoginRequiredMixin, ListView):
     def get_queryset(self):
         # pylint: disable=no-member
         qs = AuditLog.objects.all().order_by('-dt')
-        if self.request.GET.get('date'):
-            date = datetime.datetime.strptime(self.request.GET.get('date'), '%Y-%m-%d').date()
-            print(date)
-            qs = qs.filter(dt__date = date)
         if self.request.GET.get('tab') and self.request.GET.get('tab') != 'all':
             qs = qs.filter(tab=self.request.GET.get('tab'))
+        else:
+            qs = qs.filter(tab = 'Production')
+        if self.request.GET.get('date'):
+            date = datetime.datetime.strptime(self.request.GET.get('date'), '%Y-%m-%d').date()
+            qs = qs.filter(dt__date = date)
         if self.request.GET.get('op') and self.request.GET.get('op') != 'all':
             qs = qs.filter(op=self.request.GET.get('op'))
-        if self.request.GET.get('user') and self.request.GET.get('user') != 'all':
+        if self.request.GET.get('user'):
             user = User.objects.get(username=self.request.GET.get('user'))
             qs = qs.filter(user=user)
+        else:
+            qs = qs.filter(user = self.request.user)
         return qs
 
     def get_context_data(self, *args,**kwargs):
@@ -1192,18 +1206,17 @@ class AuditSummary(LoginRequiredMixin, ListView):
         context['count'] = self.get_queryset().count
         # pylint: disable=no-member
         context['tables'] = list(AuditLog.objects.values_list('tab', flat=True).distinct())
-        date = None
-        if self.request.GET.get('date'):
-            date = datetime.datetime.strptime(self.request.GET.get('date'), '%Y-%m-%d').date()
-        context['date'] = date
-        if self.request.GET.get('tab'):
+        if self.request.GET.get('op') and self.request.GET.get('op') != 'all':
+            context['op'] = self.request.GET.get('op')
+        qs = self.get_queryset().first()
+        if qs:
+            context['table'] = qs.tab
+            context['user_n'] = qs.user
+        else:
             context['table'] = self.request.GET.get('tab')
+            context['user_n'] = User.objects.get(username = self.request.GET.get('user')    )
         context['ops'] = list(AuditLog.objects.values_list('op', flat=True).distinct())
-        if self.request.GET.get('op'):
-            context['oper'] = self.request.GET.get('op')
         context['users'] = list(User.objects.all())
-        if self.request.GET.get('user'):
-            context['user_n'] = self.request.GET.get('user')
         return context
 
 class AuditDetails(LoginRequiredMixin, DetailView):
@@ -1248,9 +1261,32 @@ def add_tcr_man(request):
         'title' : "nouveau tcr".upper(),
         'req' : "nouveau tcr".upper(),
         'years': years,
-        'nb_years': len(years)
+        'nb_years': len(years),
+        'mode': 'add',
+        'units': list(Tcr.objects.exclude(unite = 'ENTREPRISE').values_list('unite', flat=True).distinct())
     }
     return render(request, 'core/add_tcr_man.html', context)
+
+class TcrMan(LoginRequiredMixin, ListView):
+    model = Tcr
+    template_name = 'core/add_tcr_man.html'
+
+    def get_queryset(self):
+        # pylint: disable=no-member
+        qs = Tcr.objects.filter(date__year = self.kwargs['year'], date__month = self.kwargs['month'])
+        return qs
+    
+    def get_context_data(self, *args,**kwargs):
+        context = super(TcrMan, self).get_context_data(*args, **kwargs)
+        context['title'] = 'Modification tcr - '.upper() + calendar.month_name[self.kwargs['month']] + ' ' + str(self.kwargs['year'])
+        context['req'] = context['title']
+        context['mode'] = 'edit'
+        context['qs'] = self.get_queryset()
+        context['units'] = list(Tcr.objects.exclude(unite = 'ENTREPRISE').values_list('unite', flat=True).distinct())
+        context['units'].insert(0, context['units'].pop(2))
+        context['month'] = self.kwargs['month']
+        context['year'] = self.kwargs['year']
+        return context
 
 class AddTcrMan(View):
     def post(self, request):
@@ -1272,17 +1308,26 @@ class AddTcrMan(View):
         year = int(dic['year'][0])
         dt = datetime.datetime(year, month, 28, 0, 0, 0)
         # pylint: disable=no-member
-        if Tcr.objects.filter(date__date = dt.date()).count() > 0:
+        if dic['mode'][0] == 'add' and Tcr.objects.filter(date__date = dt.date()).count() > 0:
             messages.error(request, "Le TCR " + calendar.month_name[month].upper() + " " + str(year) + " existe déjà ! Veuillez le modifier si vous désirez ainsi.")
             return redirect('core:add-tcr-man')
         del dic['month']
         del dic['year']
+        mode = dic['mode']
+        del dic['mode']
         for unit in range(0, len(dic['unite'])):
             dic_tcr = dict()
             # id = dic['unite'][unit] + '_' + str(month) + '_' + str(year)
             # dic_tcr['id'] = id
+            if mode == 'edit':
+                id = dic['id'][unit]
+            else:
+                # pylint: disable=no-member
+                id = Tcr.objects.aggregate(Max('id')).get('id__max') + 1
+                # print(id)
             for key, val in dic.items():
-                dic_tcr[key] = dic[key][unit]
+                if key != 'id':
+                    dic_tcr[key] = dic[key][unit]
             dic_tcr['prod_exerc'] = dic_tcr['ca'] + dic_tcr['cessions_et_produits'] + dic_tcr['var_stock_fini_encours'] + dic_tcr['prod_immob'] + dic_tcr['subv_expl']
             dic_tcr['consom_exerc'] = dic_tcr['achats_consom'] + dic_tcr['serv_ext_other_consom'] + dic_tcr['consom_inter_unit']
             dic_tcr['v_ajoute'] = dic_tcr['prod_exerc'] - dic_tcr['consom_exerc']
@@ -1296,6 +1341,8 @@ class AddTcrMan(View):
             dic_tcr['res_extraord'] = dic_tcr['elem_extraord_prod'] - dic_tcr['elem_extraord_charge']
             dic_tcr['res_net_exerc'] = dic_tcr['res_net_act_ord'] + dic_tcr['res_extraord']
             dic_tcr['date'] = dt
+            print(dic_tcr)
+
             # pylint: disable=no-member
             obj, created = Tcr.objects.update_or_create(
                 id = id,
@@ -1315,10 +1362,127 @@ class AddTcrMan(View):
             if field.name != 'id' and field.name != 'unite' and field.name != 'date':
                 dic_tcr[field.name] = qs.aggregate(Sum(field.name)).get(field.name + '__sum')
         # print(dic_tcr)
-        print(dic_tcr)
+        id = Tcr.objects.aggregate(Max('id')).get('id__max') + 1
         obj, created = Tcr.objects.update_or_create(
             id = id,
             defaults = dic_tcr
         )
         messages.success(request, "L'opération s'est terminé avec succès !")
-        return redirect('core:add-tcr-man')
+        return redirect('core:tcr-view')
+
+class ObjCapacitySummary(LoginRequiredMixin, ListView):
+    model = ObjectifCapaciteProduction
+    template_name = 'core/goals-summary.html'
+    paginate_by = 30
+    
+    def get_queryset(self):
+        # pylint: disable=no-member
+        qs = ObjectifCapaciteProduction.objects.all().order_by('-date')
+        dates = list(qs.values_list('date', flat=True).distinct())
+        dates.append(datetime.date(2022, 2, 20))
+        if not self.request.GET.get('date'):
+            date = [dates[0].month, dates[0].year]
+        else:
+            date = [int(self.request.GET.get('date').split('-')[0]), int(self.request.GET.get('date').split('-')[1])]
+        if self.request.GET.get('prod'):
+            prod = self.request.GET.get('prod')
+        else:
+            prod = 'Boite'
+        # pylint: disable=no-member
+        qs = ObjectifCapaciteProduction.objects.filter(produit = prod, date__month = date[0], date__year = date[1])
+        return qs.order_by('-date')
+
+    def get_context_data(self, *args,**kwargs):
+        context = super(ObjCapacitySummary, self).get_context_data(*args, **kwargs)
+        context['title'] = 'Objectifs et capacités'.upper()
+        context['req'] = 'Objectifs et capacités'.upper()
+        context['count'] = self.get_queryset().count()
+        context['mode'] = self.kwargs['mode']
+        if context['mode'] == 'add':
+            volumes = list(Production.objects.filter(produit = 'Boite').values_list('volume', flat=True).distinct())
+            volumes = [x for x in volumes if x is not None]
+            volumes = list(map(lambda x: x.upper().strip(), volumes))
+            volumes.sort()
+            context['volumes'] = volumes
+            context['years'] = []
+            for year in range(datetime.datetime.now().year, datetime.datetime.now().year + 3):
+                context['years'].append(year)
+        if self.request.GET.get('prod'):
+            context['prod'] = self.request.GET.get('prod')
+        else:
+            context['prod'] = 'Boite'
+        # pylint: disable=no-member
+        qs = ObjectifCapaciteProduction.objects.all().order_by('-date')
+        context['dates'] = list(qs.values_list('date', flat=True).distinct())
+        if len(context['dates']) > 1:
+            rmv_date = context['dates'].pop(0)
+        if not self.request.GET.get('date'):
+            context['first_dt'] = [context['dates'][0].month, context['dates'][0].year]
+        else:
+            context['first_dt'] = [int(self.request.GET.get('date').split('-')[0]), int(self.request.GET.get('date').split('-')[1])]
+        # print(context['first_dt'])
+        context['qs'] = self.get_queryset()
+        return context
+
+class AddObjectifCap(View):
+    def post(self, request):
+        dic = dict(request.POST)
+        del dic['csrfmiddlewaretoken']
+        mode = None
+        if dic['mode'][0] == 'add':
+            mode = 'add'
+            dic['date-obj'] = [dic['month-obj'][0] + '-' + dic['year-obj'][0]]
+            del dic['mode']
+            del dic['month-obj']
+            del dic['year-obj']
+        dic_values = dic.items()
+        for key, value in dic_values:
+            if key == 'date-obj':
+                month = int(value[0].split('-')[0])
+                year = int(value[0].split('-')[1])
+                dic[key] = [month, year]
+            else:
+                val = list()
+                for v in value:
+                    try:
+                        val.append(int(v))
+                    except ValueError:
+                        val.append(v)
+                dic[key] = val
+        print(dic)
+        # IF ADD MODE ; CHECK IF DATE MENTIONED ALREADY EXISTS
+        if mode:
+            qs_count = ObjectifCapaciteProduction.objects.filter(
+                date__month = dic['date-obj'][0],
+                date__year = dic['date-obj'][1],
+                produit = dic['prod-obj'][0]
+            ).count()
+            if qs_count > 0:
+                messages.error(request, "Des objectifs ont déjà été fixés pour le produit : " + dic['prod-obj'][0] + ", pour le mois " + str(calendar.month_name[dic['date-obj'][0]]).upper() + " " + str(dic['date-obj'][1]) + " .")
+                return redirect(reverse('core:goals-summary', kwargs={
+                    'mode': mode
+                }))
+        # DELETE THE DATE-CONCERNED & PRODUCT-CONCERNED ROWS
+        ObjectifCapaciteProduction.objects.filter(date__month = dic['date-obj'][0],
+                                                date__year = dic['date-obj'][1],
+                                                produit = dic['prod-obj'][0]).delete()
+        nb_obj = len(dic['obj'])
+        dic_obj = dict()
+        date = datetime.date(dic['date-obj'][1], dic['date-obj'][0], datetime.datetime.now().day)
+        for obj in range(0, nb_obj):
+            dic_obj['id'] = ObjectifCapaciteProduction.objects.latest('id').id + 1
+            dic_obj['unite'] = dic['unit-obj'][obj]
+            dic_obj['obj'] = dic['obj'][obj]
+            dic_obj['capacite_jour'] = dic['capacite_jour'][obj]
+            dic_obj['date'] = date
+            dic_obj['volume'] = dic['volume-obj'][obj]
+            dic_obj['category'] = dic['category-obj'][obj]
+            dic_obj['produit'] = dic['prod-obj'][0]
+            obj, created = ObjectifCapaciteProduction.objects.update_or_create(
+            id = dic_obj['id'],
+            defaults = dic_obj
+        )
+        messages.success(request, "L'opération s'est terminé avec succès !")
+        return redirect('core:goals-summary')
+
+

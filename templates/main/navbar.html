@@ -8,7 +8,7 @@
             url("{% static 'core/font/Ubuntu/Ubuntu-Regular.ttf' %}");
       }
     </style>
-  <a class="navbar-brand" href="{% url 'core:home-view' %}" style="font-weight: lighter !important; font-size: 2.85rem !important; color: white !important;">EMB &nbsp; | <b class="font-weight-bold" style="margin-left: 15px !important; letter-spacing: 2px !important; color: white !important;">&nbsp;TECH</b></a>
+  <a class="navbar-brand" href="{% url 'core:home-view' %}" style="font-weight: lighter !important; font-size: 2.85rem !important; color: white !important;">EMB &nbsp; | <b class="font-weight-bold" style="margin-left: 15px !important; letter-spacing: 2px !important; color: white !important;">&nbsp;DCG</b></a>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon" style="background-color: white !important;"></span>
   </button>
@@ -70,6 +70,15 @@
                   <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z"/>
                 </svg>
                 <a href="{% url 'core:add-tcr' %}" class="dwn py-2 mb-0 h6" style="font-size: 1.25em !important;" type="button">Nouveau TCR</a>
+              </div>
+              <div class="d-flex flex-row d-flex align-items-center dropdown-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="black" class="bi bi-bullseye" viewBox="0 0 16 16">
+                  <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" fill="#d9d9d9"/>
+                  <path d="M8 13A5 5 0 1 1 8 3a5 5 0 0 1 0 10zm0 1A6 6 0 1 0 8 2a6 6 0 0 0 0 12z" fill="#ababab"/>
+                  <path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" fill="#6f6f6f"/>
+                  <path d="M9.5 8a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
+                </svg>
+                <a href="{% url 'core:goals-summary' mode='edit' %}" class="dwn py-2 mb-0 h6" style="font-size: 1.25em !important;" type="button">Objectifs et capacités</a>
               </div>
               {% if request.user.profile.poste == 'DCG' %}
               <div class="d-flex flex-row d-flex align-items-center dropdown-item">

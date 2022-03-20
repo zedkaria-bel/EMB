@@ -58,6 +58,12 @@
             <div class="tab-pane fade" id="list-prod" role="tabpanel" aria-labelledby="list-prod-list">
                 <div id="list-prod-container">
                     <div class="shadow p-3 mb-5 bg-white rounded prod-case">
+                        <div class="close d-flex justify-content-end p-2" style="background-color: #d7d7d7; border-radius: 50%; cursor: pointer; display: none !important;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-x-lg mb-0" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M13.854 2.146a.5.5 0 0 1 0 .708l-11 11a.5.5 0 0 1-.708-.708l11-11a.5.5 0 0 1 .708 0Z"/>
+                                <path fill-rule="evenodd" d="M2.146 2.146a.5.5 0 0 0 0 .708l11 11a.5.5 0 0 0 .708-.708l-11-11a.5.5 0 0 0-.708 0Z"/>
+                              </svg>
+                        </div>
                         <h4 style="font-weight: bolder !important;"><b>PRODUCTION</b></h4>
                         <h5 style="font-weight: bolder !important; color: #878787;" class="mt-3"><b>INFORMATIONS GÉNÉRAL</b></h5>
                         <hr class="my-0" style="color: #878787;">
@@ -81,7 +87,11 @@
                             </div>
                             <div class="form-group col-md-1">
                                 <label for="volume" class="col-form-label"><b>Volume</b></label>
-                                <input type="text" class="form-control" name="volume" id="volume" placeholder="Volume" required>
+                                <select class="custom-select" name="volume" id="volume" required>
+                                    {% for volume in volumes %}
+                                    <option value={{volume}}>{{volume}}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                             <div class="form-group col-md-2">
                                 <label for="category" class="col-form-label"><b>Catégorie</b></label>
@@ -126,11 +136,11 @@
                         <div class="form-row">
                             <div class="form-group col-md-3">
                                 <label for="pu_cout_revient" class="col-form-label"><b>PU - Avec coût de revient</b></label>
-                                <input type="number" class="form-control" value="0" name="pu_cout_revient" id="pu_cout_revient" required>
+                                <input type="number" class="form-control" value="0" step="0.01" name="pu_cout_revient" id="pu_cout_revient" required>
                             </div>
                             <div class="form-group col-md-3">
                                 <label for="pu_prix_vente" class="col-form-label"><b>PU - Avec prix de vente</b></label>
-                                <input type="number" class="form-control" value="0" name="pu_prix_vente" id="pu_prix_vente" required>
+                                <input type="number" class="form-control" value="0" step="0.01" name="pu_prix_vente" id="pu_prix_vente" required>
                             </div>
                         </div>
                     </div>
@@ -146,7 +156,13 @@
             <div class="tab-pane fade" id="list-sale" role="tabpanel" aria-labelledby="list-sale-list">
                 <div id="list-sale-container">
                     <div class="shadow p-3 mb-5 bg-white rounded sale-case">
-                        <h4 style="font-weight: bolder !important;"><b>VENTE</b></h4>
+                        <div class="close d-flex justify-content-end p-2" style="background-color: #d7d7d7; border-radius: 50%; cursor: pointer; display: none !important;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-x-lg mb-0" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M13.854 2.146a.5.5 0 0 1 0 .708l-11 11a.5.5 0 0 1-.708-.708l11-11a.5.5 0 0 1 .708 0Z"/>
+                                <path fill-rule="evenodd" d="M2.146 2.146a.5.5 0 0 0 0 .708l11 11a.5.5 0 0 0 .708-.708l-11-11a.5.5 0 0 0-.708 0Z"/>
+                              </svg>
+                        </div>
+                        <h4 style="font-weight: bolder !important;"><b> <span id="tab">VENTE</span></b></h4>
                         <!-- INFO GENERAL -->
                         <div class="form-row">
                             <div class="form-group col-md-3">
@@ -163,7 +179,7 @@
                             </div>
                             <div class="form-group col-md-2">
                                 <label for="pu" class="col-form-label"><b>PU - DZD/HT</b></label>
-                                <input type="number" class="form-control" name="pu" id="pu" value="0" required>
+                                <input type="number" step="0.01" class="form-control" name="pu" id="pu" value="0" required>
                             </div>
                             <div class="form-group col-md-2">
                                 <label for="category" class="col-form-label"><b>Catégorie</b></label>
@@ -187,6 +203,12 @@
             <div class="tab-pane fade" id="list-trs" role="tabpanel" aria-labelledby="list-trs-list">
                 <div id="list-trs-container">
                     <div class="shadow p-3 mb-5 bg-white rounded trs-case">
+                        <div class="close d-flex justify-content-end p-2" style="background-color: #d7d7d7; border-radius: 50%; cursor: pointer; display: none !important;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-x-lg mb-0" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M13.854 2.146a.5.5 0 0 1 0 .708l-11 11a.5.5 0 0 1-.708-.708l11-11a.5.5 0 0 1 .708 0Z"/>
+                                <path fill-rule="evenodd" d="M2.146 2.146a.5.5 0 0 0 0 .708l11 11a.5.5 0 0 0 .708-.708l-11-11a.5.5 0 0 0-.708 0Z"/>
+                              </svg>
+                        </div>
                         <h4 style="font-weight: bolder !important;"><b>TAUX DE RENDEMENT SYNTHÉTIQUE</b></h4>
                         <h5 style="font-weight: bolder !important; color: #878787;" class="mt-3"><b>LIGNE ET ARRETS</b></h5>
                         <hr class="my-0" style="color: #878787;">
@@ -242,7 +264,9 @@
           </div>
         </div>
       </div>
-      <button type="submit" id="submit-form" class="btn btn-lg ld-over" style="color: white !important; background-color: #0e385b !important;"><b>TRAITER</b></button>
+      <div class="row d-flex justify-content-center">
+        <button type="submit" id="submit-form" class="btn btn-lg ld-over" style="color: white !important; background-color: #0e385b !important; width: 20%;"><b>AJOUTER</b></button>
+      </div>
 </form>
 
 
@@ -290,8 +314,11 @@
 
 
     $('#add-prod').on('click', function(){
-        console.log('ASXCDER')
-        $(".prod-case:last").clone(true, true).appendTo('#list-prod-container')
+        // console.log('ASXCDER')
+        var clone = $(".prod-case:last").clone(true, true).hide()
+        clone.appendTo('#list-prod-container')
+        clone.slideToggle('slow')
+        $(".prod-case:last").find('.close').css('display', 'block');
         $('.prod-case:last input').each(function(){
             $(this).attr('id', $(this).attr('id').slice(0,-1) + cloneCount.toString())
         })
@@ -301,8 +328,11 @@
     });
 
     $('#add-sale').on('click', function(){
-        console.log('ASXCDER')
-        $(".sale-case:last").clone(true, true).appendTo('#list-sale-container')
+        // console.log('ASXCDER')
+        var clone = $(".sale-case:last").clone(true, true).hide()
+        clone.appendTo('#list-sale-container')
+        $(".sale-case:last").find('.close').css('display', 'block');
+        clone.slideToggle('slow')
         $('.sale-case:last input').each(function(){
             $(this).attr('id', $(this).attr('id').slice(0,-1) + cloneCount.toString())
         })
@@ -312,8 +342,11 @@
     });
 
     $('#add-trs').on('click', function(){
-        console.log('ASXCDER')
-        $(".trs-case:last").clone(true, true).appendTo('#list-trs-container')
+        // console.log('ASXCDER')
+        var clone = $(".trs-case:last").clone(true, true).hide()
+        clone.appendTo('#list-trs-container')
+        clone.slideToggle('slow')
+        $(".trs-case:last").find('.close').css('display', 'block');
         $('.trs-case:last input').each(function(){
             $(this).attr('id', $(this).attr('id').slice(0,-1) + cloneCount.toString())
         })
@@ -321,6 +354,28 @@
         var nbprod = parseInt($('#nb_trs').text()) + 1
         $('#nb_trs').text(nbprod.toString())
     });
+
+    $(document).on('click', '.close', function(){
+        $(this).closest(".rounded").slideToggle('slow', function(){
+            var id = $(this).closest('.tab-pane').attr('id')
+            // VENTE
+            if(id.indexOf("sale") >= 0){
+                var nbprod = parseInt($('#nb_sale').text()) - 1
+                $('#nb_sale').text(nbprod.toString())
+            }
+            // TRS
+            else if(id.indexOf("trs") >= 0){
+                var nbprod = parseInt($('#nb_trs').text()) - 1
+                $('#nb_trs').text(nbprod.toString())
+            }
+            // PROD
+            else{
+                var nbprod = parseInt($('#nb_prod').text()) - 1
+                $('#nb_prod').text(nbprod.toString())
+            }
+            $(this).closest(".rounded").remove()
+        });
+    })
 
 
     var $cache = $('#list-tab');

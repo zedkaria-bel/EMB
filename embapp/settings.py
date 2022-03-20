@@ -178,3 +178,6 @@ from django.contrib.messages import constants as messages
 MESSAGE_TAGS = {
     messages.ERROR: 'danger',
 }
+
+USE_THOUSAND_SEPARATOR = True
+NUMBER_GROUPING = 3

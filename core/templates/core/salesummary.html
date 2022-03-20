@@ -125,8 +125,8 @@
                     {{ request.client }}
                     {% endif %}
                 </b></td>
-                <td class="py-2 align-middle" scope="row"><b class="h6 font-weight-bold" >{{ request.qte_journ }}</b></td>
-                <td class="py-2 align-middle" scope="row"><b class="h6 font-weight-bold" >{{ request.qte_cumul }}</b></td>
+                <td class="py-2 align-middle" scope="row"><b class="h6 font-weight-bold" >{{ request.qte_journ|intcomma|space_digits }}</b></td>
+                <td class="py-2 align-middle" scope="row"><b class="h6 font-weight-bold" >{{ request.qte_cumul|intcomma|space_digits }}</b></td>
                 <td class="py-2 align-middle" scope="row"><b class="h6 font-weight-bold" >{{ request.pu|floatformat:'2'|intcomma|space_digits }} DZD</b></td>
                 <td class="py-2 align-middle" scope="row"><b class="h6 font-weight-bold" >{{ request.montant_journee|floatformat:'2'|intcomma|space_digits }} DZD</b></td>
                 <td class="py-2 align-middle" scope="row"><b class="h6 font-weight-bold" >{{ request.montant_cumul|floatformat:"2"|intcomma|space_digits }} DZD</b></td>

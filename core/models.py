@@ -99,7 +99,7 @@ class Production(ChangesMixin, AbstractProduction):
     def get_user(self, request):
         return request.user
 
-class ObjectifCapaciteProduction(AbstractProduction):
+class ObjectifCapaciteProduction(ChangesMixin, AbstractProduction):
     class Meta(AbstractProduction.Meta):
         db_table = 'OBJ_CAP_PRODUCTION'
 

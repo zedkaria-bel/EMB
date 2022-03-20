@@ -3,6 +3,7 @@
 {% load static %}
 {% load hum_money %}
 {% load humanize %}
+{% block head_title %}{{title}} {% endblock %}
 {% block content %}
 {% if messages %}
 <div id="div-msg" class="mt-2 pb-0 pt-0" style="position: relative; top: -30px;">
@@ -40,9 +41,9 @@
         <div class="form-group col-md-1">
             <label for="unit" class="col-form-label"><b>Unité</b></label>
             <select class="custom-select gen" name="unit" id="unit" required disabled>
-                <option value="KDU" {% if obj.unit == 'KDU' %} selected {% endif %} >KDU</option>
-                <option value="AZDU" {% if obj.unit == 'AZDU' %} selected {% endif %}>AZDU</option>
-                <option value="SKDU" {% if obj.unit == 'SKDU' %} selected {% endif %}>SKDU</option>
+                <option value="KDU" {% if obj.unite == 'KDU' %} selected {% endif %} >KDU</option>
+                <option value="AZDU" {% if obj.unite == 'AZDU' %} selected {% endif %}>AZDU</option>
+                <option value="SKDU" {% if obj.unite == 'SKDU' %} selected {% endif %}>SKDU</option>
             </select>
         </div>
         <div class="form-group col-md-3">
@@ -151,11 +152,37 @@
     </div>
 </div>
 
-<button type="submit" id="submit-form" class="btn" style="color: white !important; background-color: #0e385b !important; position: relative; top: -30px;"><b class="h5">Modifier</b></button>
+<button type="submit" id="submit-form" class="btn" style="color: white !important; background-color: #0e385b !important; position: relative; top: -30px;" disabled><b class="h5">Modifier</b></button>
 
 </form>
 
 <script>
+
+
+putThousandsSeparators = function(value, sep) {
+        if (sep == null) {
+            sep = ',';
+        }
+        // check if it needs formatting
+        if (value.toString() === value.toLocaleString()) {
+            // split decimals
+            var parts = value.toString().split('.')
+            // format whole numbers
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, sep);
+            // put them back together
+            value = parts[1] ? parts.join('.') : parts[0];
+        } else {
+            value = value.toLocaleString('cs-CZ');
+        }
+        return value;
+    };
+
+    $(document).ready(function(){
+        $('.form-row > .form-group > input[type=number]').each(function(){
+            $(this).prop('type', 'text');
+            $(this).val(putThousandsSeparators(parseFloat($(this).val())));
+        })
+    })
 
     $('form').on('submit', function(e) {
         $(':disabled').each(function(e) {
@@ -164,25 +191,29 @@
     });
 
     $('.form').on('submit', function(){
-        $(':input').not('#locked').val(function(index, value) {
-            return value.replace(/ /g, '');
-        });
-        $('input').not('.gen').not('#locked').not('input[name="csrfmiddlewaretoken"]').not('#id').prop('type', 'number');
+        $(':input').not('#unit, #ligne').not('input[name="csrfmiddlewaretoken"]').not('#locked').val(function(index, value) {
+                return value.replace(/\s/g, '').replace(',', '.');
+            });
+            $('input').not('#unit, #ligne').not('#locked').not('input[name="csrfmiddlewaretoken"]').not('#id').prop("type", "number");
     });
 
     $('#locked').on('change', function(){
         var chk = $(this).is(':checked');
         if(!chk){
-            $(':input').not('#locked').prop('disabled', false);
+            $(':input').not('input[name="csrfmiddlewaretoken"]').not('#locked').not('#ecarts_cadences').not('#qte_prod').not('#taux_dispo').not('#taux_perf').not('#taux_qualit').not('#trs').prop('disabled', false);
             // $(':select').prop('disabled', false);
             $('#submit-form').prop('disabled', true);
-            $(':input').not('#locked').not('#ligne').val(function(index, value) {
-                return value.replace(/ /g, '');
+            $(':input').not('#unit, #ligne').not('input[name="csrfmiddlewaretoken"]').not('#locked').val(function(index, value) {
+                return value.replace(/\s/g, '').replace(',', '.');
             });
-            $('input').not('.gen').not('#locked').not('input[name="csrfmiddlewaretoken"]').not('#id').not('#ligne').prop('type', 'number');
+            $('input').not('#unit, #ligne').not('#locked').not('input[name="csrfmiddlewaretoken"]').not('#id').prop("type", "number");
         }
         else{
-            $(':input').not('#locked').not('input[name="csrfmiddlewaretoken"]').not('#id').prop('disabled', true);
+            $(':input').not('input[name="csrfmiddlewaretoken"]').not('#locked').not('#ecarts_cadences').not('#qte_prod').not('#taux_dispo').not('#taux_perf').not('#taux_qualit').not('#trs').prop('disabled', true);
+            $(':input').not('#unit, #ligne').not('input[name="csrfmiddlewaretoken"]').not('#locked').not('#id').each(function(){
+                $(this).prop('type', 'text');
+                $(this).val(putThousandsSeparators(parseFloat($(this).val())));
+            })
             // $(':select').prop('disabled', true);
             $('#submit-form').prop('disabled', false);
         }
