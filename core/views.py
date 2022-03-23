@@ -1035,6 +1035,7 @@ class AddActMan(View):
         if dt < max_dt.date:
             messages.error(request, "La date renseignée est déjà couverte !")
             return redirect('core:add-act-journ-manual')
+        
 
         # PRODUCTION
         dic_prod = dict()
@@ -1093,14 +1094,48 @@ class AddActMan(View):
             except ZeroDivisionError:
                 dic_prod['montantcumul_prix_vente'] = 0
             dic_prod['date'] = dic['date'][0]
-            dic_prod['volume'] = dic['volume'][i]
             dic_prod['category'] = dic['category'][i]
             dic_prod['produit'] = dic['produit'][i]
+            if dic_prod['produit'] == 'Boite':
+                dic_prod['volume'] = dic['volume'][i]
+            else:
+                dic_prod['volume'] = None
             new_id = Production.objects.aggregate(Max('id')).get('id__max') + 1
             obj, created = Production.objects.update_or_create(
                 id = new_id,
                 defaults = dic_prod
             )
+            # CHECK FOR OBJECTIVES
+            # IF NEW MONTH, THEN ADD EMPTY OBJECTIVES WITH 0 ONLY
+            # IF SAME MONTH OF YEAR - PRODUCT - CATEGORY - VOLUME ( if prod = boite ) then obj already exists
+            month = dt.month
+            year = dt.year
+            qs = ObjectifCapaciteProduction.objects.filter(produit = dic_prod['produit'],
+                    category = dic_prod['category'],
+                    date__month = month,
+                    date__year = year,
+                    unite = dic_prod['unite'])
+            if dic_prod['produit'] == 'Boite':
+                qs = qs.filter(volume = dic_prod['volume'])
+            if qs.count() == 0:
+                # Production ajouté, pas d'objectif
+                dic_new_obj = dict()
+                new_id = ObjectifCapaciteProduction.objects.aggregate(Max('id')).get('id__max') + 1
+                dic_new_obj['unite'] = dic_prod['unite']
+                dic_new_obj['obj'] = 0
+                dic_new_obj['capacite_jour'] = 0
+                dic_new_obj['date'] = dic_prod['date']
+                dic_new_obj['category'] = dic_prod['category']
+                dic_new_obj['produit'] = dic_prod['produit']
+                if dic_new_obj['produit'] == 'Boite':
+                    dic_new_obj['volume'] = dic_prod['volume']
+                else:
+                    dic_new_obj['volume'] = None
+                obj, created = ObjectifCapaciteProduction.objects.update_or_create(
+                    id = new_id,
+                    defaults = dic_new_obj
+                )
+                
 
         dic_sale = dict()
         for i in range(0, nb_sale):

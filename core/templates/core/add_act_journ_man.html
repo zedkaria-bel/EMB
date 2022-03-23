@@ -73,7 +73,7 @@
                                 <label for="line" class="col-form-label"><b>Ligne</b></label>
                                 <select class="custom-select" name="line" id="line" required>
                                     {% for line in prod_lines %}
-                                    <option value={{line}}>{{line}}</option>
+                                    <option value="{{line}}">{{line}}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -89,7 +89,7 @@
                                 <label for="volume" class="col-form-label"><b>Volume</b></label>
                                 <select class="custom-select" name="volume" id="volume" required>
                                     {% for volume in volumes %}
-                                    <option value={{volume}}>{{volume}}</option>
+                                    <option value="{{volume}}">{{volume}}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -97,7 +97,7 @@
                                 <label for="category" class="col-form-label"><b>Catégorie</b></label>
                                 <select class="custom-select" name="category" id="category" required>
                                     {% for cat in cats %}
-                                    <option value={{cat}}>{{cat}}</option>
+                                    <option value="{{cat}}">{{cat}}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -218,7 +218,7 @@
                                 <label for="ligne" class="col-form-label"><b>Ligne</b></label>
                                 <select class="custom-select" name="ligne" id="ligne" required>
                                     {% for line in trs_lines %}
-                                    <option value={{line}}>{{line}}</option>
+                                    <option value="{{line}}">{{line}}</option>
                                     {% endfor %}
                                 </select>
                             </div>
