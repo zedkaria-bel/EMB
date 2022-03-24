@@ -127,15 +127,34 @@
                                         <p class="h5 mb-0 p-3"><b>{{cat.grouper}}</b></p>
                                     </div>
                                     {% if prod == 'Boite' %}
-                                    <div class="d-flex flex-column justify-content-center align-items-center col-2 p-0" style="border-left: 1px solid #c8c8c8; border-right: 1px solid #c8c8c8;">
+                                    <div class="d-flex flex-column col-10 p-0" style="border-left: 1px solid #c8c8c8; border-right: 1px solid #c8c8c8;">
                                         {% for vol in cat.list %}
-                                            <p class="h5 mb-0 p-3"><b>{{vol.volume}}</b></p>
-                                            {% if cat.list|count > 1 and forloop.counter != cat.list|count %}
-                                            <hr class="m-0" style="color: black; width: 100%; height: 0.75px;">   
-                                            {% endif %}
+                                        <div class="row">
+                                            <div class="col-2 align-self-center">
+                                                <p class="h5 mb-0 p-3 text-center"><b>{{vol.volume}}</b></p>
+                                            </div>
+                                            <div class="col-10 align-self-center">
+                                                <input type="hidden" id="unit-obj" name="unit-obj" value="{{vol.unite}}">
+                                                <input type="hidden" id="volume-obj" name="volume-obj" value="{{vol.volume}}">
+                                                <input type="hidden" id="category-obj" name="category-obj" value="{{vol.category}}">
+                                                <div class="form-inline col-12 d-flex align-items-center">
+                                                    <div class="form-group p-2 col-6">
+                                                        <label for="obj" class="col-form-label mr-2"><b>Objectif</b></label>
+                                                        <input type="number" class="form-control" name="obj" id="obj" value="{{vol.obj}}" placeholder="Objectif" required disabled>
+                                                    </div>
+                                                    <div class="form-group p-2 col-6">
+                                                        <label for="capacite_jour" class="col-form-label mr-2"><b>Capacité</b></label>
+                                                        <input type="number" class="form-control" name="capacite_jour" id="capacite_jour" value="{{vol.capacite_jour}}" placeholder="Capacité" required disabled>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% if cat.list|count > 1 and forloop.counter != cat.list|count %}
+                                        <hr class="m-0" style="color: black; width: 100%; height: 0.75px;">   
+                                        {% endif %}
                                         {% endfor %}
                                     </div>
-                                    {% endif %}
+                                    {% else %}
                                     <div class="col-8 d-flex flex-column justify-content-center align-items-center p-0">
                                         {% for vol in cat.list %}
                                         <input type="hidden" id="unit-obj" name="unit-obj" value="{{vol.unite}}">
@@ -156,6 +175,7 @@
                                         {% endif %}
                                         {% endfor %}
                                     </div>
+                                    {% endif %}
                                 </div>
                                 {% if cats|count > 1 and forloop.counter != cats|count %}
                                 <hr class="m-0" style="color: black; width: 100%; height: 0.5px;">   
@@ -320,6 +340,11 @@
             $('#prod-obj').val($('input[name="prod"]:checked', '#form').val())
             $('#date-obj').val($('.list-group > .active').attr('aria-controls'))
         }
+        $('.form-inline > .form-group > input').val(function(index, value) {
+            // console.log(value.replace(/\s/g, ''))
+            return value.replace(/\s/g, '').replace(',', '.');
+        });
+        $('.form-inline > .form-group > input').prop("type", "number");
         $('#form-obj').submit()
     })
 

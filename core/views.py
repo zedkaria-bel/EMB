@@ -1484,7 +1484,7 @@ class AddObjectifCap(View):
                     except ValueError:
                         val.append(v)
                 dic[key] = val
-        print(dic)
+        # print(dic)
         # IF ADD MODE ; CHECK IF DATE MENTIONED ALREADY EXISTS
         if mode:
             qs_count = ObjectifCapaciteProduction.objects.filter(
@@ -1518,6 +1518,10 @@ class AddObjectifCap(View):
             defaults = dic_obj
         )
         messages.success(request, "L'opération s'est terminé avec succès !")
-        return redirect('core:goals-summary')
+        if not mode:
+            mode = 'edit'
+        return redirect(reverse('core:goals-summary', kwargs={
+                    'mode': mode
+                }))
 
 
