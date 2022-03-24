@@ -26,20 +26,20 @@
     </svg>
     <form method="GET" action="{% url 'core:prod-view' %}" id="form" class="col-9 d-flex flex-row" style="display: flex; justify-content: center; align-items: center;">
         {% csrf_token %}
-        <input type="date" id='date_filter' name="date" placeholder="Date" value="{{date|date:'Y-m-d'}}" class="form-control col-2 mr-4">
+        <input type="date" id='date_filter' name="date" placeholder="Date" value="{{date|date:'Y-m-d'}}" class="form-control col-md mr-4">
         <select class="custom-select col-2 mr-4" name="unit" id="unit">
             <option value="all" {% if unit == 'all' %} selected {% endif %} >Unité (All)</option>
             <option value="KDU" {% if unit == 'KDU' %} selected {% endif %} >KDU</option>
             <option value="AZDU" {% if unit == 'AZDU' %} selected {% endif %} >AZDU</option>
             <option value="SKDU" {% if unit == 'SKDU' %} selected {% endif %} >SKDU</option>
         </select>
-        <select class="custom-select col-3 mr-4" name="lines" id="lines">
+        <select class="custom-select col-md mr-4" name="lines" id="lines">
             <option value="all">Ligne (All)</option>
             {% for line in lines %}
             <option value="{{line}}" {% if ligne == line %} selected {% endif %}>{{line|upper}}</option>
             {% endfor %}
         </select>
-        <select class="custom-select col-2 mr-4" name="prod" id="prod">
+        <select class="custom-select col-md mr-4" name="prod" id="prod">
             <option value="all" {% if prod == 'all' %} selected {% endif %}>Produit (All)</option>
             <option value="Boite" {% if prod == 'Boite' %} selected {% endif %}>Boite</option>
             <option value="Accessoire" {% if prod == 'Accessoire' %} selected {% endif %}>Accessoire</option>

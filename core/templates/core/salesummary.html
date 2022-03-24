@@ -26,14 +26,14 @@
     </svg>
     <form method="GET" action="{% url 'core:sale-view' %}" id="form" class="col-9 d-flex flex-row" style="display: flex; justify-content: center; align-items: center;">
         {% csrf_token %}
-        <input type="date" id='date_filter' name="date" placeholder="Date" value="{{date|date:'Y-m-d'}}" class="form-control col-2 mr-4">
-        <select class="custom-select col-2 mr-4" name="unit" id="unit">
+        <input type="date" id='date_filter' name="date" placeholder="Date" value="{{date|date:'Y-m-d'}}" class="form-control col-md mr-4">
+        <select class="custom-select col-md mr-4" name="unit" id="unit">
             <option value="all" {% if unit == 'all' %} selected {% endif %} >Unité (All)</option>
             <option value="KDU" {% if unit == 'KDU' %} selected {% endif %} >KDU</option>
             <option value="AZDU" {% if unit == 'AZDU' %} selected {% endif %} >AZDU</option>
             <option value="SKDU" {% if unit == 'SKDU' %} selected {% endif %} >SKDU</option>
         </select>
-        <select class="custom-select col-2 mr-4" name="category" id="category">
+        <select class="custom-select col-md mr-4" name="category" id="category">
             <option value="all" {% if category == 'all' %} selected {% endif %}>Catégorie (All)</option>
             <option value="DIVERS" {% if category == 'DIVERS' %} selected {% endif %}>DIVERS</option>
             <option value="CONSERVE" {% if category == 'CONSERVE' %} selected {% endif %}>CONSERVE</option>
