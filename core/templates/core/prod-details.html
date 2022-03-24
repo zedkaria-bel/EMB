@@ -55,19 +55,19 @@
                 <label for="line" class="col-form-label"><b>Ligne</b></label>
                 <input type="text" class="form-control" name="line" id="line" value="{% if obj.ligne %} {{obj.ligne}} {% else %} - {% endif %}" placeholder="Ligne" required disabled>
             </div>
-            <div class="form-group col-md-3">
+            <div class="form-group col-md-5">
                 <label for="des" class="col-form-label"><b>Désignation</b></label>
                 <input type="text" class="form-control" name="des" id="des" value="{% if obj.des %} {{obj.des}} {% else %} - {% endif %}" placeholder="Désignation" required disabled>
             </div>
-            <div class="form-group col-md-3">
+            <div class="form-group col-md-2">
                 <label for="client" class="col-form-label"><b>Client</b></label>
                 <input type="text" class="form-control" name="client" id="client" value="{% if obj.client %} {{obj.client}} {% else %} - {% endif %}" placeholder="Client" required disabled>
             </div>
-            <div class="form-group col-md-3">
+            <div class="form-group col-md">
                 <label for="volume" class="col-form-label"><b>Volume</b></label>
                 <input type="text" class="form-control" name="volume" id="volume" value="{% if obj.volume %} {{obj.volume}} {% else %} - {% endif %}" placeholder="Volume" required disabled>
             </div>
-            <div class="form-group col-md-3">
+            <div class="form-group col-md">
                 <label for="category" class="col-form-label"><b>Catégorie</b></label>
                 <select class="custom-select" name="category" id="category" required disabled>
                     {% for cat in cat_list %}
@@ -75,7 +75,7 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="form-group col-md-3">
+            <div class="form-group col-md">
                 <label for="produit" class="col-form-label"><b>Produit</b></label>
                 <select class="custom-select" name="produit" id="produit" required disabled>
                     <option value="Boite" {% if obj.produit == 'Boite' %} selected {% endif %} >Boite</option>
@@ -90,27 +90,29 @@
 <div class="shadow p-3 mb-5 bg-white rounded w-100y" style="position:relative; top: -30px;">
     <h3 class="mb-4" style="font-weight: bolder !important;"><b>PRODUCTION PHYSIQUE</b></h3>
     <div class="form-row">
-        <div class="form-group col-md-1">
+        <div class="form-group col-md-4">
             <label for="obj" class="col-form-label"><b>Objectif</b></label>
             <input type="number" class="form-control" name="obj" id="obj" value="{{obj.obj}}" placeholder="Objectif" required disabled>
         </div>
-        <div class="form-group col-md-1">
+        <div class="form-group col-md-4">
             <label for="capacite_jour" class="col-form-label"><b>Capacité jour</b></label>
             <input type="number" class="form-control" name="capacite_jour" id="capacite_jour" value="{{obj.capacite_jour}}" placeholder="Capacité jour" required disabled>
         </div>
-        <div class="form-group col-md-2">
+        <div class="form-group col-md-4">
             <label for="brute_jour" class="col-form-label"><b>Production brute - le {{obj.date|date:'d/m/Y'}} </b></label>
             <input type="number" class="form-control" name="brute_jour" id="brute_jour" value="{{obj.brute_jour}}" placeholder="Brute - jour" required disabled>
         </div>
-        <div class="form-group col-md-3">
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-4">
             <label for="conforme_jour" class="col-form-label"><b>Production conforme - le {{obj.date|date:'d/m/Y'}} </b></label>
             <input type="number" class="form-control" name="conforme_jour" id="conforme_jour" value="{{obj.conforme_jour}}" placeholder="Conforme jour" required disabled>
         </div>
-        <div class="form-group col-md-2">
+        <div class="form-group col-md-4">
             <label for="rebut_jour" class="col-form-label"><b>Production rebut - le {{obj.date|date:'d/m/Y'}} </b></label>
             <input type="number" class="form-control" name="rebut_jour" id="rebut_jour" value="{{obj.rebut_jour}}" placeholder="Rebut jour" required disabled>
         </div>
-        <div class="form-group col-md-2">
+        <div class="form-group col-md-4">
             <label for="taux_jour" class="col-form-label"><b>Taux jour</b></label>
             <input type="number" class="form-control" name="taux_jour" id="taux_jour" value="{{obj.taux_jour}}" placeholder="Taux jour" required disabled>
         </div>
@@ -118,23 +120,23 @@
     <h5 class='mt-3' style="color:teal !important;"><b>Cumulé sur le mois - {{obj.date|date:'F Y'}} </b></h5>
     <hr class='mt-0' style="height: 4px !important; background-color: teal !important;">
     <div class="form-row">
-        <div class="form-group col-md-2">
+        <div class="form-group col-md">
             <label for="brute_mois" class="col-form-label"><b>Production Brute</b></label>
             <input type="number" class="form-control" name="brute_mois" id="brute_mois" value="{{obj.brute_mois}}" placeholder="Brute - Mois" required disabled>
         </div>
-        <div class="form-group col-md-2">
+        <div class="form-group col-md">
             <label for="conforme_mois" class="col-form-label"><b>Production Conforme</b></label>
             <input type="number" class="form-control" name="conforme_mois" id="conforme_mois" value="{{obj.conforme_mois}}" placeholder="Conforme - Mois" required disabled>
         </div>
-        <div class="form-group col-md-2">
+        <div class="form-group col-md">
             <label for="rebut_mois" class="col-form-label"><b>Production Rebutée</b></label>
             <input type="number" class="form-control" name="rebut_mois" id="rebut_mois" value="{{obj.rebut_mois}}" placeholder="Rebut - Mois" required disabled>
         </div>
-        <div class="form-group col-md-2">
+        <div class="form-group col-md">
             <label for="taux_real" class="col-form-label"><b>Taux de réalisation - %</b></label>
             <input type="number" min="0" max="100" step="0.01" class="form-control" name="taux_real" id="taux_real" value="{{taux_real}}" placeholder="Taux Réal." required disabled>
         </div>
-        <div class="form-group col-md-2">
+        <div class="form-group col-md">
             <label for="taux_rebut" class="col-form-label"><b>Taux de rebut - %</b></label>
             <input type="number" min="0" max="100" step="0.01" class="form-control" name="taux_rebut" id="taux_rebut" value="{{taux_rebut}}" placeholder="Taux Rebut" required disabled>
         </div>
@@ -147,15 +149,15 @@
     <h5 class='mt-3' style="color:teal !important;"><b>Avec coût de revient - Journée du {{obj.date|date:'d/m/Y'}} </b></h5>
     <hr class='mt-0' style="height: 4px !important; background-color: teal !important;">
     <div class="form-row">
-        <div class="form-group col-md-2">
+        <div class="form-group col-md">
             <label for="pu_cout_revient" class="col-form-label"><b>PU - DZD</b></label>
             <input type="number" class="form-control" name="pu_cout_revient" id="pu_cout_revient" value="{{obj.pu_cout_revient}}" placeholder="PU" required disabled>
         </div>
-        <div class="form-group col-md-2">
+        <div class="form-group col-md">
             <label for="montant_journee_coutrev" class="col-form-label"><b>Montant Journée - DZD</b></label>
             <input type="number" class="form-control" name="montant_journee_coutrev" id="montant_journee_coutrev" value="{{obj.montant_journee_coutrev}}" placeholder="Montant journée" required disabled>
         </div>
-        <div class="form-group col-md-2">
+        <div class="form-group col-md">
             <label for="montantcumul_coutrev" class="col-form-label"><b>Montant Cumulé - DZD</b></label>
             <input type="number" class="form-control" name="montantcumul_coutrev" id="montantcumul_coutrev" value="{{obj.montantcumul_coutrev}}" placeholder="Montant cumulé" required disabled>
         </div>
@@ -163,15 +165,15 @@
     <h5 class='mt-3' style="color:teal !important;"><b>Avec prix de vente </b></h5>
     <hr class='mt-0' style="height: 4px !important; background-color: teal !important;">
     <div class="form-row">
-        <div class="form-group col-md-2">
+        <div class="form-group col-md">
             <label for="pu_prix_vente" class="col-form-label"><b>PU - DZD</b></label>
             <input type="number" class="form-control" name="pu_prix_vente" id="pu_prix_vente" value="{{obj.pu_prix_vente}}" placeholder="PU" required disabled>
         </div>
-        <div class="form-group col-md-2">
+        <div class="form-group col-md">
             <label for="montant_journee_prix_vente" class="col-form-label"><b>Montant Journée - DZD</b></label>
             <input type="number" class="form-control" name="montant_journee_prix_vente" id="montant_journee_prix_vente" value="{{obj.montant_journee_prix_vente}}" placeholder="Montant journée" required disabled>
         </div>
-        <div class="form-group col-md-2">
+        <div class="form-group col-md">
             <label for="montantcumul_prix_vente" class="col-form-label"><b>Montant Cumulé - DZD</b></label>
             <input type="number" class="form-control" name="montantcumul_prix_vente" id="montantcumul_prix_vente" value="{{obj.montantcumul_prix_vente}}" placeholder="Montant cumulé" required disabled>
         </div>
