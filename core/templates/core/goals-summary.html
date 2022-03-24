@@ -207,7 +207,7 @@
                               </svg>
                         </div>
                         <div class="form-row">
-                            <div class="form-group col-1">
+                            <div class="form-group col-md">
                                 <label for="unit-obj" class="col-form-label"><b>Unité</b></label>
                                 <select class="custom-select" name="unit-obj" id="unit-obj" required>
                                     <option value="KDU">KDU</option>
@@ -215,14 +215,14 @@
                                     <option value="SKDU">SKDU</option>
                                 </select>
                             </div>
-                            <div class="form-group col-2">
+                            <div class="form-group col-md">
                                 <label for="category-obj" class="col-form-label"><b>Catégorie</b></label>
                                 <select class="custom-select" name="category-obj" id="category-obj" required>
                                     <option value="CONSERVE">CONSERVE</option>
                                     <option value="DIVERSE">DIVERSE</option>
                                 </select>
                             </div>
-                            <div class="form-group col-2 volume-obj">
+                            <div class="form-group col-md volume-obj">
                                 <label for="volume-obj" class="col-form-label"><b>Volume</b></label>
                                 <select class="custom-select" name="volume-obj" id="volume-obj" required>
                                     {% for vol in volumes %}
@@ -230,11 +230,11 @@
                                     {% endfor %}
                                 </select>
                             </div>
-                            <div class="form-group col-3">
+                            <div class="form-group col-md">
                                 <label for="volume" class="col-form-label"><b>Objectif</b></label>
                                 <input type="number" class="form-control" name="obj" id="obj" value="0" placeholder="Volume" required>
                             </div>
-                            <div class="form-group col-3">
+                            <div class="form-group col-md">
                                 <label for="capacite_jour" class="col-form-label"><b>Capacité</b></label>
                                 <input type="number" class="form-control" name="capacite_jour" id="capacite_jour" placeholder="Capacité" value="0" required>
                             </div>
