@@ -463,7 +463,7 @@ class tcrSummary(LoginRequiredMixin, ListView):
         df = df.T
         df.columns = df.loc['unite']
         df = df.iloc[2: , :]
-        print(df.head())
+        # print(df.head())
         if not df.empty and len(df.columns) > 1:
             cols = ['SIEGE', 'KDU', 'SKDU', 'AZDU', 'ENTREPRISE']
             df = df[cols]

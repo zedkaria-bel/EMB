@@ -27,17 +27,17 @@
     </svg>
     <form method="GET" action="{% url 'core:tcr-view' %}" id="form" class="col-9 d-flex flex-row" style="display: flex; justify-content: center; align-items: center;">
         {% csrf_token %}
-        <select class="custom-select col-2 mr-4" name="year" id="year">
+        <select class="custom-select col-md mr-4" name="year" id="year">
             {% for year in years %}
             <option value="{{year}}" {% if year == Year %} selected {% endif %} >{{year}}</option>
             {% endfor %}
         </select>
-        <select class="custom-select col-2 mr-4" name="month" id="month">
+        <select class="custom-select col-md mr-4" name="month" id="month">
             {% for month in 13|times %}
             <option value="{{month}}" {% if month == Month %} selected {% endif %} >{{month|month_name}}</option>
             {% endfor %}
         </select>
-        <select class="custom-select col-2 mr-4" name="unit" id="unit">
+        <select class="custom-select col-md mr-4" name="unit" id="unit">
             <option value="all" {% if unit == 'all' %} selected {% endif %} >Unité (All)</option>
             <option value="SIEGE" {% if unit == 'SIEGE' %} selected {% endif %} >SIÈGE</option>
             <option value="KDU" {% if unit == 'KDU' %} selected {% endif %} >KDU</option>

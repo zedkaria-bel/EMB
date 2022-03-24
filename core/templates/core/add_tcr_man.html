@@ -89,23 +89,25 @@
                         <hr class="my-0" style="color: #484fb2;">
                         <!-- PROD EXERC -->
                         <div class="form-row">
-                            <div class="form-group col-md-2">
+                            <div class="form-group col-md">
                                 <label for="ca" class="col-form-label"><b>Chiffre d'affaire</b></label>
                                 <input type="number" step="0.001" class="form-control number-separator" name="ca" id="ca" {% if mode == 'edit' %} value="{{qs|get_unit_qs:unit|get_field:'ca'}}" disabled {% else %} value="0" {% endif %} placeholder="Chiffre d'affaire" required>
                             </div>
-                            <div class="form-group col-md-2">
+                            <div class="form-group col-md">
                                 <label for="cessions_et_produits" class="col-form-label"><b>Cessions et produits</b></label>
                                 <input type="number" step="0.001" class="form-control" name="cessions_et_produits" {% if mode == 'edit' %} value="{{qs|get_unit_qs:unit|get_field:'cessions_et_produits'}}" disabled {% else %} value="0" {% endif %} id="cessions_et_produits" placeholder="Cessions et produits" required>
                             </div>
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md">
                                 <label for="var_stock_fini_encours" class="col-form-label"><b>Variation stocks prod. finis / en cours</b></label>
                                 <input type="number" step="0.001" class="form-control" name="var_stock_fini_encours" id="var_stock_fini_encours" {% if mode == 'edit' %} value="{{qs|get_unit_qs:unit|get_field:'var_stock_fini_encours'}}" disabled {% else %} value="0" {% endif %} placeholder="Variation stocks produits finis et en cours" required>
                             </div>
-                            <div class="form-group col-md-2">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md">
                                 <label for="prod_immob" class="col-form-label"><b>Production immobilisée</b></label>
                                 <input type="number" step="0.001" class="form-control" name="prod_immob" id="prod_immob" {% if mode == 'edit' %} value="{{qs|get_unit_qs:unit|get_field:'prod_immob'}}" disabled {% else %} value="0" {% endif %} placeholder="Production immobilisée" required>
                             </div>
-                            <div class="form-group col-md-2">
+                            <div class="form-group col-md">
                                 <label for="subv_expl" class="col-form-label"><b>Subvention d'exploitation</b></label>
                                 <input type="number" step="0.001" class="form-control" name="subv_expl" id="subv_expl" {% if mode == 'edit' %} value="{{qs|get_unit_qs:unit|get_field:'subv_expl'}}" disabled {% else %} value="0" {% endif %} placeholder="Subvention d'exploitation" required>
                             </div>
@@ -114,15 +116,15 @@
                         <hr class="my-0" style="color: #484fb2;">
                         <!-- CONSOMM EXERC -->
                         <div class="form-row">
-                            <div class="form-group col-md-3">
+                            <div class="form-group col-md">
                                 <label for="achats_consom" class="col-form-label"><b>Achats consommés</b></label>
                                 <input type="number" step="0.001" class="form-control" name="achats_consom" id="achats_consom" {% if mode == 'edit' %} value="{{qs|get_unit_qs:unit|get_field:'achats_consom'}}" disabled {% else %} value="0" {% endif %} placeholder="Achats consommés" required>
                             </div>
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md">
                                 <label for="serv_ext_other_consom" class="col-form-label"><b>Services extérieurs et Autres consommation</b></label>
                                 <input type="number" step="0.001" class="form-control" name="serv_ext_other_consom" id="serv_ext_other_consom" {% if mode == 'edit' %} value="{{qs|get_unit_qs:unit|get_field:'serv_ext_other_consom'}}" disabled {% else %} value="0" {% endif %} placeholder="Services extérieurs et Autres consommation" required>
                             </div>
-                            <div class="form-group col-md-3">
+                            <div class="form-group col-md">
                                 <label for="consom_inter_unit" class="col-form-label"><b>Consommation inter-unités</b></label>
                                 <input type="number" step="0.001" class="form-control" name="consom_inter_unit" id="consom_inter_unit" {% if mode == 'edit' %} value="{{qs|get_unit_qs:unit|get_field:'consom_inter_unit'}}" disabled {% else %} value="0" {% endif %} placeholder="Consommation inter-unités" required>
                             </div>
@@ -131,11 +133,11 @@
                         <hr class="my-0" style="color: #484fb2;">
                         <!--  EXCEDENT BRUT D'EXPLOITATION -->
                         <div class="form-row">
-                            <div class="form-group col-md-3">
+                            <div class="form-group col-md">
                                 <label for="charge_pers" class="col-form-label"><b>Charges de personnel</b></label>
                                 <input type="number" step="0.001" class="form-control" name="charge_pers" id="charge_pers" {% if mode == 'edit' %} value="{{qs|get_unit_qs:unit|get_field:'charge_pers'}}" disabled {% else %} value="0" {% endif %} placeholder="Charges de personnel" required>
                             </div>
-                            <div class="form-group col-md-3">
+                            <div class="form-group col-md">
                                 <label for="impot_tax_vers_ass" class="col-form-label"><b>Impôts, taxes et versements assimiles</b></label>
                                 <input type="number" step="0.001" class="form-control" name="impot_tax_vers_ass" id="impot_tax_vers_ass" {% if mode == 'edit' %} value="{{qs|get_unit_qs:unit|get_field:'impot_tax_vers_ass'}}" disabled {% else %} value="0" {% endif %} placeholder="Impôts, taxes et versements assimiles" required>
                             </div>
@@ -144,27 +146,29 @@
                         <hr class="my-0" style="color: #484fb2;">
                         <!--  RESULTAT OPERATIONNEL -->
                         <div class="form-row">
-                            <div class="form-group col-md-3">
+                            <div class="form-group col-md">
                                 <label for="other_prod_op" class="col-form-label"><b>Autres produits opérationnels</b></label>
                                 <input type="number" step="0.001" class="form-control" name="other_prod_op" id="other_prod_op" {% if mode == 'edit' %} value="{{qs|get_unit_qs:unit|get_field:'other_prod_op'}}" disabled {% else %} value="0" {% endif %} placeholder="Autres produits opérationnels" required>
                             </div>
-                            <div class="form-group col-md-3">
+                            <div class="form-group col-md">
                                 <label for="other_charge_op" class="col-form-label"><b>Autres charges opérationnelles</b></label>
                                 <input type="number" step="0.001" class="form-control" name="other_charge_op" id="other_charge_op" {% if mode == 'edit' %} value="{{qs|get_unit_qs:unit|get_field:'other_charge_op'}}" disabled {% else %} value="0" {% endif %} placeholder="Autres charges opérationnelles" required>
                             </div>
-                            <div class="form-group col-md-2">
+                            <div class="form-group col-md">
                                 <label for="prod_inter_unit" class="col-form-label"><b>Produits inter unités</b></label>
                                 <input type="number" step="0.001" class="form-control" name="prod_inter_unit" id="prod_inter_unit" {% if mode == 'edit' %} value="{{qs|get_unit_qs:unit|get_field:'prod_inter_unit'}}" disabled {% else %} value="0" {% endif %} placeholder="Produits inter unités" required>
                             </div>
-                            <div class="form-group col-md-2">
+                            <div class="form-group col-md">
                                 <label for="charge_inter_unit" class="col-form-label"><b>Charges inter unités</b></label>
                                 <input type="number" step="0.001" class="form-control" name="charge_inter_unit" id="charge_inter_unit" {% if mode == 'edit' %} value="{{qs|get_unit_qs:unit|get_field:'charge_inter_unit'}}" disabled {% else %} value="0" {% endif %} placeholder="Charges inter unités" required>
                             </div>
-                            <div class="form-group col-md-5">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md">
                                 <label for="dot_amort_prov_pert_val" class="col-form-label"><b>Dotation aux amortissements, provisions et pertes de valeur </b></label>
                                 <input type="number" step="0.001" class="form-control" name="dot_amort_prov_pert_val" id="dot_amort_prov_pert_val" {% if mode == 'edit' %} value="{{qs|get_unit_qs:unit|get_field:'dot_amort_prov_pert_val'}}" disabled {% else %} value="0" {% endif %} placeholder="Dotation aux amortissements, provisions et pertes de valeur " required>
                             </div>
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md">
                                 <label for="repr_pert_val_prov" class="col-form-label"><b>Reprise sur pertes de valeur et provisions</b></label>
                                 <input type="number" step="0.001" class="form-control" name="repr_pert_val_prov" id="repr_pert_val_prov" {% if mode == 'edit' %} value="{{qs|get_unit_qs:unit|get_field:'repr_pert_val_prov'}}" disabled {% else %} value="0" {% endif %} placeholder="Reprise sur pertes de valeur et provisions" required>
                             </div>
@@ -173,11 +177,11 @@
                         <hr class="my-0" style="color: #484fb2;">
                         <!--  RESULTAT FINANCIER -->
                         <div class="form-row">
-                            <div class="form-group col-md-3">
+                            <div class="form-group col-md">
                                 <label for="prod_fin" class="col-form-label"><b>Produits financiers</b></label>
                                 <input type="number" step="0.001" class="form-control" name="prod_fin" id="prod_fin" {% if mode == 'edit' %} value="{{qs|get_unit_qs:unit|get_field:'prod_fin'}}" disabled {% else %} value="0" {% endif %} placeholder="Produits financiers" required>
                             </div>
-                            <div class="form-group col-md-3">
+                            <div class="form-group col-md">
                                 <label for="charge_financ" class="col-form-label"><b>Charges financières</b></label>
                                 <input type="number" step="0.001" class="form-control" name="charge_financ" id="charge_financ" {% if mode == 'edit' %} value="{{qs|get_unit_qs:unit|get_field:'charge_financ'}}" disabled {% else %} value="0" {% endif %} placeholder="Charges financières" required>
                             </div>
@@ -186,11 +190,11 @@
                         <hr class="my-0" style="color: #484fb2;">
                         <!--  RESULTAT FINANCIER -->
                         <div class="form-row">
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md">
                                 <label for="impot_exig_res_ord" class="col-form-label"><b>Impôts exigibles sur résultats ordinaires</b></label>
                                 <input type="number" step="0.001" class="form-control" name="impot_exig_res_ord" id="impot_exig_res_ord" {% if mode == 'edit' %} value="{{qs|get_unit_qs:unit|get_field:'impot_exig_res_ord'}}" disabled {% else %} value="0" {% endif %} placeholder="Impôts exigibles sur résultats ordinaires" required>
                             </div>
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md">
                                 <label for="impot_diff_res_ord" class="col-form-label"><b>Impôts différés (variations) sur résultats ordinaires</b></label>
                                 <input type="number" step="0.001" class="form-control" name="impot_diff_res_ord" id="impot_diff_res_ord" {% if mode == 'edit' %} value="{{qs|get_unit_qs:unit|get_field:'impot_diff_res_ord'}}" disabled {% else %} value="0" {% endif %} placeholder="Impôts différés (variations) sur résultats ordinaires" required>
                             </div>
@@ -199,11 +203,11 @@
                         <hr class="my-0" style="color: #484fb2;">
                         <!--  RESULTAT EXTRAORDINAIRE -->
                         <div class="form-row">
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md">
                                 <label for="elem_extraord_prod" class="col-form-label"><b>Eléments extraordinaire produits</b></label>
                                 <input type="number" step="0.001" class="form-control" name="elem_extraord_prod" id="elem_extraord_prod" {% if mode == 'edit' %} value="{{qs|get_unit_qs:unit|get_field:'elem_extraord_prod'}}" disabled {% else %} value="0" {% endif %} placeholder="Eléments extraordinaire produits" required>
                             </div>
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md">
                                 <label for="elem_extraord_charge" class="col-form-label"><b>Eléments extraordinaire charges</b></label>
                                 <input type="number" step="0.001" class="form-control" name="elem_extraord_charge" id="elem_extraord_charge" {% if mode == 'edit' %} value="{{qs|get_unit_qs:unit|get_field:'elem_extraord_charge'}}" disabled {% else %} value="0" {% endif %} placeholder="Eléments extraordinaire charges" required>
                             </div>
