@@ -103,6 +103,7 @@
     <table id="table-bag-cases" class="table table-hover" style="width: 100% !important;">
         <thead class="thead-dark">
           <tr>
+            {% if count != 0 %}
             <th class="py-3" scope="col"><b class="h6">#</b></th>
             <th class="py-3" scope="col"><b class="h6">Date</b></th>
             <th class="py-3" scope="col"><b class="h6">Unité</b></th>
@@ -113,6 +114,7 @@
             <th class="py-3" scope="col"><b class="h6">Catégorie</b></th>
             <th class="py-3" scope="col"><b class="h6">Produit</b></th>
             <th class="py-3" scope="col"><b class="h6">Détails</b></th>
+            {% endif %}
           </tr>
         </thead>
         <tbody id="tbody">
@@ -140,6 +142,10 @@
                         </svg>
                     </a>
                 </b></td>
+            </tr>
+            {% empty %}
+            <tr class="d-flex justify-content-center align-items-center">
+                <th class="py-5" colspan="8"><b class="h4" style="color: gray;">Aucune données disponible.</b></th>
             </tr>
             {% endfor %}
         </tbody>

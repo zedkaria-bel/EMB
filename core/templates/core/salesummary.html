@@ -138,6 +138,10 @@
                     </a>
                 </b></td>
             </tr>
+            {% empty %}
+            <tr class="d-flex justify-content-center align-items-center">
+                <th class="py-5" colspan="8"><b class="h4" style="color: gray;">Aucune données disponible.</b></th>
+            </tr>
             {% endfor %}
         </tbody>
     </table>
