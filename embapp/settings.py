@@ -33,9 +33,9 @@ DB_PORT = env('DB_PORT')
 SECRET_KEY = 'django-insecure-1*^f%ryh%bqkd-g3o1)gmeer(n05(^o9nh7#%#h-szcseqz^8m'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [env('ALLOWED_HOSTS')]
 
 
 AUTHENTICATION_BACKENDS = [

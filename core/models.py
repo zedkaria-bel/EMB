@@ -200,6 +200,7 @@ class Vente(ChangesMixin, models.Model):
         return request.user
 
 class Profile(models.Model):
+    id = models.AutoField(primary_key=True)
     user = models.OneToOneField(User, on_delete = models.CASCADE)
     poste = models.TextField(null=True, blank = True)
 
