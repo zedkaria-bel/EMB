@@ -913,6 +913,9 @@ class AddAct(View):
             except ValueError as v:
                 messages.error(request, str(v))
                 return redirect('core:add-act-journ')
+            except:
+                messages.error(request, "Erreur !")
+                return redirect('core:add-act-journ')
             fs.delete(uploaded_file_path)
         messages.success(request, "Le données ont été stockés avec succès !")
         return redirect('core:add-act-journ')

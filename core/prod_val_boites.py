@@ -16,6 +16,16 @@ def missing_prod_in_val(df_prod, result):
     result = result.loc[:, ~result.columns.str.contains('^Unnamed')]
     # df_prod['date'] = df_prod['date'].dt.date
     dts = df_prod['date'].unique().tolist()
+    dts_result = result['date'].unique().tolist()
+
+    # Fix difference between date in prod physique and valorisé
+    # i : index of date in prod's date
+    i = 0
+    for dt in dts_result:
+        result.loc[result['date'] == dt, 'date'] = dts[i]
+        i = i + 1
+
+
     # print(df_prod['produit'].unique().tolist())
     # print(dts)
     frames = []

@@ -92,6 +92,7 @@
     <table id="table-bag-cases" class="table table-hover" style="width: 100% !important;">
         <thead class="thead-dark">
           <tr>
+            {% if count != 0 %}
             <th class="py-3 align-middle" scope="col"><b class="h6">#</b></th>
             <th class="py-3 align-middle" scope="col"><b class="h6">Unité</b></th>
             <th class="py-3 align-middle" scope="col"><b class="h6">Ligne</b></th>
@@ -103,6 +104,7 @@
             <th class="py-3 align-middle" scope="col"><b class="h6">Qte conforme</b></th>
             <th class="py-3 align-middle" scope="col"><b class="h6">Qte rebutée</b></th>
             <th class="py-3 align-middle" scope="col"><b class="h6">Détails</b></th>
+            {% endif %}
           </tr>
         </thead>
         <tbody id="tbody">
@@ -128,7 +130,7 @@
             </tr>
             {% empty %}
             <tr class="d-flex justify-content-center align-items-center">
-                <th class="py-5" colspan="8"><b class="h4" style="color: gray;">Aucune données disponible.</b></th>
+                <th class="py-5" colspan="8"><b class="h4" style="color: gray;">Aucune donnée disponible.</b></th>
             </tr>
             {% endfor %}
         </tbody>
