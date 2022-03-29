@@ -108,8 +108,8 @@
         <li class="nav-item ml-4 dropdown px-3" style="border-radius: 60px; border: 2px white solid;">
           <a class="nav-link dropdown-toggle" id="usr" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color: white !important;" href="{{request.user.profile.get_absolute_url}}"> {{request.user.first_name|upper|add:' '|add:request.user.last_name}} </a>
           <div class="dropdown-menu" aria-labelledby="dropdownMenu2" style="background-color: white !important;">
-            <a href="#" class="dropdown-item dwn py-3 mb-0 h5" type="button">PROFILE</a>
-            <a href="{% url 'account_logout' %}?next=/accounts/login/" class="dropdown-item dwn py-3 mb-0 h5" type="button">LOGOUT</a>
+            <!-- <a href="#" class="dropdown-item dwn py-3 mb-0 h5" type="button">PROFILE</a> -->
+            <a href="{% url 'account_logout' %}?next=/accounts/login/" class="dropdown-item dwn py-3 mb-0 h5" type="button">Se déconnecter</a>
           </div>
         </li>
         {% else %}
