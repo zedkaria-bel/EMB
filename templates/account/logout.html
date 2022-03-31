@@ -1,26 +1,56 @@
 {% extends "account/base.html" %}
 {% load i18n %}
-
+{% load static %}
 {% block head_title %}{% trans "Sign Out" %}{% endblock %}
 
 {% block content %}
-  <main>
+
+<main class="d-flex justify-content-center">
+  <div class="d-flex flex-row col-8 shadow mt-5 px-0 mb-0 signwallp">
+    <div class="form-cont col-6 px-0 d-flex justify-content-center align-items-center" style="color: white !important;">
+      <div class='col-12 p-5'>
+        <h1>{% trans "Se déconnecter" %}</h1>
+        <p>{% trans 'Êtes-vous certain de vouloir vous déconnecter?' %}</p>
+        <form method="post" action="{% url 'account_logout' %}">
+          {% csrf_token %}
+          {% if redirect_field_value %}
+          <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+          {% endif %}
+          <button class="btn py-3" style="color: #323232 !important; background-color: white !important;" type="submit">{% trans 'Confirmer' %}</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</main>
+
+
+<style>
+  .signwallp{
+    border-radius: 40px !important;
+    overflow: hidden;
+    position: relative; 
+    background-image: linear-gradient(to right, #323232 50%, transparent), url("{% static 'core/img/Metal-Packaging-Group-mini.jpg' %}");
+  }
+</style>
+
+
+  <!-- <main>
     <div class="container">
       <section class="mb-4">
         <div class="row wow fadeIn">
           <div class='col-6 offset-3'>
-            <h1>{% trans "Sign Out" %}</h1>
-            <p>{% trans 'Are you sure you want to sign out?' %}</p>
+            <h1>{% trans "Se déconnecter" %}</h1>
+            <p>{% trans 'Êtes-vous certain de vouloir vous déconnecter?' %}</p>
             <form method="post" action="{% url 'account_logout' %}">
               {% csrf_token %}
               {% if redirect_field_value %}
               <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
               {% endif %}
-              <button class='btn btn-primary' type="submit">{% trans 'Sign Out' %}</button>
+              <button class='btn btn-primary' type="submit">{% trans 'Confirmer' %}</button>
             </form>
           </div>
         </div>
       </section>
     </div>
-  </main>
+  </main> -->
 {% endblock %}
