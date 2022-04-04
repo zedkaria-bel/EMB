@@ -40,6 +40,6 @@ for sheetname in xl.sheet_names:
         # Only for tcr 2020
         df.insert(9, 'Consommation inter-unités', 0)
 
-        df.to_excel(folder + '\\' + file_name, index = False)
+        # df.to_excel(folder + '\\' + file_name, index = False)
         # print(df)
         # break

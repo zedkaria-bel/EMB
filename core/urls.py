@@ -25,6 +25,7 @@ from .views import (
     ObjCapacitySummary,
     AddObjectifCap,
     TcrMan,
+    set_capacity,
 )
 
 app_name = 'core'
@@ -54,4 +55,5 @@ urlpatterns = [
     path('add-tcr/process-tcr-manual/', AddTcrMan.as_view(), name = 'process-new-tcr-man'),
     path('goals-summary/<str:mode>/', ObjCapacitySummary.as_view(), name = 'goals-summary'),
     path('process-goals/', AddObjectifCap.as_view(), name = 'process-goals'),
+    path('set-capacity/', set_capacity, name = 'set-capacity'),
 ]

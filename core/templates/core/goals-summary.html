@@ -83,19 +83,19 @@
             <form method="GET" action="{% url 'core:process-goals' %}" id="form" class="d-flex flex-column">
                 {% csrf_token %}
                 <label for="unit" class="col-form-label h5"><b>Année</b></label>
-                <select class="custom-select mr-4 mb-4" name="year" id="year">
+                <select class="custom-select mr-4 mb-4 chg" name="year" id="year">
                     {% for year in years %}
                     <option value="{{year}}">{{year}}</option>
                     {% endfor %}
                 </select>
                 <label for="month" class="col-form-label h5"><b>Mois</b></label>
-                <select class="custom-select mr-4 mb-4" name="month" id="month">
+                <select class="custom-select mr-4 mb-4 chg" name="month" id="month">
                     {% for month in 13|times %}
                     <option value="{{month}}">{{month|month_name}}</option>
                     {% endfor %}
                 </select>
                 <label for="prod" class="col-form-label h5"><b>Produit</b></label>
-                <select class="custom-select mr-4 mb-4" name="prod" id="prod">
+                <select class="custom-select mr-4 mb-4 chg" name="prod" id="prod">
                     <option value="Boite">Boite</option>
                     <option value="Accessoire">Accessoire</option>
                 </select>
@@ -209,7 +209,7 @@
                         <div class="form-row">
                             <div class="form-group col-md">
                                 <label for="unit-obj" class="col-form-label"><b>Unité</b></label>
-                                <select class="custom-select" name="unit-obj" id="unit-obj" required>
+                                <select class="custom-select chg" name="unit-obj" id="unit-obj" required>
                                     <option value="KDU">KDU</option>
                                     <option value="AZDU">AZDU</option>
                                     <option value="SKDU">SKDU</option>
@@ -217,14 +217,14 @@
                             </div>
                             <div class="form-group col-md">
                                 <label for="category-obj" class="col-form-label"><b>Catégorie</b></label>
-                                <select class="custom-select" name="category-obj" id="category-obj" required>
+                                <select class="custom-select chg" name="category-obj" id="category-obj" required>
                                     <option value="CONSERVE">CONSERVE</option>
                                     <option value="DIVERSE">DIVERSE</option>
                                 </select>
                             </div>
                             <div class="form-group col-md volume-obj">
                                 <label for="volume-obj" class="col-form-label"><b>Volume</b></label>
-                                <select class="custom-select" name="volume-obj" id="volume-obj" required>
+                                <select class="custom-select chg" name="volume-obj" id="volume-obj" required>
                                     {% for vol in volumes %}
                                         <option value="{{vol}}">{{vol}}</option>
                                     {% endfor %}
@@ -271,6 +271,8 @@
 
 <script>
 
+    var mode = '{{mode}}';   
+
     var putThousandsSeparators;
 
     putThousandsSeparators = function(value, sep) {
@@ -291,11 +293,40 @@
     return value;
     };
 
+    var getData = function(){
+        data = {
+            'year' : $('#year').val(),
+            'month' : $('#month').val(),
+            'prod' : $('#prod').val(),
+            'unit' : $('#unit-obj').val(),
+            'category' : $('#category-obj').val(),
+            'volume' : $('#volume-obj').val()
+        }
+        return data;
+    }
+
+    var setCapacity = function(){
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'core:set-capacity' %}",
+            data: getData(),
+            success: function(response){
+                // console.log(response)
+                $('#capacite_jour').val(response['capacity'])
+            }
+        })
+    }
+
     $(document).ready(function(){
         $('.form-inline > .form-group > input').each(function(){
             $(this).prop('type', 'text');
             $(this).val(putThousandsSeparators(parseFloat($(this).val())));
         })
+        setCapacity();
+    })
+
+    $('.chg').on('change', function(){
+        setCapacity();
     })
     
     $('input[type=radio]').on('change', function(){

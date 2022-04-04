@@ -81,6 +81,7 @@ def get_vente_df(df):
     indexNames = df[df['Qte_Cumul'] == 0].index
     df.drop(indexNames , inplace=True)
     df.loc[df['category'].str.contains('diver', flags=re.IGNORECASE, na = False), 'category'] = 'DIVERSE'
+    df['Unité'] = map(lambda x: str(x).upper(), df['Unité'])
     # file_name = 'Ventes_' + str(date.month) + '_' + str(date.year) + '.xlsx'
     # if not os.path.isfile(r'C:\Users\zaki1\Desktop\Controle de Gestion\Scripts\Ventes_' + str(date.month) + '_' + str(date.year) + '.xlsx'):
     #     # print('New file !')

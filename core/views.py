@@ -856,7 +856,7 @@ class AddAct(View):
                         if tab_name != 'TCR':
                             cursor.execute('SELECT MAX("ID") FROM public."' + tab_name + '"')
                             max_id = cursor.fetchone()[0]
-                            print('about to insert')
+                            # print('about to insert')
                             df.insert(0, 'ID', range(int(max_id) + 1, 1 + int(max_id) + len(df)))
                         df.to_sql(tab_name, engine, if_exists='append', index=False)
                         last_obj = Vente.objects.latest('id')
@@ -1527,4 +1527,18 @@ class AddObjectifCap(View):
                     'mode': mode
                 }))
 
-
+def set_capacity(request):
+    if request.is_ajax and request.method == "POST":
+        # pylint: disable=no-member
+        qs = ObjectifCapaciteProduction.objects.filter(
+            unite = request.POST.get('unit'),
+            category = request.POST.get('category'),
+            volume = request.POST.get('volume'),
+            produit = request.POST.get('prod'),
+        )
+        if qs.count() > 0:
+            cap = qs.order_by('-id')[0].capacite_jour
+        else:
+            cap = 0
+        return JsonResponse({'capacity': cap})
+    return JsonResponse({'error': 'Something went wrong!'})
