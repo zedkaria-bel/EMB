@@ -1452,8 +1452,8 @@ class ObjCapacitySummary(LoginRequiredMixin, ListView):
         # pylint: disable=no-member
         qs = ObjectifCapaciteProduction.objects.all().order_by('-date')
         context['dates'] = list(qs.values_list('date', flat=True).distinct())
-        if len(context['dates']) > 1:
-            rmv_date = context['dates'].pop(0)
+        # if len(context['dates']) > 1:
+        #     rmv_date = context['dates'].pop(0)
         if not self.request.GET.get('date'):
             context['first_dt'] = [context['dates'][0].month, context['dates'][0].year]
         else:

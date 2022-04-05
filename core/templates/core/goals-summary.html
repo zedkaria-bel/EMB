@@ -306,15 +306,17 @@
     }
 
     var setCapacity = function(){
-        $.ajax({
-            type: 'POST',
-            url: "{% url 'core:set-capacity' %}",
-            data: getData(),
-            success: function(response){
-                // console.log(response)
-                $('#capacite_jour').val(response['capacity'])
-            }
-        })
+        if( mode == 'add' ){
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'core:set-capacity' %}",
+                data: getData(),
+                success: function(response){
+                    // console.log(response)
+                    $('#capacite_jour').val(response['capacity'])
+                }
+            })
+        }
     }
 
     $(document).ready(function(){
