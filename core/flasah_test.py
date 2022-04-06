@@ -212,6 +212,11 @@ def get_prod_phy(df):
     
     # print(df[['Rebut_mois', 'Brute_mois']].head())
     # try:
+    df.loc[df['Rebut_mois'].astype(str).str.isspace(), 'Rebut_mois'] = np.nan
+    df.loc[df['Brute_mois'].astype(str).str.isspace(), 'Brute_mois'] = np.nan
+    df.loc[df['Objectif'].astype(str).str.isspace(), 'Objectif'] = np.nan
+    df.loc[df['Brute_jour'].astype(str).str.isspace(), 'Brute_jour'] = np.nan
+    df.loc[df['Capacité jour'].astype(str).str.isspace(), 'Capacité jour'] = np.nan
     df['Taux_rebut'] = df['Rebut_mois'] / df['Brute_mois'].replace({ 0 : np.nan })
     # except ZeroDivisionError:
     #     df['Taux_rebut'] = 0

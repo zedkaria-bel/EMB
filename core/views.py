@@ -21,6 +21,8 @@ import pandas as pd
 import numpy as np
 import json
 import re
+import sys, os
+import traceback
 
 from django.shortcuts import render
 from openpyxl import load_workbook
@@ -913,8 +915,12 @@ class AddAct(View):
             except ValueError as v:
                 messages.error(request, str(v))
                 return redirect('core:add-act-journ')
-            except:
-                messages.error(request, "Erreur !")
+            except Exception as e:
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                # print(exc_type, fname, exc_tb.tb_lineno)
+                messages.error(request, "Erreur ! ")
+                print(exc_type, fname, exc_tb.tb_lineno, traceback.format_exc())
                 return redirect('core:add-act-journ')
             fs.delete(uploaded_file_path)
         messages.success(request, "Le données ont été stockés avec succès !")
