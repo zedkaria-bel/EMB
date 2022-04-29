@@ -1,8 +1,9 @@
+from datetime import date
 from django import template
 import calendar
 import os
 import locale
-from ..models import Tcr, User
+from ..models import Flash_Impression, Tcr, User
 
 locale.setlocale(locale.LC_ALL, 'fr_FR')
 
@@ -73,3 +74,28 @@ def get_unit_qs(qs, unit):
 @register.filter
 def get_field(row, field):
     return getattr(row, field)
+
+@register.filter
+def get_flash_qs(cap_prod):
+    return Flash_Impression.objects.filter(
+        date = cap_prod.date,
+        ligne = cap_prod.ligne
+    )
+
+@register.filter
+def get_flash_obj(cap_prod, field):
+    return Flash_Impression.objects.get(
+        date = cap_prod.date,
+        ligne = cap_prod.ligne
+    )[field]
+
+@register.filter
+def get_percent(nb):
+    try:
+        return round(nb * 100, 2)
+    except:
+        return 0
+
+@register.filter
+def get_flash_count(obj):
+    return obj.count()

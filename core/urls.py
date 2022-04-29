@@ -26,6 +26,11 @@ from .views import (
     AddObjectifCap,
     TcrMan,
     set_capacity,
+    add_cap_prod_imp,
+    FlashImpressionSummary,
+    FlashImpressionDetails,
+    EditFlashImp,
+    add_cap_prod_imp_man,
 )
 
 app_name = 'core'
@@ -56,4 +61,9 @@ urlpatterns = [
     path('goals-summary/<str:mode>/', ObjCapacitySummary.as_view(), name = 'goals-summary'),
     path('process-goals/', AddObjectifCap.as_view(), name = 'process-goals'),
     path('set-capacity/', set_capacity, name = 'set-capacity'),
+    path('add-cap-prod-imp/', add_cap_prod_imp, name = 'add-cap-prod-imp'),
+    path('flash-impr-summary/', FlashImpressionSummary.as_view(), name = 'flash-impr-summary'),
+    path('flash-impr-details/<int:pk>/', FlashImpressionDetails.as_view(), name = 'flash-impr-details'),
+    path('edit-flash-imp/', EditFlashImp.as_view(), name = 'edit-flash-imp'),
+    path('add-flash-imp-manual/', add_cap_prod_imp_man, name = 'add-flash-imp-manual'),
 ]

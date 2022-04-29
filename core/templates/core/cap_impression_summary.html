@@ -24,25 +24,14 @@
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-filter mr-4" viewBox="0 0 16 16">
         <path d="M6 10.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5z"/>
     </svg>
-    <form method="GET" action="{% url 'core:prod-view' %}" id="form" class="col-9 d-flex flex-row" style="display: flex; justify-content: center; align-items: center;">
+    <form method="GET" action="{% url 'core:flash-impr-summary' %}" id="form" class="col-9 d-flex flex-row" style="display: flex; justify-content: center; align-items: center;">
         {% csrf_token %}
         <input type="date" id='date_filter' name="date" placeholder="Date" value="{{date|date:'Y-m-d'}}" class="form-control col-md mr-4">
-        <select class="custom-select col-2 mr-4" name="unit" id="unit">
-            <option value="all" {% if unit == 'all' %} selected {% endif %} >Unité (All)</option>
-            <option value="KDU" {% if unit == 'KDU' %} selected {% endif %} >KDU</option>
-            <option value="AZDU" {% if unit == 'AZDU' %} selected {% endif %} >AZDU</option>
-            <option value="SKDU" {% if unit == 'SKDU' %} selected {% endif %} >SKDU</option>
-        </select>
         <select class="custom-select col-md mr-4" name="lines" id="lines">
             <option value="all">Ligne (All)</option>
             {% for line in lines %}
             <option value="{{line}}" {% if ligne == line %} selected {% endif %}>{{line|upper}}</option>
             {% endfor %}
-        </select>
-        <select class="custom-select col-md mr-4" name="prod" id="prod">
-            <option value="all" {% if prod == 'all' %} selected {% endif %}>Produit (All)</option>
-            <option value="Boite" {% if prod == 'Boite' %} selected {% endif %}>Boite</option>
-            <option value="Accessoire" {% if prod == 'Accessoire' %} selected {% endif %}>Accessoire</option>
         </select>
         <button type="submit" id="submit-form" class="btn d-flex flex-row py-2 px-3 mr-3" style="color: white !important; background-color: #0e385b !important;">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-funnel-fill" viewBox="0 0 16 16">
@@ -70,21 +59,6 @@
             <path fill-rule="evenodd" d="M13.854 2.146a.5.5 0 0 1 0 .708l-11 11a.5.5 0 0 1-.708-.708l11-11a.5.5 0 0 1 .708 0Z"/>
             <path fill-rule="evenodd" d="M2.146 2.146a.5.5 0 0 0 0 .708l11 11a.5.5 0 0 0 .708-.708l-11-11a.5.5 0 0 0-.708 0Z"/>
           </svg>
-        <!-- <p id="close_div" class="h1 ml-auto mr-3 p-3" style="color: black; transform: rotate(45deg); cursor: pointer; transition: 0.5s !important; border-radius: 50% !important; background-color:#efefef;">+</p> -->
-        <form method="POST" enctype="multipart/form-data" action="{% url 'core:process-new-act' %}" class="form mx-5 my-4">
-            {% csrf_token %}
-            <h5 style="font-weight: bolder !important;">AJOUTER UN NOUVEAU FICHIER EXCEL POUR METTRE À JOUR L'ACTIVITÉ JOURNALIÈRE DU <u><b>{{date|date:'d/m/Y'}}</b></u> </h5>
-            <div class="form-row">
-                <div class="form-group col-md-12">
-                    <input type="hidden" name="edit-tcr-month" value="{{Month}}">
-                    <input type="hidden" name="edit-tcr-year" value="{{Year}}">
-                    <label for="pu" class="col-form-label"><b>Fichier de l'activité journalière</b></label>
-                    <input type="file" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="form-control chg" name="file_pg" id="file_pg" />
-                </div>
-            </div>
-            <button type="submit" id="submit-edit" class="btn ld-over ml-0" style="color: white !important; background-color: #0e385b !important;" disabled><b>TRAITER</b></button>
-            <div class="ld ld-ring ld-spin"></div>
-        </form>
     </div> 
 </div>
 
@@ -93,10 +67,11 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="#31389a" class="mr-4 bi bi-info-circle-fill" viewBox="0 0 16 16">
             <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
           </svg>
-        <p class="h5 mb-0 align-self-center" style="color: #31389a;">La dernière production enregistrée date du : <b>{{max_dt_prod|date:'d/m/Y'}}</b></p>
+        <p class="h5 mb-0 align-self-center" style="color: #31389a;">Le dernier flash journalier d'impression enregistré date du : <b>{{max_dt_flash|date:'d/m/Y'}}</b></p>
     </div>
+    {% if mode != 'impr' %}
     <div class="impr d-flex flex-row col-2">
-        <a href="{% url 'core:flash-impr-summary' %}" id="add_act_man" target="_blank" class="px-4 py-2 d-flex flex-row h5 justify-content-center align-items-center shadow mb-0" style="background-color: white; border-radius: 60px; transition: 0.5s; color: #303be9;">
+        <a href="{% url 'core:add-act-journ-manual' %}" id="add_act_man" target="_blank" class="px-4 py-2 d-flex flex-row h5 justify-content-center align-items-center shadow mb-0" style="background-color: white; border-radius: 60px; transition: 0.5s; color: #303be9;">
             <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="black" class="bi bi-printer" viewBox="0 0 16 16">
                 <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
                 <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
@@ -104,6 +79,7 @@
             <p class="mb-0 ml-2"><b>IMPRIMERIE</b></p>
         </a>
     </div>
+    {% endif %}
 </div>
 
 <div class="mb-4">
@@ -117,13 +93,11 @@
             {% if count != 0 %}
             <th class="py-3" scope="col"><b class="h6">#</b></th>
             <th class="py-3" scope="col"><b class="h6">Date</b></th>
-            <th class="py-3" scope="col"><b class="h6">Unité</b></th>
             <th class="py-3" scope="col"><b class="h6">Ligne</b></th>
-            <th class="py-3" scope="col"><b class="h6">Brute (Jour)</b></th>
-            <th class="py-3" scope="col"><b class="h6">Rebut (Jour)</b></th>
-            <th class="py-3" scope="col"><b class="h6">PU - Coût de revient</b></th>
-            <th class="py-3" scope="col"><b class="h6">Catégorie</b></th>
-            <th class="py-3" scope="col"><b class="h6">Produit</b></th>
+            <th class="py-3" scope="col"><b class="h6">CPH</b></th>
+            <th class="py-3" scope="col"><b class="h6">Arrêts (Mn)</b></th>
+            <th class="py-3" scope="col"><b class="h6">Prod. Brute</b></th>
+            <th class="py-3" scope="col"><b class="h6">Shift</b></th>
             <th class="py-3" scope="col"><b class="h6">Détails</b></th>
             {% endif %}
           </tr>
@@ -133,19 +107,11 @@
             <tr class="row_tab" style="border-bottom: 2px #d7d7d7 solid !important;">
                 <th class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ page_obj.start_index|add:forloop.counter0 }}</b></th>
                 <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.date|date:'d-m-Y' }}</b></td>
-                <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.unite }}</b></td>
-                <td class="py-3" scope="row"><b class="h6 font-weight-bold" >
-                    {% if request.ligne is not None %}
-                    {{ request.ligne }}
-                    {% else %}
-                    -
-                    {% endif %}
-                </b></td>
-                <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.brute_jour|intcomma|space_digits }}</b></td>
-                <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.rebut_jour }}</b></td>
-                <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.pu_cout_revient|floatformat:"2" }} DZD</b></td>
-                <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.category }}</b></td>
-                <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.produit }}</b></td>
+                <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.ligne }}</b></td>
+                <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.cph|intcomma|space_digits }}</b></td>
+                <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.arrets }}</b></td>
+                <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.prod_brute|intcomma|space_digits }}</b></td>
+                <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.shift }}</b></td>
                 <td class="py-3" scope="row"><b class="h6 font-weight-bold" >
                     <a href="{{request.get_absolute_url}}" target="_blank">
                         <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-arrow-right-circle" viewBox="0 0 16 16">
@@ -198,35 +164,6 @@
 
 <script>
 
-    $('#edit_tcr').on('click', function(){
-        $('#loader').show();
-        $('body').css('overflow-y', 'hidden');
-    });
-
-    $('#close_div').on('click', function(){
-        $('#loader').attr("style", "display: none !important");
-        $('body').css('overflow-y', 'visible');
-    });
-
-
-    $('.chg').on('change', function(){
-        $('#exist').find('.msg').remove();
-        $('#exist').hide();
-        if($('#file_pg').val() == ''){
-            $('#submit-edit').prop('disabled', true);
-        }
-        else{
-            $('#submit-edit').prop('disabled', false);
-        }
-    });
-
-    $('form').submit(function(e) {
-        $('#edit-tcr').attr("style", "display: none !important");
-        $('#spin').show();
-        $(':disabled').each(function(e) {
-            $(this).removeAttr('disabled');
-        })
-    });
 </script>
 
 {% endblock content %}

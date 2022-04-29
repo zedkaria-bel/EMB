@@ -150,3 +150,16 @@ table.table-bordered > thead > tr{
   height: fit-content !important;
 }
 
+.bi-chevron-up:hover,
+.bi-plus-circle:hover,
+.bi-x-lg:hover{
+  transition: .8s;
+  /* box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2), 0 12px 40px 0 rgba(0, 0, 0, 0.19) !important; */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5) !important;
+}
+
+
+
+.flip {
+  transform: rotate(-180deg);
+}

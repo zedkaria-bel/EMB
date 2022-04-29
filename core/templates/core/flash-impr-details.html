@@ -1,0 +1,366 @@
+{% extends 'main/base.html' %}
+
+{% load static %}
+{% load hum_money %}
+{% load humanize %}
+{% block head_title %}{{title}} {% endblock %}
+{% block content %}
+{% if messages %}
+<div id="div-msg" class="mt-2 pb-0 pt-0" style="position: relative; top: -30px;">
+    {% for message in messages %}
+    <div id="exist" class="alert alert-{{ message.tags }} alert-dismissible fade show align-items-center" role="alert">
+        <p class="mb-0 msg h5"><b>{{ message }}</b></p>
+        <button type="button" class="close align-items-center mb-0" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- LOCK FORM -->
+<div class="d-flex">
+    <div class="form-group ml-auto mt-2" style="position: relative; top: -45px;">
+        <input type="checkbox" class="form-check-input align-self-center mt-2" id="locked" checked>
+        <label class="form-check-label h3 mr-3 mb-0 align-self-center" for="locked"><b>LOCKED</b></label>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-lock-fill align-self-center mb-2" viewBox="0 0 16 16">
+            <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+          </svg>
+    </div>
+</div>
+
+<form method="POST" enctype="multipart/form-data" action="{% url 'core:edit-flash-imp' %}" class="form">
+{% csrf_token %}
+<input type="hidden" id='mode' class="mode" name="mode" value="edit" class="form-control">
+<input type="hidden" id='main_id' name="main_id" value="{{id}}" class="form-control">
+<input type="hidden" id='date' name="date" value="{{date}}" class="form-control">
+
+<div class="gen">
+
+    {% for obj in qs %}
+    <!-- FLASH JOURNALIER -->
+    <div class="shadow p-3 mb-5 bg-white rounded w-100y" style="position:relative; top: -30px;">
+        <input type="hidden" id='id' name="id" value="{{obj.id}}" class="form-control">
+        <input type="hidden" id='ligne' name="ligne" value="{{obj.ligne}}" class="form-control">
+        <div class="row pb-2 d-flex justify-content-between align-items-center">
+            <h3 class="col-5 mb-0" style="font-weight: bolder !important;"><b>{{obj.ligne}} </b></h3>
+            <div class="form-group col-5 d-flex flex-row mb-0">
+                <label for="cph" class="col-6 h5 text-right col-form-label">Capacité par heure : </label>
+                <input type="number" disabled class="form-control col-4" id="cph" name="cph" value="{{obj.cph}}"/>
+            </div>
+            <div class="col-2 d-flex justify-content-center align-items-center">
+                <svg  data-toggle="collapse" href="#collapse-line-{{obj.ligne}}" role="button" aria-expanded="false" aria-controls="collapseExample" xmlns="http://www.w3.org/2000/svg" width="45" height="45" fill="#626262" class="bi bi-chevron-up line-dropdwn p-2 {{obj.line}}" style="border-radius: 50%; cursor: pointer; border: 3px #626262 solid;" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+                </svg>
+            </div>
+        </div>
+        <div class="collapse" id="collapse-line-{{obj.ligne}}" style="transition: 0.8s !important;">
+            {% if obj|get_flash_qs|get_flash_count > 0 %}
+            <div class="row pb-2 d-flex justify-content-between align-items-center" style="background-color: #eaffe9;">
+                <h5 class='mt-3 h4 col-10' style="color:teal !important;"><b>RÉALISATION</b></h5>
+                <div class="col-2 d-flex justify-content-center align-items-center">
+                    <svg  data-toggle="collapse" href="#collapse-real-{{obj.ligne}}" role="button" aria-expanded="false" aria-controls="collapseExample" xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="teal" class="bi bi-chevron-up real-dropdwn p-2 {{obj.line}}" style="border-radius: 50%; cursor: pointer; border: 2px teal solid;" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+                    </svg>
+                </div>
+            </div>
+            <hr class='mt-0' style="height: 4px !important; background-color: teal !important;">
+            <div class="collapse" id="collapse-real-{{obj.ligne}}" style="transition: 0.8s !important;">
+                <input type="hidden" id='{{obj.ligne}}-nbreal' class="nb" name="{{obj.ligne}}-nbreal" value="{{obj|get_flash_qs|get_flash_count}}" class="form-control">
+                {% for flash_obj in obj|get_flash_qs %}
+                <div class="row">
+                    <div class="col-10">
+                        <input type="hidden" id='id_flash' name="id_flash" value="{{flash_obj.id}}" class="form-control">
+                        <div class="form-row">
+                            <div class="form-group col-md-1">
+                                <label for="hours" class="col-form-label"><b>Heures</b></label>
+                                <input type="number" class="form-control" name="hours" id="hours" value="{{flash_obj.hours}}" placeholder="Heures" required disabled>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="real_shift" class="col-form-label"><b>Shift</b></label>
+                                <select class="custom-select" name="real_shift" id="real_shift" required disabled>
+                                    {% for shift in shifts %}
+                                    <option value="{{shift}}" {% if flash_obj.shift == shift %} selected {% endif %} >{{shift}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="format_fer" class="col-form-label"><b>Format de fer</b></label>
+                                <select class="custom-select" name="format_fer" id="format_fer" required disabled>
+                                    {% for format_fer in formats %}
+                                    <option value="{{format_fer}}" {% if flash_obj.format_fer == format_fer %} selected {% endif %} >{{format_fer}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="des" class="col-form-label"><b>Désignation</b></label>
+                                <input type="text" class="form-control text" name="des" id="des" value="{% if flash_obj.des %} {{flash_obj.des}} {% else %} - {% endif %}" placeholder="Désignation" required disabled>
+                            </div>
+                            <div class="form-group col-md-1">
+                                <label for="nb_psg" class="col-form-label"><b>NB Passage</b></label>
+                                <input type="number" class="form-control" name="nb_psg" id="nb_psg" value="{{flash_obj.nb_psg}}" placeholder="NB Passage" required disabled>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="conduct" class="col-form-label"><b>Conducteur</b></label>
+                                <input type="text" class="form-control text" name="conduct" id="conduct" value="{{flash_obj.conduct}}" placeholder="Conducteur" required disabled>
+                            </div>
+                        </div>
+                        <h5 class='mt-3 h5' style="color:darkgray !important;"><b>Produits semi-fini</b></h5>
+                        <hr class='mt-0' style="height: 3px !important; background-color: darkgray !important;">
+                        <div class="form-row">
+                            <div class="form-group col-md-">
+                                <label for="sf_brut" class="col-form-label"><b>S/Fini. - Brute</b></label>
+                                <input type="number" min="0" class="form-control brut" name="sf_brut" id="sf_brut" value="{{flash_obj.sf_brut}}" placeholder="Brute" required disabled>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="sf_rebut" class="col-form-label"><b>S/Fini. - Rebut</b></label>
+                                <input type="number" min="0" class="form-control" name="sf_rebut" id="sf_rebut" value="{{flash_obj.sf_rebut}}" placeholder="Rebut" required disabled>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="sf_conf" class="col-form-label"><b>S/Fini. - Conforme</b></label>
+                                <input type="number" min="0" class="form-control" name="sf_conf" id="sf_conf" value="{{flash_obj.sf_conf}}" placeholder="Conforme" required disabled>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="sf_taux_reb" class="col-form-label"><b>S/Fini. - Taux rebut</b></label>
+                                <input type="number" min="0" step="0.01" class="form-control col-10 taux" name="sf_taux_reb" id="sf_taux_reb" value="{% if flash_obj.sf_taux_reb %}{{flash_obj.sf_taux_reb|get_percent}}{% endif %}" placeholder="Taux rebut" required disabled>
+                            </div>
+                        </div>
+                        <h5 class='mt-3 h5' style="color:darkgray !important;"><b>Produits fini</b></h5>
+                        <hr class='mt-0' style="height: 3px !important; background-color: darkgray !important;">
+                        <div class="form-row">
+                            <div class="form-group col-md-">
+                                <label for="brut" class="col-form-label"><b>Brute</b></label>
+                                <input type="number" min="0" class="form-control brut" name="brut" id="brut" value="{{flash_obj.brut}}" placeholder="Brute" required disabled>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="rebut" class="col-form-label"><b>Rebut</b></label>
+                                <input type="number" min="0" class="form-control" name="rebut" id="rebut" value="{{flash_obj.rebut}}" placeholder="Rebut" required disabled>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="conf" class="col-form-label"><b>Conforme</b></label>
+                                <input type="number" min="0" class="form-control" name="conf" id="conf" value="{{flash_obj.conf}}" placeholder="Conforme" required disabled>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="taux_reb" class="col-form-label"><b>Taux rebut</b></label>
+                                <input type="number" min="0" step="0.01" class="form-control taux" name="taux_reb" id="taux_reb" value="{% if flash_obj.sf_taux_reb %}{{flash_obj.taux_reb|get_percent}}{% endif %}" placeholder="Taux rebut" required disabled>
+                                <!-- <input type="number" min="0" step="0.01" class="form-control taux" name="taux_reb" id="taux_reb" value="{{flash_obj.taux_reb|get_percent}}" placeholder="Taux rebut" required disabled> -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-2 d-flex justify-content-center align-items-stretch">
+                        <div class="shadow d-flex justify-content-center align-items-center" style="background-color: #f1f8ea;">
+                            <p class="mb-0 h1 py-4 px-5" style="color: teal;"> <b>{{forloop.counter}}</b> </p>
+                        </div>
+                    </div>
+                </div>
+                <hr class='mt-4' style="height: 3px !important; color:black !important;">
+                {% endfor %}
+            </div>
+            {% endif %}
+            <!-- CAPACITE DE PRODUCTION -->
+            <div class="pb-2 row" style="background-color: #eaffe9;">
+                <h5 class='pt-3 h4 mb-0 col-10' style="color:teal !important;"><b>CAPACITÉ DE PRODUCTION</b></h5>
+                <div class="col-2 d-flex justify-content-center align-items-center">
+                    <svg  data-toggle="collapse" href="#collapse-cap-{{obj.ligne}}" role="button" aria-expanded="false" aria-controls="collapseExample" xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="teal" class="bi bi-chevron-up cap-dropdwn p-2 {{obj.line}}" style="border-radius: 50%; cursor: pointer; border: 2px teal solid;" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+                    </svg>
+                </div>
+            </div>
+            <hr class='mt-0' style="height: 4px !important; background-color: teal !important;">
+            <div class="form-row collapse" id="collapse-cap-{{obj.ligne}}" style="transition: 0.8s !important;">
+                <div class="form-group col-md-2">
+                    <label for="unit" class="col-form-label"><b>Arrêts (Mn)</b></label>
+                    <input type="number" min="0" class="form-control" name="arrets" id="arrets" value="{{obj.arrets}}" placeholder="Arrêts" required disabled>
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="prod_brute" class="col-form-label"><b>Prod. Brute</b></label>
+                    <input type="number" min="0" class="form-control" name="prod_brute" id="prod_brute" value="{{obj.prod_brute}}" placeholder="Prod. Brute" required disabled>
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="shift" class="col-form-label"><b>Shift</b></label>
+                    <input type="number" min="0" class="form-control" name="shift" id="shift" value="{{obj.shift}}" placeholder="Shift" required disabled>
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="taux_util" class="col-form-label"><b>Taux d'utilisation</b></label>
+                    <input type="number" min="0" step="0.01" class="form-control taux" name="taux_util" id="taux_util" value="{{obj.taux_util|get_percent}}" placeholder="Taux d'utilisation" required disabled>
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="capacite_prod" class="col-form-label"><b>Capacité de production</b></label>
+                    <input type="number" min="0" step="0.01" class="form-control" name="capacite_prod" id="capacite_prod" value="{{obj.capacite_prod}}" placeholder="Capacité" required disabled>
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="taux_prod" class="col-form-label"><b>Taux de production</b></label>
+                    <input type="number" min="0" step="0.01" class="form-control taux" name="taux_prod" id="taux_prod" value="{{obj.taux_prod|get_percent}}" placeholder="Capacité" required disabled>
+                </div>
+            </div>
+            <!-- TEMPS DES ARRETS (MINUTES) -->
+            <div class="pb-2 row" style="background-color: #eaffe9;">
+                <h5 class='pt-3 h4 mb-0 col-10' style="color:teal !important;"><b>TEMPS DES ARRETS (MINUTES)</b></h5>
+                <div class="col-2 d-flex justify-content-center align-items-center">
+                    <svg  data-toggle="collapse" href="#collapse-arret-{{obj.ligne}}" role="button" aria-expanded="false" aria-controls="collapseExample" xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="teal" class="bi bi-chevron-up arret-dropdwn p-2 {{obj.line}}" style="border-radius: 50%; cursor: pointer; border: 2px teal solid;" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+                    </svg>
+                </div>
+            </div>
+            <hr class='mt-0' style="height: 4px !important; background-color: teal !important;">
+            <div class="collapse" id="collapse-arret-{{obj.ligne}}" style="transition: 0.8s !important;">
+                <h5 class='mt-3 h5' style="color:darkgray !important;"><b>Arrêts programmés</b></h5>
+                <hr class='mt-0' style="height: 3px !important; background-color: darkgray !important;">
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label for="prep_line" class="col-form-label"><b>Préparation de la ligne</b></label>
+                        <input type="number" min="0" class="form-control" name="prep_line" id="prep_line" value="{{obj.prep_line}}" placeholder="Temps" required disabled>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="pause_eat" class="col-form-label"><b>Pause dejeuné</b></label>
+                        <input type="number" min="0" class="form-control" name="pause_eat" id="pause_eat" value="{{obj.pause_eat}}" placeholder="Temps" required disabled>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="chg_form" class="col-form-label"><b>Changement de format</b></label>
+                        <input type="number" min="0" class="form-control" name="chg_form" id="chg_form" value="{{obj.chg_form}}" placeholder="Temps" required disabled>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="lvg" class="col-form-label"><b>Lavage</b></label>
+                        <input type="number" min="0" class="form-control" name="lvg" id="lvg" value="{{obj.lvg}}" placeholder="Temps" required disabled>
+                    </div>
+                </div>
+                <h5 class='mt-3 h5' style="color:darkgray !important;"><b>Arrêts non programmés</b></h5>
+                <hr class='mt-0' style="height: 3px !important; background-color: darkgray !important;">
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label for="manque_prog" class="col-form-label"><b>Manque de programme</b></label>
+                        <input type="number" min="0" class="form-control" name="manque_prog" id="manque_prog" value="{{obj.manque_prog}}" placeholder="Temps" required disabled>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label for="panne" class="col-form-label"><b>Panne</b></label>
+                        <input type="number" min="0" class="form-control" name="panne" id="panne" value="{{obj.panne}}" placeholder="Temps" required disabled>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label for="reglages" class="col-form-label"><b>Réglages</b></label>
+                        <input type="number" min="0" class="form-control" name="reglages" id="reglages" value="{{obj.reglages}}" placeholder="Temps" required disabled>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="abs" class="col-form-label"><b>Absenteïsme</b></label>
+                        <input type="number" min="0" class="form-control" name="abs" id="abs" value="{{obj.abs}}" placeholder="Temps" required disabled>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label for="autres" class="col-form-label"><b>Autres</b></label>
+                        <input type="number" min="0" class="form-control" name="autres" id="autres" value="{{obj.autres}}" placeholder="Temps" required disabled>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="d-flex justify-content-center align-items-center">
+    <button type="submit" id="submit-form" class="btn col-4" style="color: white !important; background-color: #0e385b !important; position: relative; top: -30px;" disabled><b class="h5">Modifier</b></button>
+</div>
+
+</form>
+
+<script>
+
+    $(document).ready(function() {
+        $( ".line-dropdwn" ).click( function() {
+            $(this).toggleClass('flip');
+        });
+        $( ".real-dropdwn" ).click( function() {
+            $(this).toggleClass('flip');
+        });
+        $( ".cap-dropdwn" ).click( function() {
+            $(this).toggleClass('flip');
+        });
+        $( ".arret-dropdwn" ).click( function() {
+            $(this).toggleClass('flip');
+        });
+    });
+
+    // $('.collapse').on('show.bs.collapse', function () {
+    //     $(this).closest('.line-dropdwn').toggleClass('flip');
+    // })
+
+    putThousandsSeparators = function(value, sep) {
+        if (sep == null) {
+            sep = ',';
+        }
+        // check if it needs formatting
+        if (value.toString() === value.toLocaleString()) {
+            // split decimals
+            var parts = value.toString().split('.')
+            // format whole numbers
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, sep);
+            // put them back together
+            value = parts[1] ? parts.join('.') : parts[0];
+        } else {
+            value = value.toLocaleString('cs-CZ');
+        }
+        return value;
+    };
+
+    $(document).ready(function(){
+        $('.form-row > .form-group > input[type=number], .form-group > input[type=number]').each(function(){
+            $(this).prop('type', 'text');
+            $(this).val(putThousandsSeparators(parseFloat($(this).val())));
+            if($(this).attr('id').includes('taux')){
+                if($(this).val() != 'NaN'){
+                    $(this).val( $(this).val() + ' %' )
+                }
+            }
+        })
+    })
+
+
+    $('.form').on('submit', function(){
+        $(':input').not('.custom-select, .text').not('input[name="csrfmiddlewaretoken"]').not('#locked').val(function(index, value) {
+            return value.replace(/\s/g, '').replace(',', '.');
+        });
+        $('.taux').each(function(){
+            str = $(this).val().slice(0, -1)
+            // console.log(str)
+            $($(this)).val(str)
+        })
+        $('input').not('.custom-select, .text').not('#locked').not('input[name="csrfmiddlewaretoken"]').not('#id').not('#date').not('#ligne').not('input[type=hidden]').prop("type", "number");
+    });
+
+    $('#locked').on('change', function(){
+        var chk = $(this).is(':checked');
+        if(!chk){
+            $(':input').not('input[name="csrfmiddlewaretoken"]').not('#locked').not('.taux').not('.brut').prop('disabled', false);
+            // $(':select').prop('disabled', false);
+            $('#submit-form').prop('disabled', true);
+            $(':input').not('.custom-select, .text').not('input[name="csrfmiddlewaretoken"]').not('#locked').val(function(index, value) {
+                return value.replace(/\s/g, '').replace(',', '.');
+            });
+            $('.taux').each(function(){
+                str = $(this).val().slice(0, -1)
+                // console.log(str)
+                $($(this)).val(str)
+            })
+            $('input').not('.custom-select, .text').not('#locked').not('input[name="csrfmiddlewaretoken"]').not('#id').not('#date').not('#ligne').not('input[type=hidden]').prop("type", "number");
+        }
+        else{
+            $(':input').not('input[name="csrfmiddlewaretoken"]').not('#locked').not('.taux').not('.brut').prop('disabled', true);
+            $('input').not('.custom-select, .text').not('input[name="csrfmiddlewaretoken"]').not('#locked').not('#id').not('#date').not('#ligne').not('input[type=hidden]').each(function(){
+                $(this).prop('type', 'text');
+                $(this).val(putThousandsSeparators(parseFloat($(this).val())));
+                if($(this).attr('id').includes('taux')){
+                    if($(this).val() != 'NaN'){
+                        $(this).val( $(this).val() + ' %' )
+                    }
+                }
+            })
+            // $(':select').prop('disabled', true);
+            $('#submit-form').prop('disabled', false);
+        }
+    });
+
+    $('form').submit(function(e) {
+        $(':disabled').each(function(e) {
+            $(this).removeAttr('disabled');
+        })
+    });
+</script>
+
+{% endblock content %}

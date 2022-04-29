@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 from pathlib import Path
 import os
+# pylint: disable=import-error
 import environ
 # Initialise environment variables
 env = environ.Env()

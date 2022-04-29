@@ -5,17 +5,18 @@
 #   * Make sure each ForeignKey and OneToOneField has `on_delete` set to the desired behavior
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
-from django.db import models
-from django.shortcuts import reverse
-import json
-from django.dispatch import receiver
-# pylint: disable=import-error
-from django_model_changes import ChangesMixin
-from django_model_changes import post_change
-from django.contrib.auth.models import User
-from django.db.models.signals import post_save
+
+
 import datetime
+
 from django.apps import apps
+from django.contrib.auth.models import User
+from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.shortcuts import reverse
+# pylint: disable=import-error
+from django_model_changes import ChangesMixin, post_change
 from embapp.middleware import get_current_user
 
 op_choices = (
@@ -169,7 +170,7 @@ class Trs(ChangesMixin, models.Model):
 
     class Meta:
         db_table = 'TRS'
-    
+
     def get_absolute_url(self):
         return reverse('core:trs-details', kwargs = {
             'pk' : self.pk
@@ -190,12 +191,12 @@ class Vente(ChangesMixin, models.Model):
 
     class Meta:
         db_table = 'Vente'
-    
+
     def get_absolute_url(self):
         return reverse('core:sale-details', kwargs = {
             'pk' : self.pk
         })
-    
+
     def get_user(self, request):
         return request.user
 
@@ -206,6 +207,57 @@ class Profile(models.Model):
 
     class Meta:
         db_table = 'Profile'
+
+class Flash_Impression(ChangesMixin, models.Model):
+    id = models.AutoField(primary_key=True)
+    hours = models.IntegerField(null = True, blank = True)
+    shift = models.TextField(null = True, blank = True)
+    format_fer = models.TextField(null = True, blank = True)
+    des = models.TextField(null = True, blank = True)
+    nb_psg = models.IntegerField(null = True, blank = True)
+    sf_brut = models.IntegerField(null = True, blank = True)
+    sf_rebut = models.IntegerField(null = True, blank = True)
+    sf_conf = models.IntegerField(null = True, blank = True)
+    sf_taux_reb = models.FloatField(null = True, blank = True)
+    brut = models.IntegerField(null = True, blank = True)
+    rebut = models.IntegerField(null = True, blank = True)
+    conf = models.IntegerField(null = True, blank = True)
+    taux_reb = models.FloatField(null = True, blank = True)
+    conduct = models.TextField(null = True, blank = True)
+    ligne = models.TextField(null = True, blank = True)
+    date = models.DateField(null = True, blank = True)
+
+    class Meta:
+        db_table = 'Flash_Impression'
+
+class Production_Capacite_Imp(ChangesMixin, models.Model):
+    id = models.AutoField(primary_key=True)
+    date = models.DateField(blank=True, null=True)
+    arrets = models.IntegerField(blank=True, null=True)
+    prod_brute = models.IntegerField(null=True, blank=True)
+    shift = models.IntegerField(null=True, blank=True)
+    taux_util = models.FloatField(null=True, blank=True)
+    capacite_prod = models.IntegerField(blank=True, null=True)
+    taux_prod = models.FloatField(null=True, blank=True)
+    ligne = models.TextField(null=True, blank=True)
+    cph = models.IntegerField(blank=True, null=True)
+    prep_line = models.IntegerField(blank=True, null=True)
+    pause_eat = models.IntegerField(blank=True, null=True)
+    chg_form = models.IntegerField(blank=True, null=True)
+    lvg = models.IntegerField(blank=True, null=True)
+    manque_prog = models.IntegerField(blank=True, null=True)
+    panne = models.IntegerField(blank=True, null=True)
+    reglages = models.IntegerField(blank=True, null=True)
+    autres = models.IntegerField(blank=True, null=True)
+    abs = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        db_table = 'Production_Capacite_Imp'
+    
+    def get_absolute_url(self):
+        return reverse('core:flash-impr-details', kwargs = {
+            'pk' : self.pk
+        })
 
 @receiver(post_save, sender=User)
 def update_user_profile(sender, instance, created, **kwargs):

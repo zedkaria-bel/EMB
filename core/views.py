@@ -1,57 +1,45 @@
-from django.shortcuts import render, get_object_or_404
-from django.views.generic import DetailView, ListView, View
-from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseRedirect
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import login, authenticate
-from django.shortcuts import render, redirect
-from django.db.models import Max, Min, Sum, Q
-from django.shortcuts import reverse
-from django.contrib import messages
-from django.core.files.storage import FileSystemStorage
-from django.db import models
-import datetime
-from django.utils import timezone
-from django.template.loader import render_to_string
 import calendar
-from dateutil.relativedelta import relativedelta
-from django.views.decorators.csrf import csrf_protect
-import pandas as pd
-import numpy as np
-import json
+import datetime
+import os
 import re
-import sys, os
+import sys
 import traceback
+from difflib import SequenceMatcher
 
-from django.shortcuts import render
-from openpyxl import load_workbook
 import dateparser
+import numpy as np
+import pandas as pd
+import psycopg2
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import User
+from django.core.files.storage import FileSystemStorage
+from django.db.models import Max, Sum
+from django.http import (HttpResponseRedirect,
+                         JsonResponse)
+from django.shortcuts import redirect, render, reverse
+from django.views.generic import DetailView, ListView, View
 # pylint: disable=import-error
 from django_pandas.io import read_frame
-from .models import (
-    Production,
-    Vente,
-    Trs,
-    Tcr,
-    AuditLog,
-    ObjectifCapaciteProduction,
-)
-from .flasah_test import get_prod_phy
-from .prod_val_boites import missing_prod_in_val, get_val_df
-from .prod_acc import get_acc_df
-from .ventes import get_vente_df
-from .trs import get_trs_df
-import psycopg2
-import sqlalchemy
-from sqlalchemy import create_engine
-from sqlalchemy import func
-from urllib import parse
+from sqlalchemy import create_engine, true
 from sqlalchemy.orm import sessionmaker
-from django.conf import settings
-from difflib import SequenceMatcher
-from django.apps import apps
-from django.contrib.auth.models import User
+
+from .flasah_test import get_prod_phy
+from .models import (AuditLog, 
+Flash_Impression, 
+ObjectifCapaciteProduction,
+Production,
+Production_Capacite_Imp,
+Tcr,
+Trs,
+Vente
+)
+from .prod_acc import get_acc_df
+from .prod_val_boites import get_val_df, missing_prod_in_val
+from .trs import get_trs_df
+from .ventes import get_vente_df
+
 
 def similar(a, b):
     a_digit_seq = []
@@ -71,6 +59,15 @@ calc_fields_prod = ['brute_jour', 'taux_jour', 'brute_mois', 'conforme_mois', 'r
 no_calc_fields_trs = ['id', 'unite', 'ligne', 'arret_plan', 'arret_non_plan', 'capacite_theo', 'qte_conf', 'qte_rebut', 'temps_ouv', 'date']
 calc_fields_sale = ['qte_cumul', 'montant_journee', 'montant_cumul']
 calc_fields_tcr = ['prod_exerc', 'consom_exerc', 'v_ajoute', 'exced_brut_exploit', 'res_financ', 'res_ord_pre_impot', 'tot_prod_act_ord', 'tot_charge_act_ord', 'res_net_act_ord', 'res_extraord', 'res_net_exerc']
+full_labels = ['prep_line',
+'pause_eat',
+'chg_form',
+'lvg',
+'manque_prog',
+'panne',
+'reglages',
+'autres',
+'abs']
 
 # FIELDS PRETTY NAMING
 pretty_naming = {
@@ -915,7 +912,7 @@ class AddAct(View):
             except ValueError as v:
                 messages.error(request, str(v))
                 return redirect('core:add-act-journ')
-            except Exception as e:
+            except:
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                 # print(exc_type, fname, exc_tb.tb_lineno)
@@ -923,7 +920,7 @@ class AddAct(View):
                 print(exc_type, fname, exc_tb.tb_lineno, traceback.format_exc())
                 return redirect('core:add-act-journ')
             fs.delete(uploaded_file_path)
-        messages.success(request, "Le données ont été stockés avec succès !")
+        messages.success(request, "Opération terminé avec succès !")
         return redirect('core:add-act-journ')
 
 def add_tcr(request):
@@ -949,7 +946,6 @@ class AddTcr(View):
             filename = fs.save(myfile.name, myfile)
             uploaded_file_path = fs.path(filename)
             file_str = uploaded_file_path
-            book = load_workbook(file_str)
             tab_name = 'TCR'
             cursor.execute('SELECT MAX("date") FROM public."' + tab_name + '"')
             max_dt = cursor.fetchone()[0]
@@ -1548,3 +1544,446 @@ def set_capacity(request):
             cap = 0
         return JsonResponse({'capacity': cap})
     return JsonResponse({'error': 'Something went wrong!'})
+
+def add_cap_prod_imp(request):
+    context = {
+        'title' : "capacité de production ( imprimerie )".upper(),
+        'req' : "capacité de production ( imprimerie )".upper(),
+    }
+    return render(request, 'core/add-cap-prod-imp.html', context)
+
+class addFlashJourn(View):
+    def post(self, request):
+        if request.FILES['file_pg']:
+            myfile = request.FILES['file_pg']
+            fs = FileSystemStorage()
+            filename = fs.save(myfile.name, myfile)
+            uploaded_file_path = fs.path(filename)
+            new_act_journ = uploaded_file_path
+            try:
+                tab_name = 'Production_Capacite_Imp'
+                cursor.execute('SELECT MAX("date") FROM public."' + tab_name + '"')
+                max_dt_cap = cursor.fetchone()[0]
+                tab_name = 'Flash_Impression'
+                cursor.execute('SELECT MAX("date") FROM public."' + tab_name + '"')
+                max_dt_flash = cursor.fetchone()[0]
+
+                xl = pd.ExcelFile(new_act_journ, engine='openpyxl') # pylint: disable=abstract-class-instantiated
+                bg_frames = []
+                for sheetname in xl.sheet_names:
+                    if 'flash' in sheetname.lower() or 'journ' in sheetname.lower():
+                        bg_df = pd.read_excel(new_act_journ, sheet_name=sheetname, header=1)
+                        ix = bg_df.index[bg_df['Unnamed: 0'].str.lower().str.contains(r'\d{2}/\d{2}/\d{4}', na = False)].tolist()[0]
+                        dte = bg_df['Unnamed: 0'][ix]
+                        # check the data type
+                        if isinstance(dte, datetime.datetime):
+                            date = dte.date()
+                        else:
+                            match = re.search(r'\d{2}/\d{2}/\d{4}', dte)
+                            date = datetime.datetime.strptime(match.group(), '%d/%m/%Y').date()
+                        if date > max_dt_flash:
+                            dfs = bg_df.index[bg_df['Unnamed: 0'].str.lower().str.contains('vern|tand|offs', na = False)].tolist()
+                            for idx, val in enumerate(dfs):
+                                df = pd.DataFrame()
+                                try:
+                                    df = bg_df.loc[val: dfs[idx+1]]
+                                except IndexError:
+                                    df = bg_df.loc[val:]
+                                df = df.reset_index(drop=True)
+                                line = df.iloc[0]['Unnamed: 0']
+                                if 'vern' in line.lower():
+                                    line = 'VERNISSEUSE'
+                                else:
+                                    line = 'TANDEM'
+                                # **************************************** FLASH IMPRESSION ***********************************************************
+                                end_flash_df = df.index[df['Unnamed: 3'].str.lower().str.contains('tot', na = False)].tolist()[0]
+                                flash_df = df.loc[0:end_flash_df, :]
+                                flash_df = flash_df.copy()
+                                flash_df.dropna(axis=1, how='all', inplace = True)
+                                to_rmv = df.index[df['Unnamed: 0'].str.lower().str.contains('shi', na = False)].tolist()[0]
+                                flash_df = flash_df.iloc[to_rmv + 3:-1]
+                                flash_df['Unnamed: 0'].fillna(method='ffill', inplace = True)
+                                flash_df['Unnamed: 1'].fillna(method='ffill', inplace = True)
+                                flash_df['Unnamed: 13'].fillna(method='ffill', inplace = True)
+                                flash_df['Unnamed: 0'] = flash_df['Unnamed: 0'].str.strip().str[-1].astype(int)
+                                flash_df.rename(columns = {
+                                    flash_df.columns[0]: 'hours',
+                                    flash_df.columns[1]: 'shift',
+                                    flash_df.columns[2]: 'format_fer',
+                                    flash_df.columns[3]: 'des',
+                                    flash_df.columns[4]: 'nb_psg',
+                                    flash_df.columns[5]: 'sf_brut',
+                                    flash_df.columns[6]: 'sf_rebut',
+                                    flash_df.columns[7]: 'sf_conf',
+                                    flash_df.columns[8]: 'sf_taux_reb',
+                                    flash_df.columns[9]: 'brut',
+                                    flash_df.columns[10]: 'rebut',
+                                    flash_df.columns[11]: 'conf',
+                                    flash_df.columns[12]: 'taux_reb',
+                                    flash_df.columns[13]: 'conduct',
+                                }, inplace = True)
+                                flash_df = flash_df.reset_index(drop=True)
+                                flash_df = flash_df.replace(['-'],0)
+                                flash_df.fillna(0, inplace = True)
+                                flash_df['sf_brut'] = flash_df['sf_rebut'] + flash_df['sf_conf']
+                                try:
+                                    flash_df['sf_taux_reb'] = flash_df['sf_rebut'] / flash_df['sf_brut']
+                                except ZeroDivisionError():
+                                    flash_df['sf_taux_reb'] = np.nan
+                                flash_df['brut'] = flash_df['rebut'] + flash_df['conf']
+                                try:
+                                    flash_df['taux_reb'] = flash_df['rebut'] / flash_df['brut']
+                                except ZeroDivisionError():
+                                    flash_df['taux_reb'] = np.nan
+                                flash_df['date'] = date
+                                flash_df['ligne'] = line
+                                print(flash_df[['sf_brut', 'sf_conf', 'sf_rebut', 'sf_taux_reb','brut', 'conf', 'rebut', 'taux_reb']])
+                                # **************************************** FLASH IMPRESSION ***********************************************************
+                             
+                                # **************************************** CAPACITE PROD ***********************************************************
+                                start_df2 = df.index[df['Unnamed: 0'].str.lower().str.contains('arr', na = False)].tolist()[0]
+                                try:
+                                    df_capacite = df.loc[start_df2:dfs[idx+1], :]
+                                except:
+                                    df_capacite = df.loc[start_df2:, :]
+                                df_capacite = df_capacite.reset_index(drop=True)
+                                df_capacite.dropna(axis=1, how='all', inplace = True)
+                                df_arrets = df_capacite.iloc[:, :3]
+                                df_cap_prod = df_capacite.iloc[:, 3:]
+                                
+                                # DF ARRETS
+
+                                begin_df = (df_arrets['Unnamed: 0'].str.lower().str.contains('prog', na = False)).idxmax()
+                                end_df = df_arrets['Unnamed: 2'].where(df_arrets['Unnamed: 2'].str.lower().str.contains('tot', na = False)).last_valid_index()
+                                df_arrets = df_arrets.loc[begin_df:end_df-1]
+                                df_arrets = df_arrets.loc[:, 'Unnamed: 2':]
+                                df_arrets.rename(columns = {
+                                    df_arrets.columns[0]: 'label_arret',
+                                    df_arrets.columns[1]: 'temps arrets (mn)',
+                                }, inplace = True)
+                                df_arrets = df_arrets[df_arrets['label_arret'].notna()]
+                                # df_arrets['line'] = line
+                                # df_arrets['date'] = date
+
+                                df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('parat'), 'label_arret'] = 'prep_line'
+                                df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('paus'), 'label_arret'] = 'pause_eat'
+                                df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('forma'), 'label_arret'] = 'chg_form'
+                                df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('lavag'), 'label_arret'] = 'lvg'
+                                df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('prog'), 'label_arret'] = 'manque_prog'
+                                df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('pan'), 'label_arret'] = 'panne'
+                                df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('reg|rég'), 'label_arret'] = 'reglages'
+                                df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('autr'), 'label_arret'] = 'autres'
+                                df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('abs'), 'label_arret'] = 'abs'
+
+                                diff = list(set(full_labels) - set(df_arrets['label_arret'].unique().tolist()))
+                                if len(diff) > 0:
+                                    for label in diff:
+                                        df_arrets.loc[len(df_arrets.index)+1] = [label, 0]
+
+                                df_arrets.fillna(0, inplace = True)
+                                df_arrets = df_arrets.T
+                                df_arrets.columns = df_arrets.iloc[0]
+                                df_arrets = df_arrets.iloc[1:]
+                                # print(df_arrets)
+
+                                # DF CAP PROD
+                            
+                                df_cap_prod.rename(columns = {
+                                    df_cap_prod.columns[0]: 'Unnamed: 0',
+                                    df_cap_prod.columns[1]: 'Unnamed: 1',
+                                }, inplace = True)
+
+                                cph_brut = df_cap_prod.index[df_cap_prod['Unnamed: 0'].str.lower().str.contains('=', na = False)].tolist()[0]
+                                match = re.search(r'([0-9]+)\s*f', df_cap_prod.at[cph_brut, 'Unnamed: 0'])
+                                cph = int(match.group(1))
+                                df_cap_prod = df_cap_prod.iloc[1:]
+                                df_cap_prod = df_cap_prod.dropna(axis=0, how='all')
+                                df_cap_prod.rename(columns = {
+                                    df_cap_prod.columns[0]: 'key',
+                                    df_cap_prod.columns[1]: 'val',
+                                }, inplace = True)
+                                df_cap_prod = df_cap_prod[df_cap_prod['val'].notna()]
+                                df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('arr'), 'key'] = 'arrets'
+                                df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('bru'), 'key'] = 'prod_brute'
+                                df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('shif'), 'key'] = 'shift'
+                                df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('util'), 'key'] = 'taux_util'
+                                df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('cap'), 'key'] = 'capacite_prod'
+                                df_cap_prod = df_cap_prod.T
+                                df_cap_prod.columns = df_cap_prod.iloc[0]
+                                df_cap_prod = df_cap_prod.iloc[1:]
+                                s = df_cap_prod.columns.to_series()
+                                s.iloc[-1] = 'taux_prod'
+                                df_cap_prod.columns = s
+                                # calcul des taux et de la capacite
+                                try:
+                                    df_cap_prod['taux_util'] = ( (df_cap_prod['shift'] * flash_df.loc.at[0, 'hours'] * 60) - df_cap_prod['arrets'] ) / (df_cap_prod['shift'] * flash_df.loc.at[0, 'hours'] * 60)
+                                except:
+                                    df_cap_prod['taux_util'] = np.nan
+                                try:
+                                    df_cap_prod['capacite_prod'] = round(df_cap_prod['cph'] * df_cap_prod['shift'] * flash_df.loc.at[0, 'hours'] * df_cap_prod['taux_util'])
+                                except:
+                                    df_cap_prod['capacite_prod'] = np.nan
+                                try:
+                                    df_cap_prod['taux_prod'] = df_cap_prod['prod_brute'] / df_cap_prod['capacite_prod']
+                                except:
+                                    df_cap_prod['taux_prod'] = np.nan
+
+                                # COMBINE DF_ARRET AND DF_CAP_PROD
+                                df_arrets.reset_index(drop=True, inplace=True)
+                                df_cap_prod.reset_index(drop=True, inplace=True)
+                                df_capacite = pd.concat([df_cap_prod, df_arrets], axis=1)
+                                df_capacite['date'] = date
+                                df_capacite['ligne'] = line
+                                df_capacite['cph'] = cph
+
+                                # **************************************** CAPACITE PROD ***********************************************************
+
+                                # print(flash_df)
+                                # print(df_capacite)
+
+                                tab_name = 'Production_Capacite_Imp'
+
+                                cursor.execute('SELECT MAX("id") FROM public."' + tab_name + '"')
+                                max_id = cursor.fetchone()[0]
+                                if not max_id:
+                                    max_id = 0
+                                df_capacite.insert(0, 'id', range(int(max_id) + 1, 1 + int(max_id) + len(df_capacite)))
+                                df_capacite.to_sql(tab_name, engine, if_exists='append', index=False)
+
+                                tab_name = 'Flash_Impression'
+
+                                cursor.execute('SELECT MAX("id") FROM public."' + tab_name + '"')
+                                max_id = cursor.fetchone()[0]
+                                if not max_id:
+                                    max_id = 0
+                                flash_df.insert(0, 'id', range(int(max_id) + 1, 1 + int(max_id) + len(flash_df)))
+                                flash_df.to_sql(tab_name, engine, if_exists='append', index=False)
+
+            except (KeyError, pd.errors.ParserError):
+                messages.error(request, "Erreur ! Noms de feuilles Excel erronés, ou bien la structure du fichier ( d'un tableau ) a été modifiée.")
+                print(str(KeyError))
+                return redirect('core:add-cap-prod-imp')
+            except UnboundLocalError:
+                messages.error(request, "Erreur ! Les données des dates concernées ont déjà été chargées.")
+                return redirect('core:add-cap-prod-imp')
+            except ValueError as v:
+                messages.error(request, str(v))
+                return redirect('core:add-cap-prod-imp')
+            except Exception as e:
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                # print(exc_type, fname, exc_tb.tb_lineno)
+                messages.error(request, "Erreur ! ")
+                print(exc_type, fname, exc_tb.tb_lineno, traceback.format_exc())
+                return redirect('core:add-cap-prod-imp')
+            fs.delete(uploaded_file_path)
+        messages.success(request, "Opération terminé avec succès !")
+        return redirect('core:add-cap-prod-imp')
+    
+class FlashImpressionSummary(LoginRequiredMixin, ListView):
+    model = Production_Capacite_Imp
+    template_name = 'core/cap_impression_summary.html'
+    paginate_by = 30
+    
+    def get_queryset(self):
+        # pylint: disable=no-member
+        qs = Production_Capacite_Imp.objects.all().order_by('-date')
+        if self.request.GET.get('date'):
+            date = datetime.datetime.strptime(self.request.GET.get('date'), '%Y-%m-%d').date()
+            # pylint: disable=no-member
+            qs = qs.filter(date=date)
+        if self.request.GET.get('lines') and self.request.GET.get('lines') != 'all':
+            qs = qs.filter(ligne = self.request.GET.get('lines').strip())
+        return qs.order_by('-date')
+
+    def get_context_data(self, *args,**kwargs):
+        context = super(FlashImpressionSummary, self).get_context_data(*args, **kwargs)
+        context['max_dt_flash'] = Production_Capacite_Imp.objects.latest('date').date
+        context['req'] = 'flash journalier d\'impression'.upper()
+        context['count'] = self.get_queryset().count()
+        context['mode'] = 'impr'
+        if self.request.GET.get('lines'):
+            context['ligne'] = self.request.GET.get('lines')
+        if self.request.GET.get('date'):
+            context['date'] = datetime.datetime.strptime(self.request.GET.get('date'), '%Y-%m-%d').date()
+        context['lines'] = list(Production_Capacite_Imp.objects.values_list('ligne', flat = True).distinct())
+        return context
+
+class FlashImpressionDetails(LoginRequiredMixin, DetailView):
+    model = Production_Capacite_Imp
+    template_name = 'core/flash-impr-details.html'
+
+    def get_context_data(self, *args,**kwargs):
+        context = super(FlashImpressionDetails, self).get_context_data(*args, **kwargs)
+        # pylint: disable=no-member
+        obj = Production_Capacite_Imp.objects.get(id = self.get_object().pk)
+        context['id'] = self.get_object().pk
+        context['qs'] = Production_Capacite_Imp.objects.filter(date = obj.date).order_by('-ligne')
+        date = datetime.datetime.strptime(str(obj.date), '%Y-%m-%d').strftime('%d/%m/%Y')
+        context['date'] = date
+        context['req'] = 'imprimerie - '.upper() + str(date)
+        context['title'] = 'imprimerie - '.upper() + str(date)
+        context['shifts'] = list(Flash_Impression.objects.values_list('shift', flat=True).distinct())
+        context['formats'] = list(Flash_Impression.objects.values_list('format_fer', flat=True).distinct())
+        return context
+
+class EditFlashImp(View):
+    def post(self, request):
+        dic = dict(request.POST)
+        del dic['csrfmiddlewaretoken']
+        # print(dic)
+        nb_real_tandem = int(dic['TANDEM-nbreal'][0])
+        nb_real_vern = int(dic['VERNISSEUSE-nbreal'][0])
+        # print(nb_real_tandem, nb_real_vern)
+        dic_values = dic.items()
+        for key, value in dic_values:
+            val = list()
+            for v in value:
+                try:
+                    val.append(int(v))
+                except ValueError:
+                    try:
+                        val.append(float(v))
+                    except ValueError:
+                        try:
+                            val.append(datetime.datetime.strptime(v, '%d/%m/%Y').date())
+                        except:
+                            val.append(v.strip())
+            dic[key] = val
+        # print(dic)
+
+        mode = dic['mode'][0]
+        # building flash impression dic
+        date = dic['date'][0]
+        begin = 0
+        end = nb_real_vern
+        print(dic)
+        if mode == 'add':
+            nb_line = len(dic['lvg'])
+        else:
+            nb_line = len(dic['id'])
+        sum_prod_brute = dict()
+        for i in range(0, nb_line):
+            sum_prod_brute['prod_brute_' + dic['ligne'][i]] = 0
+            flash_imp_dic = dict()
+            flash_imp_dic['ligne'] = dic['ligne'][i]
+            flash_imp_dic['date'] = date
+            for j in range(begin, end):
+                flash_imp_dic['hours'] = dic['hours'][j]
+                if mode == 'edit':
+                    flash_imp_dic['id'] = dic['id_flash'][j]
+                else:
+                    tab_name = 'Flash_Impression'
+                    cursor.execute('SELECT MAX("id") FROM public."' + tab_name + '"')
+                    max_id = cursor.fetchone()[0]
+                    flash_imp_dic['id'] = max_id + 1
+                flash_imp_dic['shift'] = dic['real_shift'][j]
+                flash_imp_dic['format_fer'] = dic['format_fer'][j]
+                flash_imp_dic['des'] = dic['des'][j]
+                flash_imp_dic['nb_psg'] = dic['nb_psg'][j]
+                flash_imp_dic['sf_rebut'] = dic['sf_rebut'][j]
+                flash_imp_dic['sf_conf'] = dic['sf_conf'][j]
+                flash_imp_dic['conduct'] = dic['conduct'][j]
+                flash_imp_dic['sf_brut'] = flash_imp_dic['sf_conf'] + flash_imp_dic['sf_rebut']
+                try:
+                    flash_imp_dic['sf_taux_reb'] = flash_imp_dic['sf_rebut'] / flash_imp_dic['sf_brut']
+                except ZeroDivisionError:
+                    flash_imp_dic['sf_taux_reb'] = 0
+                flash_imp_dic['rebut'] = dic['rebut'][j]
+                flash_imp_dic['conf'] = dic['conf'][j]
+                flash_imp_dic['brut'] = flash_imp_dic['conf'] + flash_imp_dic['rebut']
+                try:
+                    flash_imp_dic['taux_reb'] = flash_imp_dic['rebut'] / flash_imp_dic['brut']
+                except ZeroDivisionError:
+                    flash_imp_dic['taux_reb'] = 0
+                sum_prod_brute['prod_brute_' + dic['ligne'][i]] = sum_prod_brute['prod_brute_' + dic['ligne'][i]] + flash_imp_dic['sf_brut'] + flash_imp_dic['brut']
+                print(flash_imp_dic)
+                print('\n')
+                try:
+                    obj, created = Flash_Impression.objects.update_or_create(
+                        id = flash_imp_dic['id'],
+                        defaults = flash_imp_dic
+                    )   
+                except:
+                    if mode == 'add':
+                        return redirect('core:add-flash-imp-manual')
+                    messages.error(request, 'Une erreur s\'est produite! Réssayez plus tard.')
+                    return HttpResponseRedirect(reverse('core:flash-impr-details', kwargs={
+                        'pk' : dic['main_id'][0]
+                    }))
+            begin = nb_real_vern
+            end = nb_real_vern + nb_real_tandem
+        
+        # building capacite prod dic
+        if mode == 'add':
+            nb_line = len(dic['lvg'])
+        else:
+            nb_line = len(dic['id'])
+        for i in range(0, nb_line):
+            cap_imp_dic = dict()
+            if mode == 'edit':
+                cap_imp_dic['id'] = dic['id_flash'][j]
+            else:
+                tab_name = 'Production_Capacite_Imp'
+                cursor.execute('SELECT MAX("id") FROM public."' + tab_name + '"')
+                max_id = cursor.fetchone()[0]
+                cap_imp_dic['id'] = max_id + 1
+            cap_imp_dic['date'] = date
+            cap_imp_dic['shift'] = dic['shift'][i]
+            cap_imp_dic['prod_brute'] = sum_prod_brute['prod_brute_' + dic['ligne'][i]]
+            cap_imp_dic['cph'] = dic['cph'][i]
+            cap_imp_dic['ligne'] = dic['ligne'][i]
+            cap_imp_dic['prep_line'] = dic['prep_line'][i]
+            cap_imp_dic['pause_eat'] = dic['pause_eat'][i]
+            cap_imp_dic['chg_form'] = dic['chg_form'][i]
+            cap_imp_dic['lvg'] = dic['lvg'][i]
+            cap_imp_dic['manque_prog'] = dic['manque_prog'][i]
+            cap_imp_dic['panne'] = dic['panne'][i]
+            cap_imp_dic['reglages'] = dic['reglages'][i]
+            cap_imp_dic['autres'] = dic['autres'][i]
+            cap_imp_dic['abs'] = dic['abs'][i]
+            cap_imp_dic['arrets'] = cap_imp_dic['prep_line'] + cap_imp_dic['pause_eat'] + cap_imp_dic['chg_form'] + cap_imp_dic['lvg'] + cap_imp_dic['manque_prog'] + cap_imp_dic['panne'] + cap_imp_dic['reglages'] + cap_imp_dic['autres'] + cap_imp_dic['abs']
+            # calcul des taux et de la capacite
+            # print(round(cap_imp_dic['cph'] * cap_imp_dic['shift'] * flash_imp_dic['hours'] * cap_imp_dic['taux_util']))
+            try:
+                cap_imp_dic['taux_util'] = ( (cap_imp_dic['shift'] * flash_imp_dic['hours'] * 60) - cap_imp_dic['arrets'] ) / (cap_imp_dic['shift'] * flash_imp_dic['hours'] * 60)
+            except:
+                cap_imp_dic['taux_util'] = np.nan
+            try:
+                cap_imp_dic['capacite_prod'] = round(cap_imp_dic['cph'] * cap_imp_dic['shift'] * flash_imp_dic['hours'] * cap_imp_dic['taux_util'])
+            except:
+                cap_imp_dic['capacite_prod'] = np.nan
+            try:
+                cap_imp_dic['taux_prod'] = cap_imp_dic['prod_brute'] / cap_imp_dic['capacite_prod']
+            except:
+                cap_imp_dic['taux_prod'] = np.nan
+            print(cap_imp_dic)
+            print('\n')
+            try:
+                obj, created = Production_Capacite_Imp.objects.update_or_create(
+                    id = cap_imp_dic['id'],
+                    defaults = cap_imp_dic
+                )
+            except:
+                if mode == 'add':
+                    return redirect('core:add-flash-imp-manual')
+                messages.error(request, 'Une erreur s\'est produite! Réssayez plus tard.')
+                return HttpResponseRedirect(reverse('core:flash-impr-details', kwargs={
+                    'pk' : dic['main_id'][0]
+                }))
+        messages.success(request, 'Modification effectuée avec succès!')
+        if mode == 'add':
+            return redirect('core:flash-impr-summary')
+        return HttpResponseRedirect(reverse('core:flash-impr-details', kwargs={
+            'pk' : dic['main_id'][0]
+        }))
+
+def add_cap_prod_imp_man(request):
+    context = {
+        'title' : "Ajout - flash journalier d'impression".upper(),
+        'req' : "Ajout - flash journalier d'impression".upper(),
+        'lines': list(Flash_Impression.objects.values_list('ligne', flat=True).distinct().order_by('-ligne')),
+        'shifts': list(Flash_Impression.objects.values_list('shift', flat=True).distinct()),
+        'formats': list(Flash_Impression.objects.values_list('format_fer', flat=True).distinct())
+    }
+    return render(request, 'core/add-flash-imp-manual.html', context)

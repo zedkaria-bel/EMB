@@ -1,0 +1,347 @@
+{% extends 'main/base.html' %}
+
+{% load static %}
+{% load hum_money %}
+{% load humanize %}
+{% block head_title %}{{title}} {% endblock %}
+
+{% block content %}
+
+
+{% if messages %}
+<div id="div-msg" class="mt-2 pb-0 pt-0" style="position:relative; top: -35px;">
+    {% for message in messages %}
+    <div id="exist" class="alert alert-{{ message.tags }} alert-dismissible fade show align-items-center" role="alert">
+        <p class="mb-0 msg h5"><b>{{ message }}</b></p>
+        <button type="button" class="close align-items-center mb-0" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<form method="POST" enctype="multipart/form-data" action="{% url 'core:edit-flash-imp' %}" class="form" style="position:relative; top: -30px;">
+    {% csrf_token %}
+    <input type="hidden" id='mode' class="mode" name="mode" value="add" class="form-control">
+    <div class="d-flex flex-column">
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+            <a class="nav-item nav-link active" id="#nav-info" data-toggle="tab" href="#nav-info" role="tab" aria-controls="nav-info" aria-selected="true">
+                <p class="h5 font-weight-bold mb-0">INFORMATIONS GÉNÉRAL</p>
+            </a>
+            {% for line in lines %}
+            <a class="nav-item nav-link" id="#nav-{{line}}" data-toggle="tab" href="#nav-{{line}}" role="tab" aria-controls="nav-{{line}}" aria-selected="true">
+                <p class="h5 font-weight-bold mb-0">{{line}}</p>
+            </a>
+            {% endfor %}
+        </div>
+        <div class="tab-content" id="nav-tabContent">
+            <div class="tab-pane fade show active" id="nav-info" role="tabpanel" aria-labelledby="nav-info">
+                <div class="shadow p-5 mb-5 bg-white rounded w-100y">
+                    <div class="form-row">
+                        <div class="form-group col-md-4 mb-0">
+                            <label for="cph" class="h5 text-right col-form-label">Date concernée</label>
+                            <input type="date" class="form-control" id="date" name="date" required/>
+                        </div>
+                        {% for line in lines %}
+                        <div class="form-group col-md-4 mb-0">
+                            <label for="cph" class="h5 text-right col-form-label">Capacité par heure - {{line}} </label>
+                            <input type="number" min="0" class="form-control" value="0" id="cph-{{line}}" name="cph" required/>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% for line in lines %}
+            <input type="hidden" id='ligne' class="ligne" name="ligne" value="{{line}}" class="form-control">
+            <div class="tab-pane fade show" id="nav-{{line}}" role="tabpanel" aria-labelledby="nav-{{line}}">
+                <div class="shadow p-3 mb-5 bg-white rounded w-100y {{line}} ">
+                    <div class="row pb-2 d-flex justify-content-between align-items-center" style="background-color: #eaffe9;">
+                        <h5 class='mt-3 h4 col-10' style="color:teal !important;"><b>RÉALISATION</b></h5>
+                        <div class="col-2 d-flex justify-content-center align-items-center">
+                            <svg  data-toggle="collapse" href="#collapse-real-{{line}}" role="button" aria-expanded="false" aria-controls="collapseExample" xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="teal" class="bi bi-chevron-up real-dropdwn p-2 {{obj.line}}" style="border-radius: 50%; cursor: pointer; border: 2px teal solid;" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <hr class='mt-0' style="height: 4px !important; background-color: teal !important;">
+                    <input type="hidden" id='{{line}}-nbreal' class="nb" name="{{line}}-nbreal" value="1" class="form-control">
+                    <div class="collapse" id="collapse-real-{{line}}">
+                        <div class="container-line" id="container-{{line}}">
+                            <div class="row">
+                                <div class="col-10">
+                                    <div class="form-row">
+                                        <div class="form-group col-md-1">
+                                            <label for="hours" class="col-form-label"><b>Heures</b></label>
+                                            <input type="number" min="0" value="0" class="form-control" name="hours" id="hours" placeholder="Heures" required >
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label for="real_shift" class="col-form-label"><b>Shift</b></label>
+                                            <select class="custom-select" name="real_shift" id="real_shift" required >
+                                                {% for shift in shifts %}
+                                                <option value="{{shift}}" >{{shift}}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-md-2">
+                                            <label for="format_fer" class="col-form-label"><b>Format de fer</b></label>
+                                            <select class="custom-select" name="format_fer" id="format_fer" required >
+                                                {% for format_fer in formats %}
+                                                <option value="{{format_fer}}" >{{format_fer}}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label for="des" class="col-form-label"><b>Désignation</b></label>
+                                            <input type="text" class="form-control text" name="des" id="des" placeholder="Désignation" required >
+                                        </div>
+                                        <div class="form-group col-md-1">
+                                            <label for="nb_psg" class="col-form-label"><b>NB Passage</b></label>
+                                            <input type="number" min="0" value="0" class="form-control" name="nb_psg" id="nb_psg" placeholder="NB Passage" required >
+                                        </div>
+                                        <div class="form-group col-md-2">
+                                            <label for="conduct" class="col-form-label"><b>Conducteur</b></label>
+                                            <input type="text" class="form-control text" name="conduct" id="conduct" placeholder="Conducteur" required >
+                                        </div>
+                                    </div>
+                                    <h5 class='mt-3 h5' style="color:darkgray !important;"><b>Produits semi-fini</b></h5>
+                                    <hr class='mt-0' style="height: 3px !important; background-color: darkgray !important;">
+                                    <div class="form-row">
+                                        <div class="form-group col-md-4">
+                                            <label for="sf_rebut" class="col-form-label"><b>S/Fini. - Rebut</b></label>
+                                            <input type="number" min="0" class="form-control" name="sf_rebut" id="sf_rebut" value="0" placeholder="Rebut" required >
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label for="sf_conf" class="col-form-label"><b>S/Fini. - Conforme</b></label>
+                                            <input type="number" min="0" class="form-control" name="sf_conf" id="sf_conf" value="0" placeholder="Conforme" required >
+                                        </div>
+                                    </div>
+                                    <h5 class='mt-3 h5' style="color:darkgray !important;"><b>Produits fini</b></h5>
+                                    <hr class='mt-0' style="height: 3px !important; background-color: darkgray !important;">
+                                    <div class="form-row">
+                                        <div class="form-group col-md-4">
+                                            <label for="rebut" class="col-form-label"><b>Rebut</b></label>
+                                            <input type="number" min="0" class="form-control" name="rebut" id="rebut" value="0" placeholder="Rebut" required >
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label for="conf" class="col-form-label"><b>Conforme</b></label>
+                                            <input type="number" min="0" class="form-control" name="conf" id="conf" value="0" placeholder="Conforme" required >
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-2 d-flex justify-content-center align-items-stretch">
+                                    <div class="shadow d-flex flex-column justify-content-between align-items-center" style="background-color: #f1f8ea;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="teal" class="bi bi-empty my-4 p-3" viewBox="0 0 16 16">
+                                        </svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="teal" class="bi close bi-x-lg my-4 p-3" viewBox="0 0 16 16" style="background-color: #dbe9d5; border-radius:50%; cursor:pointer; display:none !important">
+                                            <path fill-rule="evenodd" d="M13.854 2.146a.5.5 0 0 1 0 .708l-11 11a.5.5 0 0 1-.708-.708l11-11a.5.5 0 0 1 .708 0Z"/>
+                                            <path fill-rule="evenodd" d="M2.146 2.146a.5.5 0 0 0 0 .708l11 11a.5.5 0 0 0 .708-.708l-11-11a.5.5 0 0 0-.708 0Z"/>
+                                        </svg>
+                                        <p class="mb-0 h1 py-4 px-5 nb-prod" style="color: teal;"> <b>1</b> </p>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="teal" class="bi bi-add-empty my-4 p-3" viewBox="0 0 16 16" style="display:none !important">
+                                        </svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="teal" class="bi bi-x-lg my-4 p-3 add-flash" viewBox="0 0 16 16" style="background-color: #dbe9d5; border-radius:50%; cursor:pointer">
+                                            <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr class='mt-4' style="height: 3px !important; color:black !important;">
+                        </div>
+                    </div>
+                    <!-- CAPACITE DE PRODUCTION -->
+                    <div class="pb-2 row" style="background-color: #eaffe9;">
+                        <h5 class='pt-3 h4 mb-0 col-10' style="color:teal !important;"><b>CAPACITÉ DE PRODUCTION</b></h5>
+                        <div class="col-2 d-flex justify-content-center align-items-center">
+                            <svg  data-toggle="collapse" href="#collapse-cap-{{line}}" role="button" aria-expanded="false" aria-controls="collapseExample" xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="teal" class="bi bi-chevron-up cap-dropdwn p-2 {{obj.line}}" style="border-radius: 50%; cursor: pointer; border: 2px teal solid;" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <hr class='mt-0' style="height: 4px !important; background-color: teal !important;">
+                    <div class="form-row collapse" id="collapse-cap-{{line}}">
+                        <div class="form-group col-md-2">
+                            <label for="shift" class="col-form-label"><b>Shift</b></label>
+                            <input type="number" min="0" class="form-control" name="shift" id="shift" value="1" placeholder="Shift" required >
+                        </div>
+                    </div>
+                    <!-- TEMPS DES ARRETS (MINUTES) -->
+                    <div class="pb-2 row" style="background-color: #eaffe9;">
+                        <h5 class='pt-3 h4 mb-0 col-10' style="color:teal !important;"><b>TEMPS DES ARRETS (MINUTES)</b></h5>
+                        <div class="col-2 d-flex justify-content-center align-items-center">
+                            <svg  data-toggle="collapse" href="#collapse-arret-{{line}}" role="button" aria-expanded="false" aria-controls="collapseExample" xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="teal" class="bi bi-chevron-up arret-dropdwn p-2 {{obj.line}}" style="border-radius: 50%; cursor: pointer; border: 2px teal solid;" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <hr class='mt-0' style="height: 4px !important; background-color: teal !important;">
+                    <div class="collapse" id="collapse-arret-{{line}}">
+                        <h5 class='mt-3 h5' style="color:darkgray !important;"><b>Arrêts programmés</b></h5>
+                        <hr class='mt-0' style="height: 3px !important; background-color: darkgray !important;">
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="prep_line" class="col-form-label"><b>Préparation de la ligne</b></label>
+                                <input type="number" min="0" class="form-control" name="prep_line" id="prep_line" value="0" placeholder="Temps" required >
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="pause_eat" class="col-form-label"><b>Pause dejeuné</b></label>
+                                <input type="number" min="0" class="form-control" name="pause_eat" id="pause_eat" value="0" placeholder="Temps" required >
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="chg_form" class="col-form-label"><b>Changement de format</b></label>
+                                <input type="number" min="0" class="form-control" name="chg_form" id="chg_form" value="0" placeholder="Temps" required >
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="lvg" class="col-form-label"><b>Lavage</b></label>
+                                <input type="number" min="0" class="form-control" name="lvg" id="lvg" value="0" placeholder="Temps" required >
+                            </div>
+                        </div>
+                        <h5 class='mt-3 h5' style="color:darkgray !important;"><b>Arrêts non programmés</b></h5>
+                        <hr class='mt-0' style="height: 3px !important; background-color: darkgray !important;">
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="manque_prog" class="col-form-label"><b>Manque de programme</b></label>
+                                <input type="number" min="0" class="form-control" name="manque_prog" id="manque_prog" value="0" placeholder="Temps" required >
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="panne" class="col-form-label"><b>Panne</b></label>
+                                <input type="number" min="0" class="form-control" name="panne" id="panne" value="0" placeholder="Temps" required >
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="reglages" class="col-form-label"><b>Réglages</b></label>
+                                <input type="number" min="0" class="form-control" name="reglages" id="reglages" value="0" placeholder="Temps" required >
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="abs" class="col-form-label"><b>Absenteïsme</b></label>
+                                <input type="number" min="0" class="form-control" name="abs" id="abs" value="0" placeholder="Temps" required >
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="autres" class="col-form-label"><b>Autres</b></label>
+                                <input type="number" min="0" class="form-control" name="autres" id="autres" value="0" placeholder="Temps" required >
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="d-flex justify-content-center align-items-center">
+        <button type="submit" id="submit-form" class="btn col-4" style="color: white !important; background-color: #0e385b !important;"><b class="h5">AJOUTER</b></button>
+    </div>
+
+</form>
+
+
+<div id="loader" class="bg-modal d-flex justify-content-center align-items-center" style="display: none !important;">
+    <!-- <div class="spinner-grow text-light" role="status" style="width: 10em !important; height: 10em !important;">
+        <span id="spinner" class="sr-only">Loading...</span>
+    </div> -->
+    <div class="d-flex flex-column justify-content-center align-items-center">
+        <p class="h3" style="color: white;">Veuillez patienter</p>
+        <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+    </div> 
+</div>
+
+
+<script>
+
+    $(document).ready(function() {
+        $( ".line-dropdwn" ).click( function() {
+            $(this).toggleClass('flip');
+        });
+        $( ".real-dropdwn" ).click( function() {
+            $(this).toggleClass('flip');
+        });
+        $( ".cap-dropdwn" ).click( function() {
+            $(this).toggleClass('flip');
+        });
+        $( ".arret-dropdwn" ).click( function() {
+            $(this).toggleClass('flip');
+        });
+    });
+
+    var cloneCount = 1;
+
+    $('.add-flash').on('click', function(){
+        // console.log('ASXCDER')
+        var elt = $(this).parent().parent().parent().parent()
+        var clone = elt.clone(true, true).hide()
+        clone.insertAfter(elt)
+        clone.slideToggle('slow')
+
+        clone.find('.bi-empty').css('display', 'none');
+        clone.find('.close').css('display', 'block');
+
+        elt.find('.bi-empty').css('display', 'block');
+        elt.find('.close').css('display', 'none');
+
+        elt.find('.bi-add-empty').css('display', 'block');
+        elt.find('.add-flash').css('display', 'none');
+
+        clone.attr('id', clone.attr('id').slice(0,-1) + cloneCount.toString())
+        cloneCount++;
+        clone.find('input').each(function(){
+            if($(this).attr('type') == 'number'){
+                $(this).val('0');
+            }
+            else{
+                $(this).val('');
+            }
+            $(this).attr('id', $(this).attr('id').slice(0,-1) + cloneCount.toString())
+        })
+        // console.log(clone)
+        cloneCount++;
+        var numprod = parseInt(clone.find('.nb-prod').text()) + 1
+        clone.find('.nb-prod').text(numprod.toString())
+        var nb_prod_line = elt.parent().find('.container-line').length;
+        set_nb = $(this).parent().parent().parent().parent().parent().siblings('.nb');
+        set_nb.val(nb_prod_line.toString());
+    });
+
+    $(document).on('click', '.close', function(){
+        $(this).closest(".container-line").slideToggle('slow', function(){
+            // console.log($(this).closest(".container-line"))
+            $(this).closest(".container-line").remove();
+        });
+        var new_last = $(this).parent().parent().parent().parent().last().prev();
+        // console.log(new_last)
+        var line_div = new_last.parent()
+        var remaining = line_div.find('.container-line').length - 1;
+        // console.log(remaining)
+        if( new_last.hasClass('container-line') && (remaining > 1) ){
+            new_last.find('.bi-empty').css('display', 'none');
+            new_last.find('.close').css('display', 'block');
+        }
+        new_last.find('.bi-add-empty').css('display', 'none');
+        new_last.find('.add-flash').css('display', 'block');
+        var nb_prod_line = $(this).closest('.collapse').find('.container-line').length - 1
+        // console.log(nb_prod_line)
+        $(this).closest('.nb').val(nb_prod_line.toString());
+    })
+    
+    $('form').on('submit', function(){
+        console.log('submit');
+        $('#loader').show();
+        $('body').css('overflow-y', 'hidden');
+    });
+
+    $('.chg').on('change', function(){
+        $('#exist').find('.msg').remove();
+        $('#exist').hide();
+        if($('#file_pg').val() == ''){
+            $('#submit-form').prop('', true);
+        }
+        else{
+            $('#submit-form').prop('', false);
+        }
+    });
+
+    $('form').submit(function(e) {
+        $(':').each(function(e) {
+            $(this).removeAttr('');
+        })
+    });
+  </script>
+
+{% endblock content %}
