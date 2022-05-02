@@ -31,6 +31,7 @@ from .views import (
     FlashImpressionDetails,
     EditFlashImp,
     add_cap_prod_imp_man,
+    addFlashJourn,
 )
 
 app_name = 'core'
@@ -64,6 +65,7 @@ urlpatterns = [
     path('add-cap-prod-imp/', add_cap_prod_imp, name = 'add-cap-prod-imp'),
     path('flash-impr-summary/', FlashImpressionSummary.as_view(), name = 'flash-impr-summary'),
     path('flash-impr-details/<int:pk>/', FlashImpressionDetails.as_view(), name = 'flash-impr-details'),
+    path('add-flash-imp/', addFlashJourn.as_view(), name = 'add-flash-imp'),
     path('edit-flash-imp/', EditFlashImp.as_view(), name = 'edit-flash-imp'),
     path('add-flash-imp-manual/', add_cap_prod_imp_man, name = 'add-flash-imp-manual'),
 ]

@@ -1581,7 +1581,11 @@ class addFlashJourn(View):
                         else:
                             match = re.search(r'\d{2}/\d{2}/\d{4}', dte)
                             date = datetime.datetime.strptime(match.group(), '%d/%m/%Y').date()
-                        if date > max_dt_flash:
+                        print(date, max_dt_flash)
+                        if date <= max_dt_flash:
+                            messages.error(request, "Erreur ! Cette date a déjà été traitée.")
+                            return redirect('core:add-cap-prod-imp')
+                        else:
                             dfs = bg_df.index[bg_df['Unnamed: 0'].str.lower().str.contains('vern|tand|offs', na = False)].tolist()
                             for idx, val in enumerate(dfs):
                                 df = pd.DataFrame()
@@ -1625,6 +1629,7 @@ class addFlashJourn(View):
                                 flash_df = flash_df.reset_index(drop=True)
                                 flash_df = flash_df.replace(['-'],0)
                                 flash_df.fillna(0, inplace = True)
+                                flash_df = flash_df.loc[(flash_df['sf_brut'] != 0) | (flash_df['brut'] != 0)]
                                 flash_df['sf_brut'] = flash_df['sf_rebut'] + flash_df['sf_conf']
                                 try:
                                     flash_df['sf_taux_reb'] = flash_df['sf_rebut'] / flash_df['sf_brut']
@@ -1637,7 +1642,7 @@ class addFlashJourn(View):
                                     flash_df['taux_reb'] = np.nan
                                 flash_df['date'] = date
                                 flash_df['ligne'] = line
-                                print(flash_df[['sf_brut', 'sf_conf', 'sf_rebut', 'sf_taux_reb','brut', 'conf', 'rebut', 'taux_reb']])
+                                # print(flash_df[['sf_brut', 'sf_conf', 'sf_rebut', 'sf_taux_reb','brut', 'conf', 'rebut', 'taux_reb']])
                                 # **************************************** FLASH IMPRESSION ***********************************************************
                              
                                 # **************************************** CAPACITE PROD ***********************************************************
@@ -1696,18 +1701,25 @@ class addFlashJourn(View):
                                 cph_brut = df_cap_prod.index[df_cap_prod['Unnamed: 0'].str.lower().str.contains('=', na = False)].tolist()[0]
                                 match = re.search(r'([0-9]+)\s*f', df_cap_prod.at[cph_brut, 'Unnamed: 0'])
                                 cph = int(match.group(1))
+                                if 'vern' in line.lower():
+                                    cph = 5000
+                                else:
+                                    cph = 4000
                                 df_cap_prod = df_cap_prod.iloc[1:]
                                 df_cap_prod = df_cap_prod.dropna(axis=0, how='all')
                                 df_cap_prod.rename(columns = {
                                     df_cap_prod.columns[0]: 'key',
-                                    df_cap_prod.columns[1]: 'val',
+                                    df_cap_prod.columns[-1]: 'val',
                                 }, inplace = True)
+                                df_cap_prod = df_cap_prod.loc[:, ~df_cap_prod.columns.str.contains('^Unnamed')]
                                 df_cap_prod = df_cap_prod[df_cap_prod['val'].notna()]
-                                df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('arr'), 'key'] = 'arrets'
+                                df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('mn'), 'key'] = 'arrets'
                                 df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('bru'), 'key'] = 'prod_brute'
                                 df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('shif'), 'key'] = 'shift'
                                 df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('util'), 'key'] = 'taux_util'
                                 df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('cap'), 'key'] = 'capacite_prod'
+                                df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('feu.*av'), 'key'] = 'nb_feuill_pre_arret'
+                                df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('feu.*ap'), 'key'] = 'nb_feuill_post_arret'
                                 df_cap_prod = df_cap_prod.T
                                 df_cap_prod.columns = df_cap_prod.iloc[0]
                                 df_cap_prod = df_cap_prod.iloc[1:]
@@ -1715,18 +1727,35 @@ class addFlashJourn(View):
                                 s.iloc[-1] = 'taux_prod'
                                 df_cap_prod.columns = s
                                 # calcul des taux et de la capacite
+                                # print(( (df_cap_prod['shift'] * flash_df.loc.at[0, 'hours'] * 60) - df_cap_prod['arrets'] ) / (df_cap_prod['shift'] * flash_df.loc.at[0, 'hours'] * 60))
+                                df_cap_prod['cph'] = cph
+                                # print(df_arrets)
+                                # print(df_arrets.iloc[0]['prep_line'])
+                                # print('hhhhhhhhhhhhhhhhhhhhh')
+                                df_cap_prod['arrets'] = df_arrets.iloc[0]['prep_line'] + df_arrets.iloc[0]['pause_eat'] + df_arrets.iloc[0]['chg_form'] + df_arrets.iloc[0]['lvg'] + df_arrets.iloc[0]['manque_prog'] + df_arrets.iloc[0]['panne'] + df_arrets.iloc[0]['reglages'] + df_arrets.iloc[0]['autres'] + df_arrets.iloc[0]['abs']
+                                # print(df_cap_prod)
+                                # print('eeeeeeeeeeeeeeeeeeeee')
                                 try:
-                                    df_cap_prod['taux_util'] = ( (df_cap_prod['shift'] * flash_df.loc.at[0, 'hours'] * 60) - df_cap_prod['arrets'] ) / (df_cap_prod['shift'] * flash_df.loc.at[0, 'hours'] * 60)
+                                    df_cap_prod['taux_util'] = ( (df_cap_prod['shift'] * flash_df.at[0, 'hours'] * 60) - df_cap_prod['arrets'] ) / (df_cap_prod['shift'] * flash_df.at[0, 'hours'] * 60)
                                 except:
                                     df_cap_prod['taux_util'] = np.nan
+                                # print((df_cap_prod['cph'] * df_cap_prod['shift'] * flash_df.at[0, 'hours'] * df_cap_prod['taux_util']).astype(float).round())
                                 try:
-                                    df_cap_prod['capacite_prod'] = round(df_cap_prod['cph'] * df_cap_prod['shift'] * flash_df.loc.at[0, 'hours'] * df_cap_prod['taux_util'])
+                                    df_cap_prod['capacite_prod'] = (df_cap_prod['cph'] * df_cap_prod['shift'] * flash_df.at[0, 'hours'] * df_cap_prod['taux_util']).astype(float).round()
                                 except:
                                     df_cap_prod['capacite_prod'] = np.nan
                                 try:
                                     df_cap_prod['taux_prod'] = df_cap_prod['prod_brute'] / df_cap_prod['capacite_prod']
                                 except:
                                     df_cap_prod['taux_prod'] = np.nan
+                                try:
+                                    df_cap_prod['nb_feuill_pre_arret'] = df_cap_prod['capacite_prod'] / ( ( (df_cap_prod['shift'] * flash_df.at[0, 'hours'] * 60) - df_cap_prod['arrets'] ) / 60 )
+                                except:
+                                    df_cap_prod['nb_feuill_pre_arret'] = np.nan
+                                try:
+                                    df_cap_prod['nb_feuill_post_arret'] = df_cap_prod['capacite_prod'] / ( df_cap_prod['shift'] * flash_df.at[0, 'hours'] )
+                                except:
+                                    df_cap_prod['nb_feuill_post_arret'] = np.nan
 
                                 # COMBINE DF_ARRET AND DF_CAP_PROD
                                 df_arrets.reset_index(drop=True, inplace=True)
@@ -1734,7 +1763,6 @@ class addFlashJourn(View):
                                 df_capacite = pd.concat([df_cap_prod, df_arrets], axis=1)
                                 df_capacite['date'] = date
                                 df_capacite['ligne'] = line
-                                df_capacite['cph'] = cph
 
                                 # **************************************** CAPACITE PROD ***********************************************************
 
@@ -1758,7 +1786,6 @@ class addFlashJourn(View):
                                     max_id = 0
                                 flash_df.insert(0, 'id', range(int(max_id) + 1, 1 + int(max_id) + len(flash_df)))
                                 flash_df.to_sql(tab_name, engine, if_exists='append', index=False)
-
             except (KeyError, pd.errors.ParserError):
                 messages.error(request, "Erreur ! Noms de feuilles Excel erronés, ou bien la structure du fichier ( d'un tableau ) a été modifiée.")
                 print(str(KeyError))
@@ -1776,7 +1803,10 @@ class addFlashJourn(View):
                 messages.error(request, "Erreur ! ")
                 print(exc_type, fname, exc_tb.tb_lineno, traceback.format_exc())
                 return redirect('core:add-cap-prod-imp')
-            fs.delete(uploaded_file_path)
+            # f = open(uploaded_file_path)
+            # f.close()
+            # os.remove(uploaded_file_path)
+            # fs.delete(uploaded_file_path)
         messages.success(request, "Opération terminé avec succès !")
         return redirect('core:add-cap-prod-imp')
     

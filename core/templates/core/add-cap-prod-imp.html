@@ -30,7 +30,7 @@
 </div>
 {% endif %}
 
-<form method="POST" enctype="multipart/form-data" action="{% url 'core:process-new-act' %}" class="form" style="position:relative; top: -30px;">
+<form method="POST" enctype="multipart/form-data" action="{% url 'core:add-flash-imp' %}" class="form" style="position:relative; top: -30px;">
     {% csrf_token %}
     <div class="shadow p-3 mb-5 bg-white rounded w-100y">
         <h4 style="font-weight: bolder !important;"><b>AJOUTER UN NOUVEAU FICHIER ( Format .xlsx )</b></h4>

@@ -250,6 +250,8 @@ class Production_Capacite_Imp(ChangesMixin, models.Model):
     reglages = models.IntegerField(blank=True, null=True)
     autres = models.IntegerField(blank=True, null=True)
     abs = models.IntegerField(blank=True, null=True)
+    nb_feuill_pre_arret = models.IntegerField(blank=True, null=True, default=None)
+    nb_feuill_post_arret = models.IntegerField(blank=True, null=True, default=None)
 
     class Meta:
         db_table = 'Production_Capacite_Imp'
