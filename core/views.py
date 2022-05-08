@@ -2015,11 +2015,15 @@ class EditFlashImp(View):
         }))
 
 def add_cap_prod_imp_man(request):
+    shifts = list(Flash_Impression.objects.order_by('shift').values_list('shift', flat=True).distinct())
+    shifts = list(map(lambda s: s.strip(), shifts))
+    shifts = list(set(shifts))
+    print(shifts)
     context = {
         'title' : "Ajout - flash journalier d'impression".upper(),
         'req' : "Ajout - flash journalier d'impression".upper(),
         'lines': list(Flash_Impression.objects.values_list('ligne', flat=True).distinct().order_by('-ligne')),
-        'shifts': list(Flash_Impression.objects.values_list('shift', flat=True).distinct()),
-        'formats': list(Flash_Impression.objects.values_list('format_fer', flat=True).distinct())
+        'shifts': shifts,
     }
     return render(request, 'core/add-flash-imp-manual.html', context)
+
