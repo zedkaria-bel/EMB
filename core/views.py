@@ -33,7 +33,7 @@ Production,
 Production_Capacite_Imp,
 Tcr,
 Trs,
-Vente
+Vente, do_something_if_changed
 )
 from .prod_acc import get_acc_df
 from .prod_val_boites import get_val_df, missing_prod_in_val
@@ -947,11 +947,10 @@ class AddTcr(View):
             uploaded_file_path = fs.path(filename)
             file_str = uploaded_file_path
             tab_name = 'TCR'
-            cursor.execute('SELECT MAX("date") FROM public."' + tab_name + '"')
-            max_dt = cursor.fetchone()[0]
             xl = pd.ExcelFile(file_str, engine='openpyxl') # pylint: disable=abstract-class-instantiated
             no_error = True
             try:
+                do_something = False
                 for sheetname in xl.sheet_names:
                     if re.match("^[0-9 ]+$", sheetname):
                         # print(sheetname)
@@ -961,13 +960,17 @@ class AddTcr(View):
                         match = re.search(r'\w*\s(\w+)-(\d{4})', period)
                         month = dateparser.parse(match.group(1)).month
                         year = dateparser.parse(match.group(2)).year
-                        if (datetime.date(year, month, 28) > max_dt.date() or (month == month_crn and year == year_crn)) and datetime.date(year, month, 28) < datetime.datetime.today().date():
+                        today = datetime.date.today()
+                        cursor.execute('SELECT COUNT(*) FROM public."' + tab_name + '" WHERE "date" = \'' + str(datetime.date(year, month, 28)) + '\';')
+                        count = cursor.fetchone()[0]
+                        if (count == 0 and datetime.date(year, month, 28) == datetime.date(today.year, today.month - 1, 28) ) or (month == month_crn and year == year_crn):
                             # print(month, year)
+                            do_something = True
                             no_error = False
                             df = pd.read_excel(file_str, sheet_name=sheetname, header=1, skiprows=4)
                             last_idx = df[df['N°'].str.contains('RATIO', na = False)].index.to_list()[0]
                             df = df[['Désignation ', 'SIEGE', 'KDU', 'SKDU', 'AZDU', 'ENTREPRISE']]
-                            df = df.iloc[0: last_idx - 1 , :]
+                            df = df.iloc[0: last_idx - 1 , :] 
                             df = df.T
                             df.columns = df.iloc[0]
                             df = df.iloc[1: , :]
@@ -987,6 +990,9 @@ class AddTcr(View):
                                 # pylint: disable=no-member
                                 obj = Tcr.objects.get(id = max_id)
                                 obj.save()
+                if not do_something:
+                    messages.error(request, "Aucun nouveau TCR ajouté ! Les dates concernés existent déjà.")
+                    return redirect('core:add-tcr')
                 if no_error:
                     raise UnboundLocalError('Data already processed.')
             except (KeyError, pd.errors.ParserError):
