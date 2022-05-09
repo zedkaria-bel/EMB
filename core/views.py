@@ -538,6 +538,15 @@ def add_act_journ(request):
     }
     return render(request, 'core/add_act_journ.html', context)
 
+def safe_float_convert(x):
+    try:
+        float(x)
+        return True # numeric, success!
+    except ValueError:
+        return False # not numeric
+    except TypeError:
+        return False # null type
+
 class AddAct(View):
     def post(self, request):
         if request.FILES['file_pg']:
@@ -580,6 +589,8 @@ class AddAct(View):
                     return redirect('core:prod-view')
 
                 # pylint: disable=no-member
+                # print(Production.objects.filter(date__year = year_crn, date__month = month_crn).count())
+                # print(year_crn, month_crn)
                 Production.objects.filter(date__year = year_crn, date__month = month_crn).delete()
                 Vente.objects.filter(date__year = year_crn, date__month = month_crn).delete()
                 Trs.objects.filter(date__year = year_crn, date__month = month_crn).delete()
@@ -647,7 +658,9 @@ class AddAct(View):
                         obj_cap_acc_df.insert(0, 'ID', range(int(max_id) + 1, 1 + int(max_id) + len(obj_cap_acc_df)))
                         # obj_cap_acc_df['Ligne'] = obj_cap_acc_df['Ligne'].str.upper().str.strip()
                         obj_cap_acc_df.to_sql(tab_name, engine, if_exists='append', index=False)
-
+                        idx_line_num = acc_df['Ligne'].map(safe_float_convert)
+                        acc_df.loc[idx_line_num, 'Ligne'] = np.nan
+                        acc_df['Ligne'].fillna(method='ffill', inplace = True)
                         acc_df['Ligne'] = acc_df['Ligne'].str.upper().str.strip()
                         pails_idx = acc_df.index[~acc_df['Ligne'].isnull()].tolist()
                         # print(pails_idx)
@@ -2018,7 +2031,8 @@ def add_cap_prod_imp_man(request):
     shifts = list(Flash_Impression.objects.order_by('shift').values_list('shift', flat=True).distinct())
     shifts = list(map(lambda s: s.strip(), shifts))
     shifts = list(set(shifts))
-    print(shifts)
+    l = [1, 'shift', 3.5]
+    print(l)
     context = {
         'title' : "Ajout - flash journalier d'impression".upper(),
         'req' : "Ajout - flash journalier d'impression".upper(),

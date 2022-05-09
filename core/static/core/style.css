@@ -34,13 +34,16 @@
 
 
 .bg-modal{
-  position: absolute;
+  position: fixed;
   left: 0;
   top: 0;
-  width: 100% !important;
-  height: 100% !important;
+  right: 0;
+  bottom: 0;
+  /* width: 100 vh !important;
+  height: 100 vh !important; */
   background-color: rgba(0, 0, 0, 0.8);
   transition: 0.5s ease-in;
+  z-index: 9999 !important;
 }
 
 #spinner{

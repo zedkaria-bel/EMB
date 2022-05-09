@@ -65,7 +65,7 @@
         <p class="h3" style="color: white;">Veuillez patienter</p>
         <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
     </div> 
-    <div id="edit-tcr" class="d-flex flex-column justify-content-center align-items-center p-2" style="border-radius: 10px !important; background-color: white;">
+    <div id="edit-tcr" class="d-flex flex-column justify-content-center align-items-center p-2" style="border-radius: 10px !important; background-color: white; z-index: 99999 !important;">
         <svg id="close_div" xmlns="http://www.w3.org/2000/svg" width="45" height="45" fill="black" class="ml-auto mr-3 mt-3 p-2 bi bi-x-lg" viewBox="0 0 16 16" style="cursor: pointer; transition: 0.3s !important; border-radius: 50% !important;">
             <path fill-rule="evenodd" d="M13.854 2.146a.5.5 0 0 1 0 .708l-11 11a.5.5 0 0 1-.708-.708l11-11a.5.5 0 0 1 .708 0Z"/>
             <path fill-rule="evenodd" d="M2.146 2.146a.5.5 0 0 0 0 .708l11 11a.5.5 0 0 0 .708-.708l-11-11a.5.5 0 0 0-.708 0Z"/>
@@ -221,11 +221,12 @@
     });
 
     $('form').submit(function(e) {
+        var form = this;
         $('#edit-tcr').attr("style", "display: none !important");
         $('#spin').show();
         $(':disabled').each(function(e) {
             $(this).removeAttr('disabled');
-        })
+        });
     });
 </script>
 

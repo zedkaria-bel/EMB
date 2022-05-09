@@ -69,9 +69,10 @@
 <script>
 
     $('form').on('submit', function(){
+        var form = this;
         console.log('submit');
-        $('#loader').show();
         $('body').css('overflow-y', 'hidden');
+        $('#loader').show();
     });
 
     $('.chg').on('change', function(){

@@ -12,7 +12,7 @@ import datetime
 from django.apps import apps
 from django.contrib.auth.models import User
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.shortcuts import reverse
 # pylint: disable=import-error
@@ -271,28 +271,33 @@ def update_user_profile(sender, instance, created, **kwargs):
 def do_something_if_changed(sender, instance, **kwargs):
     tab = sender._meta.db_table
     max_id = sender.objects.latest('id').id
-    obj = sender.objects.get(pk=instance.pk)
-    line_id = str(instance.pk)
-    dt = datetime.datetime.now()
-    user = get_current_user()
-    if tab == 'TCR':
-        max_id = instance.pk
-    if max_id == instance.pk:
-        op = op_choices[0][1]
-        details = obj.previous_state()
-        details['date'] = str(details['date'])
-    else:
-        op = op_choices[1][1]
-        details = instance.old_changes()
-    # pylint: disable=no-member
-    obj = AuditLog.objects.create(
-        tab = tab,
-        line_id = line_id,
-        op = op,
-        dt = dt,
-        user = user,
-        details = details
-    )
+    try:
+        obj = sender.objects.get(pk=instance.pk)
+        op = 'add'
+    except:
+        op = 'del'
+    if op == 'add':
+        line_id = str(instance.pk)
+        dt = datetime.datetime.now()
+        user = get_current_user()
+        if tab == 'TCR':
+            max_id = instance.pk
+        if max_id == instance.pk:
+            op = op_choices[0][1]
+            details = obj.previous_state()
+            details['date'] = str(details['date'])
+        else:
+            op = op_choices[1][1]
+            details = instance.old_changes()
+        # pylint: disable=no-member
+        obj = AuditLog.objects.create(
+            tab = tab,
+            line_id = line_id,
+            op = op,
+            dt = dt,
+            user = user,
+            details = details
+        )
 
 post_change.connect(do_something_if_changed, Production)
 post_change.connect(do_something_if_changed, Vente)
