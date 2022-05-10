@@ -1753,7 +1753,9 @@ class addFlashJourn(View):
                                 # print('hhhhhhhhhhhhhhhhhhhhh')
                                 df_cap_prod['arrets'] = df_arrets.iloc[0]['prep_line'] + df_arrets.iloc[0]['pause_eat'] + df_arrets.iloc[0]['chg_form'] + df_arrets.iloc[0]['lvg'] + df_arrets.iloc[0]['manque_prog'] + df_arrets.iloc[0]['panne'] + df_arrets.iloc[0]['reglages'] + df_arrets.iloc[0]['autres'] + df_arrets.iloc[0]['abs']
                                 # print(df_cap_prod)
-                                # print('eeeeeeeeeeeeeeeeeeeee')
+                                flash_df = flash_df.reset_index(drop=True)
+                                print(flash_df)
+                                print(( (df_cap_prod['shift'] * flash_df.at[0, 'hours'] * 60) - df_cap_prod['arrets'] ) / (df_cap_prod['shift'] * flash_df.at[0, 'hours'] * 60))
                                 try:
                                     df_cap_prod['taux_util'] = ( (df_cap_prod['shift'] * flash_df.at[0, 'hours'] * 60) - df_cap_prod['arrets'] ) / (df_cap_prod['shift'] * flash_df.at[0, 'hours'] * 60)
                                 except:
@@ -1808,6 +1810,11 @@ class addFlashJourn(View):
             except (KeyError, pd.errors.ParserError):
                 messages.error(request, "Erreur ! Noms de feuilles Excel erronés, ou bien la structure du fichier ( d'un tableau ) a été modifiée.")
                 print(str(KeyError))
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                # print(exc_type, fname, exc_tb.tb_lineno)
+                messages.error(request, "Erreur ! ")
+                print(exc_type, fname, exc_tb.tb_lineno, traceback.format_exc())
                 return redirect('core:add-cap-prod-imp')
             except UnboundLocalError:
                 messages.error(request, "Erreur ! Les données des dates concernées ont déjà été chargées.")
