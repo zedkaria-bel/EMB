@@ -118,10 +118,10 @@
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.5), 0 6px 20px 0 rgba(0, 0, 0, 0.19) !important;
 }
 
-#list-tab.stuck {
+.stuck {
   position:fixed;
   top:0;
-  width: 13.120% !important;
+  /* width: 16.66666667% !important; */
 }
 
 #table-audit-cases thead tr th b,

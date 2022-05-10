@@ -23,7 +23,7 @@
 <form method="POST" enctype="multipart/form-data" action="{% url 'core:process-new-act-man' %}" class="form" style="position:relative; top: -30px;">
     {% csrf_token %}
     <div class="row">
-        <div class="col-2">
+        <div class="col-3">
           <div class="list-group" id="list-tab" role="tablist">
             <a class="list-group-item list-group-item-action active py-4 h5 m-0" id="list-inf-gen-list" data-toggle="list" href="#list-inf-gen" role="tab" aria-controls="inf-gen"><b><span id="txt-unit">Unité</span> - <span class="txt-date">Date</span></b></a>
             <a class="list-group-item list-group-item-action py-4 h5 m-0" id="list-prod-list" data-toggle="list" href="#list-prod" role="tab" aria-controls="prod"><b>PRODUCTION (<span id="nb_prod">1</span>)</b></a>
@@ -31,7 +31,7 @@
             <a class="list-group-item list-group-item-action py-4 h5 m-0" id="list-trs-list" data-toggle="list" href="#list-trs" role="tab" aria-controls="trs"><b>TRS (<span id="nb_trs">1</span>)</b></a>
           </div>
         </div>
-        <div class="col-10">
+        <div class="col-9">
           <div class="tab-content" id="nav-tabContent">
             <!-- INFO GENERAL -->
             <div class="tab-pane fade show active" id="list-inf-gen" role="tabpanel" aria-labelledby="list-inf-gen-list">
@@ -145,7 +145,7 @@
                         </div>
                     </div>
                 </div>
-                <a id="add-prod" class="px-3 py-2 d-flex flex-row h5 justify-content-center align-items-center col-2 ml-auto" style="background-color: white; border-radius: 60px; transition: 0.5s; box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19) !important; color: #303be9;">
+                <a id="add-prod" class="px-3 py-2 d-flex flex-row h5 justify-content-center align-items-center col-3 ml-auto" style="background-color: white; border-radius: 60px; transition: 0.5s; box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19) !important; color: #303be9;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
                         <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z"/>
                     </svg>
@@ -415,14 +415,20 @@
     $(window).scroll(function (event) {
         // what the y position of the scroll is
         var y = $(this).scrollTop();
+        var col_3 = $cache.parent()
+        var row = col_3.parent()
+        var col_9 = col_3.siblings();
 
         // whether that's below the form
         if (y >= vTop) {
         // if so, ad the fixed class
-        $cache.addClass('stuck');
+        col_3.addClass('stuck');
+        col_3.width(row.width() * .25-25);
+        col_9.addClass('offset-3');
         } else {
         // otherwise remove it
-        $cache.removeClass('stuck');
+        col_3.removeClass('stuck');
+        col_9.removeClass('offset-3');
         }
     });
 
