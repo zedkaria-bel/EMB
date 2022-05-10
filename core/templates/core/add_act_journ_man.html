@@ -38,11 +38,11 @@
                 <div class="shadow p-3 mb-5 bg-white rounded">
                     <h4 style="font-weight: bolder !important;"><b>DATE ET UNITÉ</b></h4>
                     <div class="form-row">
-                        <div class="form-group col-md-2">
+                        <div class="form-group col-md-6">
                             <label for="date" class="col-form-label"><b>Date</b></label>
                             <input type="date" class="form-control chg" name="date" id="date" placeholder="Date" required>
                         </div>
-                        <div class="form-group col-md-1">
+                        <div class="form-group col-md-6">
                             <label for="unit" class="col-form-label"><b>Unité</b></label>
                             <select class="custom-select chg" name="unit" id="unit" required>
                                 <option value="--" selected disabled hidden>Unité</option>
@@ -113,19 +113,19 @@
                         <hr class="my-0" style="color: #878787;">
                         <!-- PROD PHYSIQUE -->
                         <div class="form-row">
-                            <div class="form-group col-md-2">
+                            <div class="form-group col-md-3">
                                 <label for="obj" class="col-form-label"><b>Objectif</b></label>
                                 <input type="number" class="form-control" value="0" min="0" name="obj" id="obj" required>
                             </div>
-                            <div class="form-group col-md-2">
+                            <div class="form-group col-md-3">
                                 <label for="capacite_jour" class="col-form-label"><b>Capacité jour</b></label>
                                 <input type="number" class="form-control" value="0" min="0" name="capacite_jour" id="capacite_jour" required>
                             </div>
-                            <div class="form-group col-md-2">
+                            <div class="form-group col-md-3">
                                 <label for="conforme_jour" class="col-form-label"><b>Conforme - <span class="txt-date">jour</span></b></label>
                                 <input type="number" class="form-control" value="0" min="0" name="conforme_jour" id="conforme_jour" required>
                             </div>
-                            <div class="form-group col-md-2">
+                            <div class="form-group col-md-3">
                                 <label for="rebut_jour" class="col-form-label"><b>Rebut - <span class="txt-date">jour</span></b></label>
                                 <input type="number" class="form-control" value="0" min="0" name="rebut_jour" id="rebut_jour" required>
                             </div>
@@ -134,11 +134,11 @@
                         <hr class="my-0" style="color: #878787;">
                         <!-- PROD VALORISEE -->
                         <div class="form-row">
-                            <div class="form-group col-md-3">
+                            <div class="form-group col-md-6">
                                 <label for="pu_cout_revient" class="col-form-label"><b>PU - Avec coût de revient</b></label>
                                 <input type="number" class="form-control" value="0" min="0" step="0.01" name="pu_cout_revient" id="pu_cout_revient" required>
                             </div>
-                            <div class="form-group col-md-3">
+                            <div class="form-group col-md-6">
                                 <label for="pu_prix_vente" class="col-form-label"><b>PU - Avec prix de vente</b></label>
                                 <input type="number" class="form-control" value="0" min="0" step="0.01" name="pu_prix_vente" id="pu_prix_vente" required>
                             </div>
@@ -411,19 +411,20 @@
     var $cache = $('#list-tab');
 
     //store the initial position of the element
-    var vTop = $cache.offset().top - parseFloat($cache.css('marginTop').replace(/auto/, 0));
+    var vTop = $cache.offset().top - parseFloat($cache.css('marginTop').replace(/auto/, 0)) - 100;
     $(window).scroll(function (event) {
         // what the y position of the scroll is
         var y = $(this).scrollTop();
         var col_3 = $cache.parent()
         var row = col_3.parent()
         var col_9 = col_3.siblings();
+        var pad_val = parseFloat(col_3.css('padding-left')) * 2;
 
         // whether that's below the form
         if (y >= vTop) {
         // if so, ad the fixed class
         col_3.addClass('stuck');
-        col_3.width(row.width() * .25-25);
+        col_3.width(row.width() * .25-pad_val);
         col_9.addClass('offset-3');
         } else {
         // otherwise remove it
