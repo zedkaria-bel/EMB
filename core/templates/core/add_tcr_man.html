@@ -24,18 +24,18 @@
 <form method="POST" enctype="multipart/form-data" action="{% url 'core:process-new-tcr-man' %}" class="form" style="position:relative; top: -30px;">
     {% csrf_token %}
     <div class="row">
-        <div class="col-2">
+        <div class="col-3">
           <div class="list-group mb-4" id="list-tab" role="tablist">
             {% if mode == 'add' %}
                 <a class="list-group-item list-group-item-action active py-4 h5 m-0" id="list-month" data-toggle="list" href="#month-form" role="tab" aria-controls="month"><b><span id="txt-unit">MOIS CONCERNÉ</span></b></a>
             {% endif %}
             <a class="list-group-item list-group-item-action {% if mode == 'edit' %} active {% endif %} py-4 h5 m-0" id="list-siege" data-toggle="list" href="#siege_form" role="tab" aria-controls="siege"><b>SIÈGE</b></a>
-            <a class="list-group-item list-group-item-action py-4 h5 m-0" id="list-kdu" data-toggle="list" href="#kdu_form" role="tab" aria-controls="kdu"><b>KDU</b></a>
-            <a class="list-group-item list-group-item-action py-4 h5 m-0" id="list-azdu" data-toggle="list" href="#azdu_form" role="tab" aria-controls="azdu"><b>AZDU</b></a>
-            <a class="list-group-item list-group-item-action py-4 h5 m-0" id="list-skdu" data-toggle="list" href="#skdu_form" role="tab" aria-controls="skdu"><b>SKDU</b></a>
+            <a class="list-group-item list-group-item-action py-4 h5 m-0" id="list-kdu" data-toggle="list" href="#kdu_form" role="tab" aria-controls="kdu"><b>Unité : KDU</b></a>
+            <a class="list-group-item list-group-item-action py-4 h5 m-0" id="list-azdu" data-toggle="list" href="#azdu_form" role="tab" aria-controls="azdu"><b>Unité : AZDU</b></a>
+            <a class="list-group-item list-group-item-action py-4 h5 m-0" id="list-skdu" data-toggle="list" href="#skdu_form" role="tab" aria-controls="skdu"><b>Unité : SKDU</b></a>
           </div>
         </div>
-        <div class="col-10">
+        <div class="col-9">
           <div class="tab-content" id="nav-tabContent">
             <input type="hidden" name='mode' value="{{mode}}">
             {% if mode == 'add' %}
@@ -310,18 +310,25 @@
     var $cache = $('#list-tab');
 
     //store the initial position of the element
-    var vTop = $cache.offset().top - parseFloat($cache.css('marginTop').replace(/auto/, 0));
+    var vTop = $cache.offset().top - parseFloat($cache.css('marginTop').replace(/auto/, 0)) - 100;
     $(window).scroll(function (event) {
         // what the y position of the scroll is
         var y = $(this).scrollTop();
+        var col_3 = $cache.parent()
+        var row = col_3.parent()
+        var col_9 = col_3.siblings();
+        var pad_val = parseFloat(col_3.css('padding-left')) * 2;
 
         // whether that's below the form
         if (y >= vTop) {
         // if so, ad the fixed class
-        $cache.addClass('stuck');
+        col_3.addClass('stuck');
+        col_3.width(row.width() * .25-pad_val);
+        col_9.addClass('offset-3');
         } else {
         // otherwise remove it
-        $cache.removeClass('stuck');
+        col_3.removeClass('stuck');
+        col_9.removeClass('offset-3');
         }
     });
 
