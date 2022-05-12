@@ -20,9 +20,10 @@ from django.http import (HttpResponseRedirect,
                          JsonResponse)
 from django.shortcuts import redirect, render, reverse
 from django.views.generic import DetailView, ListView, View
+from scipy.fftpack import dst
 # pylint: disable=import-error
 from django_pandas.io import read_frame
-from sqlalchemy import create_engine, true
+from sqlalchemy import create_engine, false, true
 from sqlalchemy.orm import sessionmaker
 
 from .flasah_test import get_prod_phy
@@ -643,7 +644,12 @@ class AddAct(View):
                         acc_df, obj_cap_acc_df = get_acc_df(df)
                         indexNames = acc_df[acc_df['Conforme_mois'] == 0].index
                         acc_df.drop(indexNames , inplace=True)
+                        acc_df.loc[~acc_df['Unité'].str.lower().str.contains('kdu|skdu|azdu', na = False), 'Unité'] = np.nan
+                        acc_df['Unité'].fillna(method='ffill', inplace = True)
+                        print(acc_df[['Unité', 'Désignation', 'Brute_mois', 'Conforme_mois', 'date', 'category', 'produit']])
+                        
 
+                       
                         # OBJECTIF AND CAPACITE PART
                         tab_name = 'OBJ_CAP_PRODUCTION'
                         # REPLACE THE OBJ AND CAPACITE FOR THE CURRENT MONTH
@@ -1587,6 +1593,12 @@ class addFlashJourn(View):
                 cursor.execute('SELECT MAX("date") FROM public."' + tab_name + '"')
                 max_dt_flash = cursor.fetchone()[0]
 
+                # GET TABLE INTO DATAFRAME TO EXTRACT CURRENT DISTINCT DATES
+                qs = Production_Capacite_Imp.objects.all()
+                df = read_frame(qs)
+                dst_dates = list(Production_Capacite_Imp.objects.values_list('date', flat=True).distinct().order_by('-date'))
+                print(dst_dates)
+
                 xl = pd.ExcelFile(new_act_journ, engine='openpyxl') # pylint: disable=abstract-class-instantiated
                 bg_frames = []
                 for sheetname in xl.sheet_names:
@@ -1600,9 +1612,9 @@ class addFlashJourn(View):
                         else:
                             match = re.search(r'\d{2}/\d{2}/\d{4}', dte)
                             date = datetime.datetime.strptime(match.group(), '%d/%m/%Y').date()
-                        print(date, max_dt_flash)
-                        if date <= max_dt_flash:
-                            messages.error(request, "Erreur ! Cette date a déjà été traitée.")
+                        # print(date, max_dt_flash)
+                        if date in dst_dates:
+                            messages.error(request, "Erreur ! le flash d'impression du " + str(date) + " existe déjà.")
                             return redirect('core:add-cap-prod-imp')
                         else:
                             dfs = bg_df.index[bg_df['Unnamed: 0'].str.lower().str.contains('vern|tand|offs', na = False)].tolist()
