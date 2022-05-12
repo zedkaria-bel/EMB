@@ -20,7 +20,6 @@ from django.http import (HttpResponseRedirect,
                          JsonResponse)
 from django.shortcuts import redirect, render, reverse
 from django.views.generic import DetailView, ListView, View
-from scipy.fftpack import dst
 # pylint: disable=import-error
 from django_pandas.io import read_frame
 from sqlalchemy import create_engine, false, true
@@ -606,6 +605,7 @@ class AddAct(View):
 
                 cursor.execute('SELECT MAX("date") FROM public."' + tab_name + '"')
                 max_dt = cursor.fetchone()[0]
+                dst_dates = list(Production.objects.values_list('date', flat=True).distinct().order_by('-date'))
                 # print(max_dt)
                 # max_dt = datetime.date(2022, 1, 16)
 
