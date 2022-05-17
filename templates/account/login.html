@@ -53,7 +53,7 @@
               {% if redirect_field_value %}
               <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
               {% endif %}
-              <a class="btn px-3" style="color: white !important; background-color: none !important; border: 2px solid white !important;" href="{% url 'account_reset_password' %}">{% trans "Mot de passe oublié ?" %}</a>
+              <!-- <a class="btn px-3" style="color: white !important; background-color: none !important; border: 2px solid white !important;" href="{% url 'account_reset_password' %}">{% trans "Mot de passe oublié ?" %}</a> -->
               <button class="btn py-3" style="color: #323232 !important; background-color: white !important;" type="submit">{% trans "Se connecter" %}</button>
             </form>
             </div>
