@@ -1,5 +1,6 @@
 import calendar
 import datetime
+import imp
 import os
 import re
 import sys
@@ -14,6 +15,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
 from django.core.files.storage import FileSystemStorage
 from django.db.models import Max, Sum
 from django.http import (HttpResponseRedirect,
@@ -208,7 +210,7 @@ class prodDetails(LoginRequiredMixin, DetailView):
         context['title'] = 'Détails de production'
         return context
 
-class EditProd(View):
+class EditProd(LoginRequiredMixin, View):
     def post(self, request):
         dic = dict(request.POST)
         # print(request.POST)
@@ -314,7 +316,7 @@ class saleDetails(LoginRequiredMixin, DetailView):
         context['cat_list'] = Vente.objects.values_list('category', flat=True).distinct().order_by('category')
         return context
 
-class EditSale(View):
+class EditSale(LoginRequiredMixin, View):
     def post(self, request):
         # print(request.POST)
         dic = dict(request.POST)
@@ -403,7 +405,7 @@ class trsDetails(LoginRequiredMixin, DetailView):
         context['trs'] = context['obj'].trs * 100
         return context
 
-class EditTrs(View):
+class EditTrs(LoginRequiredMixin, View):
     def post(self, request):
         dic = dict(request.POST)
         # print(dic)
@@ -531,6 +533,7 @@ class tcrSummary(LoginRequiredMixin, ListView):
             context['empty_qs'] = True
         return context
 
+@login_required
 def add_act_journ(request):
     context = {
         'title' : "ACtivité journalière".upper(),
@@ -547,7 +550,7 @@ def safe_float_convert(x):
     except TypeError:
         return False # null type
 
-class AddAct(View):
+class AddAct(LoginRequiredMixin, View):
     def post(self, request):
         if request.FILES['file_pg']:
             myfile = request.FILES['file_pg']
@@ -942,6 +945,7 @@ class AddAct(View):
         messages.success(request, "Opération terminé avec succès !")
         return redirect('core:add-act-journ')
 
+@login_required
 def add_tcr(request):
     context = {
         'title' : "Nouveau TCR".upper(),
@@ -949,7 +953,7 @@ def add_tcr(request):
     }
     return render(request, 'core/add_tcr.html', context)
 
-class AddTcr(View):
+class AddTcr(LoginRequiredMixin, View):
     def post(self, request):
         if request.FILES['file_pg']:
             month_crn = 0
@@ -1025,7 +1029,8 @@ class AddTcr(View):
                 return redirect('core:tcr-view')
         messages.success(request, "Le données ont été stockés avec succès !")
         return redirect('core:add-tcr')
-                    
+
+@login_required                    
 def add_act_journ_man(request):
     # pylint: disable=no-member
     dstc_volumes = list(Production.objects.values_list('volume', flat=True).distinct().order_by('volume'))
@@ -1046,7 +1051,7 @@ def add_act_journ_man(request):
     }
     return render(request, 'core/add_act_journ_man.html', context)
 
-class AddActMan(View):
+class AddActMan(LoginRequiredMixin, View):
     def post(self, request):
         dic = dict(request.POST)
         del dic['csrfmiddlewaretoken']
@@ -1317,6 +1322,7 @@ class AuditDetails(LoginRequiredMixin, DetailView):
         context['obj'] = obj
         return context
 
+@login_required
 def add_tcr_man(request):
     # pylint: disable=no-member
     years = list(Tcr.objects.values_list('date__year', flat=True).distinct())
@@ -1353,7 +1359,7 @@ class TcrMan(LoginRequiredMixin, ListView):
         context['year'] = self.kwargs['year']
         return context
 
-class AddTcrMan(View):
+class AddTcrMan(LoginRequiredMixin, View):
     def post(self, request):
         dic = dict(request.POST)
         del dic['csrfmiddlewaretoken']
@@ -1489,7 +1495,7 @@ class ObjCapacitySummary(LoginRequiredMixin, ListView):
         context['qs'] = self.get_queryset()
         return context
 
-class AddObjectifCap(View):
+class AddObjectifCap(LoginRequiredMixin, View):
     def post(self, request):
         dic = dict(request.POST)
         del dic['csrfmiddlewaretoken']
@@ -1554,6 +1560,7 @@ class AddObjectifCap(View):
                     'mode': mode
                 }))
 
+@login_required
 def set_capacity(request):
     if request.is_ajax and request.method == "POST":
         # pylint: disable=no-member
@@ -1570,6 +1577,7 @@ def set_capacity(request):
         return JsonResponse({'capacity': cap})
     return JsonResponse({'error': 'Something went wrong!'})
 
+@login_required
 def add_cap_prod_imp(request):
     context = {
         'title' : "capacité de production ( imprimerie )".upper(),
@@ -1577,7 +1585,7 @@ def add_cap_prod_imp(request):
     }
     return render(request, 'core/add-cap-prod-imp.html', context)
 
-class addFlashJourn(View):
+class addFlashJourn(LoginRequiredMixin, View):
     def post(self, request):
         if request.FILES['file_pg']:
             myfile = request.FILES['file_pg']
@@ -1895,7 +1903,7 @@ class FlashImpressionDetails(LoginRequiredMixin, DetailView):
         context['formats'] = list(Flash_Impression.objects.values_list('format_fer', flat=True).distinct())
         return context
 
-class EditFlashImp(View):
+class EditFlashImp(LoginRequiredMixin, View):
     def post(self, request):
         dic = dict(request.POST)
         del dic['csrfmiddlewaretoken']
@@ -2046,6 +2054,7 @@ class EditFlashImp(View):
             'pk' : dic['main_id'][0]
         }))
 
+@login_required
 def add_cap_prod_imp_man(request):
     shifts = list(Flash_Impression.objects.order_by('shift').values_list('shift', flat=True).distinct())
     shifts = list(map(lambda s: s.strip(), shifts))

@@ -51,10 +51,36 @@ class AuditLog(models.Model):
             'pk' : self.pk
         })
 
-class AggPrevAnn(models.Model):
+class MetaWorkforce(models.Model):
+    id = models.AutoField(primary_key=True)
+    unit = models.TextField(blank=True, null=True)
+    product = models.TextField(blank=True, null=True)
+    dim = models.TextField(blank=True, null=True)
+    num_instal = models.TextField(blank=True, null=True)
+    code = models.TextField(blank=True, null=True)
+    cob = models.TextField(blank=True, null=True)
+    pds_brut_1000 = models.FloatField(blank=True, null=True)
+    pds_net_1000 = models.FloatField(blank=True, null=True)
+    nb_instal = models.IntegerField(blank=True, null=True)
+    phase_fab = models.IntegerField(blank=True, null=True)
+    date = models.DateField()
 
     class Meta:
-        db_table = 'Agg_Prev_Ann'
+        db_table = 'Workforce_Meta'
+
+class ConsomWorkforce(models.Model):
+    id = models.AutoField(primary_key=True)
+    code = models.TextField(blank=True, null=True)
+    des = models.TextField(blank=True, null=True)
+    nb_post = models.IntegerField(blank=True, null=True)
+    nb_agent = models.FloatField(blank=True, null=True)
+    real_cad_hor = models.IntegerField(blank=True, null=True)
+    time_consum_thsd = models.FloatField(blank=True, null=True)
+    mode = models.TextField(blank=True, null=True)
+    id_meta = models.ForeignKey(MetaWorkforce, on_delete=models.CASCADE, db_column='id_meta')
+
+    class Meta:
+        db_table = 'Workforce_Consom'
 
 class AbstractProduction(models.Model):
     id = models.IntegerField(db_column='ID', primary_key=True)  # Field name made lowercase.
