@@ -1605,7 +1605,7 @@ class addFlashJourn(LoginRequiredMixin, View):
                 qs = Production_Capacite_Imp.objects.all()
                 df = read_frame(qs)
                 dst_dates = list(Production_Capacite_Imp.objects.values_list('date', flat=True).distinct().order_by('-date'))
-                print(dst_dates)
+                # print(dst_dates)
 
                 xl = pd.ExcelFile(new_act_journ, engine='openpyxl') # pylint: disable=abstract-class-instantiated
                 bg_frames = []
@@ -1714,11 +1714,23 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('forma'), 'label_arret'] = 'chg_form'
                                 df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('lavag'), 'label_arret'] = 'lvg'
                                 df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('prog'), 'label_arret'] = 'manque_prog'
-                                df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('deb'), 'label_arret'] = 'debray'
                                 df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('pan'), 'label_arret'] = 'panne'
                                 df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('reg|rég'), 'label_arret'] = 'reglages'
                                 df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('autr'), 'label_arret'] = 'autres'
                                 df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('abs'), 'label_arret'] = 'abs'
+
+                                new_ones = list(set(df_arrets['label_arret'].unique()) - set(full_labels))
+                                for new_arret in new_ones:
+                                    if 'autres' in df_arrets['label_arret'].unique():
+                                        if df_arrets.loc[df_arrets['label_arret'] == 'autres', 'temps arret (mn)'] == np.nan:
+                                            df_arrets.loc[df_arrets['label_arret'] == 'autres', 'temps arret (mn)'] = 0
+                                        df_arrets.loc[df_arrets['label_arret'] == 'autres', 'temps arret (mn)'] += df_arrets.loc[df_arrets['label_arret'] == new_arret, 'temps arret (mn)']
+                                        df_arrets.drop(df_arrets.loc[df_arrets['label_arret'] == new_arret], inplace = True)
+                                    else:
+                                        df_arrets.loc[df_arrets['label_arret'] == new_arret, 'label_arret'] = 'autres'
+                                    df_arrets.loc[len(df_arrets.index)] = ['descr', new_arret]
+                                        
+                                # print(df_arrets)
 
                                 diff = list(set(full_labels) - set(df_arrets['label_arret'].unique().tolist()))
                                 if len(diff) > 0:
@@ -1775,8 +1787,8 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 df_cap_prod['arrets'] = df_arrets.iloc[0]['prep_line'] + df_arrets.iloc[0]['pause_eat'] + df_arrets.iloc[0]['chg_form'] + df_arrets.iloc[0]['lvg'] + df_arrets.iloc[0]['manque_prog'] + df_arrets.iloc[0]['panne'] + df_arrets.iloc[0]['reglages'] + df_arrets.iloc[0]['autres'] + df_arrets.iloc[0]['abs']
                                 # print(df_cap_prod)
                                 flash_df = flash_df.reset_index(drop=True)
-                                print(flash_df)
-                                print(( (df_cap_prod['shift'] * flash_df.at[0, 'hours'] * 60) - df_cap_prod['arrets'] ) / (df_cap_prod['shift'] * flash_df.at[0, 'hours'] * 60))
+                                # print(flash_df)
+                                # print(( (df_cap_prod['shift'] * flash_df.at[0, 'hours'] * 60) - df_cap_prod['arrets'] ) / (df_cap_prod['shift'] * flash_df.at[0, 'hours'] * 60))
                                 try:
                                     df_cap_prod['taux_util'] = ( (df_cap_prod['shift'] * flash_df.at[0, 'hours'] * 60) - df_cap_prod['arrets'] ) / (df_cap_prod['shift'] * flash_df.at[0, 'hours'] * 60)
                                 except:

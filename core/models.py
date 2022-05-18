@@ -272,7 +272,7 @@ class Production_Capacite_Imp(ChangesMixin, models.Model):
     chg_form = models.IntegerField(blank=True, null=True)
     lvg = models.IntegerField(blank=True, null=True)
     manque_prog = models.IntegerField(blank=True, null=True)
-    debray = models.IntegerField(blank=True, null=True)
+    descr = models.TextField(blank=True, null=True, max_length=300)
     panne = models.IntegerField(blank=True, null=True)
     reglages = models.IntegerField(blank=True, null=True)
     autres = models.IntegerField(blank=True, null=True)

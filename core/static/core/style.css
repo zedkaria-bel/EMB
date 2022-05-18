@@ -166,3 +166,10 @@ table.table-bordered > thead > tr{
 .flip {
   transform: rotate(-180deg);
 }
+
+
+#the-count {
+  float: right !important;
+  padding: 0.1rem 0 0 0;
+  font-size: 0.875rem;
+}
