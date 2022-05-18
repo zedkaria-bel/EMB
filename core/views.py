@@ -1830,7 +1830,7 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 if not max_id:
                                     max_id = 0
                                 df_capacite.insert(0, 'id', range(int(max_id) + 1, 1 + int(max_id) + len(df_capacite)))
-                                df_capacite.to_sql(tab_name, engine, if_exists='append', index=False)
+                                # df_capacite.to_sql(tab_name, engine, if_exists='append', index=False)
 
                                 tab_name = 'Flash_Impression'
 
@@ -1839,7 +1839,7 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 if not max_id:
                                     max_id = 0
                                 flash_df.insert(0, 'id', range(int(max_id) + 1, 1 + int(max_id) + len(flash_df)))
-                                flash_df.to_sql(tab_name, engine, if_exists='append', index=False)
+                                # flash_df.to_sql(tab_name, engine, if_exists='append', index=False)
             except (KeyError, pd.errors.ParserError):
                 messages.error(request, "Erreur ! Noms de feuilles Excel erronés, ou bien la structure du fichier ( d'un tableau ) a été modifiée.")
                 print(str(KeyError))
