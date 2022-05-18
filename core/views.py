@@ -1030,7 +1030,7 @@ class AddTcr(LoginRequiredMixin, View):
         messages.success(request, "Le données ont été stockés avec succès !")
         return redirect('core:add-tcr')
 
-@login_required                    
+@login_required
 def add_act_journ_man(request):
     # pylint: disable=no-member
     dstc_volumes = list(Production.objects.values_list('volume', flat=True).distinct().order_by('volume'))
@@ -1714,6 +1714,7 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('forma'), 'label_arret'] = 'chg_form'
                                 df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('lavag'), 'label_arret'] = 'lvg'
                                 df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('prog'), 'label_arret'] = 'manque_prog'
+                                df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('deb'), 'label_arret'] = 'debray'
                                 df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('pan'), 'label_arret'] = 'panne'
                                 df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('reg|rég'), 'label_arret'] = 'reglages'
                                 df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('autr'), 'label_arret'] = 'autres'
@@ -1846,7 +1847,7 @@ class addFlashJourn(LoginRequiredMixin, View):
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                 # print(exc_type, fname, exc_tb.tb_lineno)
-                messages.error(request, "Erreur ! ")
+                messages.error(request, "Erreur ! Probablement un nouvel arrêt non-enregistré.")
                 print(exc_type, fname, exc_tb.tb_lineno, traceback.format_exc())
                 return redirect('core:add-cap-prod-imp')
             # f = open(uploaded_file_path)
