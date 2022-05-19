@@ -1609,8 +1609,10 @@ class addFlashJourn(LoginRequiredMixin, View):
 
                 xl = pd.ExcelFile(new_act_journ, engine='openpyxl') # pylint: disable=abstract-class-instantiated
                 bg_frames = []
+                good_file = False
                 for sheetname in xl.sheet_names:
                     if 'flash' in sheetname.lower() or 'journ' in sheetname.lower():
+                        good_file = True
                         bg_df = pd.read_excel(new_act_journ, sheet_name=sheetname, header=1)
                         ix = bg_df.index[bg_df['Unnamed: 0'].str.lower().str.contains(r'\d{2}/\d{2}/\d{4}', na = False)].tolist()[0]
                         dte = bg_df['Unnamed: 0'][ix]
@@ -1720,15 +1722,23 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('abs'), 'label_arret'] = 'abs'
 
                                 new_ones = list(set(df_arrets['label_arret'].unique()) - set(full_labels))
-                                for new_arret in new_ones:
-                                    if 'autres' in df_arrets['label_arret'].unique():
-                                        if df_arrets.loc[df_arrets['label_arret'] == 'autres', 'temps arret (mn)'] == np.nan:
-                                            df_arrets.loc[df_arrets['label_arret'] == 'autres', 'temps arret (mn)'] = 0
-                                        df_arrets.loc[df_arrets['label_arret'] == 'autres', 'temps arret (mn)'] += df_arrets.loc[df_arrets['label_arret'] == new_arret, 'temps arret (mn)']
-                                        df_arrets.drop(df_arrets.loc[df_arrets['label_arret'] == new_arret], inplace = True)
-                                    else:
-                                        df_arrets.loc[df_arrets['label_arret'] == new_arret, 'label_arret'] = 'autres'
-                                    df_arrets.loc[len(df_arrets.index)] = ['descr', new_arret]
+                                if len(new_ones):
+                                    for new_arret in new_ones:
+                                        new = True
+                                        # print(df_arrets)
+                                        # print(df_arrets.loc[df_arrets['label_arret'] == new_arret, 'temps arrets (mn)'].iloc[0])
+                                        if df_arrets.loc[df_arrets['label_arret'] == new_arret, 'temps arrets (mn)'].iloc[0] == np.nan:
+                                            df_arrets.drop(df_arrets.loc[df_arrets['label_arret'] == new_arret], inplace = True)
+                                            new = False
+                                        if new:
+                                            if 'autres' in df_arrets['label_arret'].unique():
+                                                if df_arrets.loc[df_arrets['label_arret'] == 'autres', 'temps arrets (mn)'].iloc[0] == np.nan:
+                                                    df_arrets.loc[df_arrets['label_arret'] == 'autres', 'temps arrets (mn)'] = 0
+                                                df_arrets.loc[df_arrets['label_arret'] == 'autres', 'temps arrets (mn)'] += df_arrets.loc[df_arrets['label_arret'] == new_arret, 'temps arrets (mn)']
+                                                df_arrets.drop(df_arrets.loc[df_arrets['label_arret'] == new_arret], inplace = True)
+                                            else:
+                                                df_arrets.loc[df_arrets['label_arret'] == new_arret, 'label_arret'] = 'autres'
+                                            df_arrets.loc[len(df_arrets.index)] = ['descr', new_arret]
                                         
                                 # print(df_arrets)
 
@@ -1830,7 +1840,7 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 if not max_id:
                                     max_id = 0
                                 df_capacite.insert(0, 'id', range(int(max_id) + 1, 1 + int(max_id) + len(df_capacite)))
-                                # df_capacite.to_sql(tab_name, engine, if_exists='append', index=False)
+                                df_capacite.to_sql(tab_name, engine, if_exists='append', index=False)
 
                                 tab_name = 'Flash_Impression'
 
@@ -1839,20 +1849,28 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 if not max_id:
                                     max_id = 0
                                 flash_df.insert(0, 'id', range(int(max_id) + 1, 1 + int(max_id) + len(flash_df)))
-                                # flash_df.to_sql(tab_name, engine, if_exists='append', index=False)
+                                flash_df.to_sql(tab_name, engine, if_exists='append', index=False)
+                if not good_file:
+                    messages.error(request, "Fichier non conforme ! Veuillez relire la note importante en jaune.")
+                    return redirect('core:add-cap-prod-imp')
             except (KeyError, pd.errors.ParserError):
                 messages.error(request, "Erreur ! Noms de feuilles Excel erronés, ou bien la structure du fichier ( d'un tableau ) a été modifiée.")
                 print(str(KeyError))
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                 # print(exc_type, fname, exc_tb.tb_lineno)
-                messages.error(request, "Erreur ! ")
+                # messages.error(request, "Erreur ! ")
                 print(exc_type, fname, exc_tb.tb_lineno, traceback.format_exc())
                 return redirect('core:add-cap-prod-imp')
             except UnboundLocalError:
                 messages.error(request, "Erreur ! Les données des dates concernées ont déjà été chargées.")
                 return redirect('core:add-cap-prod-imp')
             except ValueError as v:
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                # print(exc_type, fname, exc_tb.tb_lineno)
+                # messages.error(request, "Erreur ! ")
+                print(exc_type, fname, exc_tb.tb_lineno, traceback.format_exc())
                 messages.error(request, str(v))
                 return redirect('core:add-cap-prod-imp')
             except Exception as e:
@@ -1883,7 +1901,7 @@ class FlashImpressionSummary(LoginRequiredMixin, ListView):
             qs = qs.filter(date=date)
         if self.request.GET.get('lines') and self.request.GET.get('lines') != 'all':
             qs = qs.filter(ligne = self.request.GET.get('lines').strip())
-        return qs.order_by('-date')
+        return qs.order_by('-date', '-ligne')
 
     def get_context_data(self, *args,**kwargs):
         context = super(FlashImpressionSummary, self).get_context_data(*args, **kwargs)
