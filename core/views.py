@@ -1650,7 +1650,8 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 flash_df['Unnamed: 0'].fillna(method='ffill', inplace = True)
                                 flash_df['Unnamed: 1'].fillna(method='ffill', inplace = True)
                                 flash_df['Unnamed: 13'].fillna(method='ffill', inplace = True)
-                                flash_df['Unnamed: 0'] = flash_df['Unnamed: 0'].str.strip().str[-1].astype(int)
+                                flash_df['Unnamed: 0'] = flash_df['Unnamed: 0'].astype(str).str.strip().str[-1].astype(int)
+                                # print(flash_df['Unnamed: 0'])
                                 flash_df.rename(columns = {
                                     flash_df.columns[0]: 'hours',
                                     flash_df.columns[1]: 'shift',
