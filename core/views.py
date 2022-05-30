@@ -1684,6 +1684,8 @@ class addFlashJourn(LoginRequiredMixin, View):
                                     flash_df['taux_reb'] = np.nan
                                 flash_df['date'] = date
                                 flash_df['ligne'] = line
+                                flash_df['conduct'].replace(0, np.nan, inplace = True)
+                                flash_df['conduct'].fillna(method='ffill', inplace = True)
                                 # print(flash_df[['sf_brut', 'sf_conf', 'sf_rebut', 'sf_taux_reb','brut', 'conf', 'rebut', 'taux_reb']])
                                 # **************************************** FLASH IMPRESSION ***********************************************************
                              
@@ -1695,8 +1697,8 @@ class addFlashJourn(LoginRequiredMixin, View):
                                     df_capacite = df.loc[start_df2:, :]
                                 df_capacite = df_capacite.reset_index(drop=True)
                                 df_capacite.dropna(axis=1, how='all', inplace = True)
-                                df_arrets = df_capacite.iloc[:, :3]
-                                df_cap_prod = df_capacite.iloc[:, 3:]
+                                df_arrets = df_capacite.iloc[:, :6]
+                                df_cap_prod = df_capacite.iloc[:, 6:]
                                 
                                 # DF ARRETS
 
@@ -1723,6 +1725,7 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('abs'), 'label_arret'] = 'abs'
 
                                 new_ones = list(set(df_arrets['label_arret'].unique()) - set(full_labels))
+                                df_arrets = df_arrets.reset_index(drop=True)
                                 if len(new_ones):
                                     for new_arret in new_ones:
                                         new = True
@@ -1739,20 +1742,44 @@ class addFlashJourn(LoginRequiredMixin, View):
                                                 df_arrets.drop(df_arrets.loc[df_arrets['label_arret'] == new_arret], inplace = True)
                                             else:
                                                 df_arrets.loc[df_arrets['label_arret'] == new_arret, 'label_arret'] = 'autres'
-                                            df_arrets.loc[len(df_arrets.index)] = ['descr', new_arret]
+                                            df_arrets.loc[len(df_arrets.index)] = ['descr', new_arret, new_arret, new_arret, new_arret]
                                         
                                 # print(df_arrets)
+
+                                if 'descr' not in df_arrets['label_arret'].unique():
+                                    df_arrets.loc[len(df_arrets.index)] = ['descr', np.nan, np.nan, np.nan, np.nan]
 
                                 diff = list(set(full_labels) - set(df_arrets['label_arret'].unique().tolist()))
                                 if len(diff) > 0:
                                     for label in diff:
-                                        df_arrets.loc[len(df_arrets.index)+1] = [label, 0]
+                                        df_arrets.loc[len(df_arrets.index)+1] = [label, 0, 0, 0, 0]
+                                
+                                df_arrets_teams = df_arrets.drop('temps arrets (mn)', axis = 1)
+                                df_arrets = df_arrets.iloc[:, :2]
 
                                 df_arrets.fillna(0, inplace = True)
                                 df_arrets = df_arrets.T
                                 df_arrets.columns = df_arrets.iloc[0]
                                 df_arrets = df_arrets.iloc[1:]
                                 # print(df_arrets)
+
+                                df_arrets_teams.rename(columns = {
+                                    df_arrets_teams.columns[1]: 1,
+                                    df_arrets_teams.columns[2]: 2,
+                                    df_arrets_teams.columns[3]: 3,
+                                }, inplace = True)
+                                df_arrets_teams.fillna(0, inplace = True)
+                                df_arrets_teams = df_arrets_teams.T
+                                df_arrets_teams.columns = df_arrets_teams.iloc[0]
+                                df_arrets_teams = df_arrets_teams.iloc[1:]
+                                
+                                # FIX DESCR
+                                # print(df_arrets_teams)
+                                if df_arrets.at['temps arrets (mn)', 'descr'] == 0:
+                                    df_arrets.at['temps arrets (mn)', 'descr'] = np.nan
+                                df_arrets_teams.loc[df_arrets_teams['autres'] == 0, 'descr'] = np.nan
+                                df_arrets_teams['line'] = line
+                                df_arrets_teams['date'] = date
 
                                 # DF CAP PROD
                             
@@ -1851,6 +1878,15 @@ class addFlashJourn(LoginRequiredMixin, View):
                                     max_id = 0
                                 flash_df.insert(0, 'id', range(int(max_id) + 1, 1 + int(max_id) + len(flash_df)))
                                 flash_df.to_sql(tab_name, engine, if_exists='append', index=False)
+
+                                tab_name = 'Impr_Arrets_Teams'
+
+                                cursor.execute('SELECT MAX("id") FROM public."' + tab_name + '"')
+                                max_id = cursor.fetchone()[0]
+                                if not max_id:
+                                    max_id = 0
+                                df_arrets_teams.insert(0, 'id', range(int(max_id) + 1, 1 + int(max_id) + len(df_arrets_teams)))
+                                df_arrets_teams.to_sql(tab_name, engine, if_exists='append', index=False)
                 if not good_file:
                     messages.error(request, "Fichier non conforme ! Veuillez relire la note importante en jaune.")
                     return redirect('core:add-cap-prod-imp')

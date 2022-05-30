@@ -288,6 +288,26 @@ class Production_Capacite_Imp(ChangesMixin, models.Model):
             'pk' : self.pk
         })
 
+class Impr_Arrets_Teams(models.Model):
+    id = models.AutoField(primary_key=True)
+    date = models.DateField(blank=True, null=True)
+    line = models.TextField(blank=True, null=True)
+    team = models.IntegerField(null=True, blank=True)
+    prep_line = models.IntegerField(blank=True, null=True)
+    pause_eat = models.IntegerField(blank=True, null=True)
+    chg_form = models.IntegerField(blank=True, null=True)
+    lvg = models.IntegerField(blank=True, null=True)
+    manque_prog = models.IntegerField(blank=True, null=True)
+    descr = models.TextField(blank=True, null=True, max_length=300)
+    panne = models.IntegerField(blank=True, null=True)
+    reglages = models.IntegerField(blank=True, null=True)
+    autres = models.IntegerField(blank=True, null=True)
+    abs = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        db_table = 'Impr_Arrets_Teams'
+
+
 @receiver(post_save, sender=User)
 def update_user_profile(sender, instance, created, **kwargs):
     if created:
