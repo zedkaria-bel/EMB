@@ -1780,6 +1780,10 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 df_arrets_teams.loc[df_arrets_teams['autres'] == 0, 'descr'] = np.nan
                                 df_arrets_teams['line'] = line
                                 df_arrets_teams['date'] = date
+                                df_arrets_teams.rename(columns = {
+                                    'label_arret': 'team'
+                                }, inplace = True)
+                                print(df_arrets_teams)
 
                                 # DF CAP PROD
                             
@@ -1868,7 +1872,7 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 if not max_id:
                                     max_id = 0
                                 df_capacite.insert(0, 'id', range(int(max_id) + 1, 1 + int(max_id) + len(df_capacite)))
-                                df_capacite.to_sql(tab_name, engine, if_exists='append', index=False)
+                                # df_capacite.to_sql(tab_name, engine, if_exists='append', index=False)
 
                                 tab_name = 'Flash_Impression'
 
@@ -1877,7 +1881,7 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 if not max_id:
                                     max_id = 0
                                 flash_df.insert(0, 'id', range(int(max_id) + 1, 1 + int(max_id) + len(flash_df)))
-                                flash_df.to_sql(tab_name, engine, if_exists='append', index=False)
+                                # flash_df.to_sql(tab_name, engine, if_exists='append', index=False)
 
                                 tab_name = 'Impr_Arrets_Teams'
 
@@ -1886,7 +1890,7 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 if not max_id:
                                     max_id = 0
                                 df_arrets_teams.insert(0, 'id', range(int(max_id) + 1, 1 + int(max_id) + len(df_arrets_teams)))
-                                df_arrets_teams.to_sql(tab_name, engine, if_exists='append', index=False)
+                                # df_arrets_teams.to_sql(tab_name, engine, if_exists='append', index=False)
                 if not good_file:
                     messages.error(request, "Fichier non conforme ! Veuillez relire la note importante en jaune.")
                     return redirect('core:add-cap-prod-imp')
