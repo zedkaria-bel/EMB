@@ -1780,9 +1780,7 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 df_arrets_teams.loc[df_arrets_teams['autres'] == 0, 'descr'] = np.nan
                                 df_arrets_teams['line'] = line
                                 df_arrets_teams['date'] = date
-                                df_arrets_teams.rename(columns = {
-                                    'label_arret': 'team'
-                                }, inplace = True)
+                                df_arrets_teams['team'] = df_arrets_teams.index
                                 print(df_arrets_teams)
 
                                 # DF CAP PROD
