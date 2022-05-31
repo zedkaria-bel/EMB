@@ -1645,8 +1645,8 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 flash_df = df.loc[0:end_flash_df, :]
                                 flash_df = flash_df.copy()
                                 # rmv rest of unnamed columns starting from last column ==> conducteur 
-                                # flash_df.dropna(axis=1, how='all', inplace = True)
-                                flash_df = flash_df.iloc[:, :16]
+                                flash_df.dropna(axis=1, how='all', inplace = True)
+                                # flash_df = flash_df.iloc[:, :16]
                                 to_rmv = df.index[df['Unnamed: 0'].str.lower().str.contains('shi', na = False)].tolist()[0]
                                 flash_df = flash_df.iloc[to_rmv + 3:-1]
                                 flash_df['Unnamed: 0'].fillna(method='ffill', inplace = True)
