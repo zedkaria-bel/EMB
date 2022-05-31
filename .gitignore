@@ -136,7 +136,8 @@ venv.bak/
 dmypy.json
 
 # Pyre type checker
-.pyre/
+.pyre/  
+
 
 # pytype static type analyzer
 .pytype/
@@ -151,6 +152,7 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-media_root/
+media_root/  
 BAT/
 core/migrations/
+scripts/
