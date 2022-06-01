@@ -1644,11 +1644,15 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 end_flash_df = df.index[df['Unnamed: 3'].str.lower().str.contains('tot', na = False)].tolist()[0]
                                 flash_df = df.loc[0:end_flash_df, :]
                                 flash_df = flash_df.copy()
-                                # rmv rest of unnamed columns starting from last column ==> conducteur 
-                                flash_df.dropna(axis=1, how='all', inplace = True)
-                                # flash_df = flash_df.iloc[:, :16]
+                                # rmv rest of unnamed columns starting from last column ==> conducteur
+                                flash_df.drop(['Unnamed: 5', 'Unnamed: 6'], axis = 1, inplace = True)
+                                # subs = flash_df.columns.difference(['Unnamed: 1'])
+                                # flash_df.dropna(subset=subs, how='all', inplace = True)
+                                # pd.set_option('display.max_columns', None)
+                                flash_df = flash_df.iloc[:, :14]
                                 to_rmv = df.index[df['Unnamed: 0'].str.lower().str.contains('shi', na = False)].tolist()[0]
                                 flash_df = flash_df.iloc[to_rmv + 3:-1]
+                                print(flash_df)
                                 flash_df['Unnamed: 0'].fillna(method='ffill', inplace = True)
                                 flash_df['Unnamed: 1'].fillna(method='ffill', inplace = True)
                                 flash_df['Unnamed: 13'].fillna(method='ffill', inplace = True)
@@ -1673,6 +1677,7 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 flash_df = flash_df.reset_index(drop=True)
                                 flash_df = flash_df.replace(['-'],0)
                                 flash_df.fillna(0, inplace = True)
+                                flash_df.loc[flash_df['shift'] == 0, 'shift'] = np.nan
                                 flash_df = flash_df.loc[(flash_df['sf_brut'] != 0) | (flash_df['brut'] != 0)]
                                 flash_df['sf_brut'] = flash_df['sf_rebut'] + flash_df['sf_conf']
                                 try:
@@ -1783,7 +1788,7 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 df_arrets_teams['line'] = line
                                 df_arrets_teams['date'] = date
                                 df_arrets_teams['team'] = df_arrets_teams.index
-                                print(df_arrets_teams)
+                                # print(df_arrets_teams)
 
                                 # DF CAP PROD
                             
@@ -1865,15 +1870,6 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 # print(flash_df)
                                 # print(df_capacite)
 
-                                tab_name = 'Production_Capacite_Imp'
-
-                                cursor.execute('SELECT MAX("id") FROM public."' + tab_name + '"')
-                                max_id = cursor.fetchone()[0]
-                                if not max_id:
-                                    max_id = 0
-                                df_capacite.insert(0, 'id', range(int(max_id) + 1, 1 + int(max_id) + len(df_capacite)))
-                                df_capacite.to_sql(tab_name, engine, if_exists='append', index=False)
-
                                 tab_name = 'Flash_Impression'
 
                                 cursor.execute('SELECT MAX("id") FROM public."' + tab_name + '"')
@@ -1882,6 +1878,15 @@ class addFlashJourn(LoginRequiredMixin, View):
                                     max_id = 0
                                 flash_df.insert(0, 'id', range(int(max_id) + 1, 1 + int(max_id) + len(flash_df)))
                                 flash_df.to_sql(tab_name, engine, if_exists='append', index=False)
+
+                                tab_name = 'Production_Capacite_Imp'
+
+                                cursor.execute('SELECT MAX("id") FROM public."' + tab_name + '"')
+                                max_id = cursor.fetchone()[0]
+                                if not max_id:
+                                    max_id = 0
+                                df_capacite.insert(0, 'id', range(int(max_id) + 1, 1 + int(max_id) + len(df_capacite)))
+                                df_capacite.to_sql(tab_name, engine, if_exists='append', index=False)
 
                                 tab_name = 'Impr_Arrets_Teams'
 
@@ -1918,7 +1923,7 @@ class addFlashJourn(LoginRequiredMixin, View):
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                 # print(exc_type, fname, exc_tb.tb_lineno)
-                messages.error(request, "Erreur ! Probablement un nouvel arrêt non-enregistré.")
+                messages.error(request, "Erreur lors du traitement!")
                 print(exc_type, fname, exc_tb.tb_lineno, traceback.format_exc())
                 return redirect('core:add-cap-prod-imp')
             # f = open(uploaded_file_path)
