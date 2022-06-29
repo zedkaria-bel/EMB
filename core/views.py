@@ -1811,8 +1811,21 @@ class addFlashJourn(LoginRequiredMixin, View):
                                     df_cap_prod.columns[0]: 'key',
                                     df_cap_prod.columns[-1]: 'val',
                                 }, inplace = True)
+                                check_last_col = False
+                                while not check_last_col:
+                                    # print('xxxxxxxxxxxxxxxxxxxxxxxx')
+                                    # print(df_cap_prod['val'].isna().sum())
+                                    if df_cap_prod['val'].isna().sum() > 2:
+                                        df_cap_prod = df_cap_prod.iloc[:, :-1]
+                                        df_cap_prod.rename(columns = {
+                                            df_cap_prod.columns[-1]: 'val',
+                                        }, inplace = True)
+                                    else:
+                                        check_last_col = True
+                                print(df_cap_prod)
                                 df_cap_prod = df_cap_prod.loc[:, ~df_cap_prod.columns.str.contains('^Unnamed')]
                                 df_cap_prod = df_cap_prod[df_cap_prod['val'].notna()]
+                                print(df_cap_prod)
                                 df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('mn'), 'key'] = 'arrets'
                                 df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('bru'), 'key'] = 'prod_brute'
                                 df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('shif'), 'key'] = 'shift'
