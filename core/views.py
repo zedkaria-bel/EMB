@@ -1831,8 +1831,8 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('shif'), 'key'] = 'shift'
                                 df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('util'), 'key'] = 'taux_util'
                                 df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('cap'), 'key'] = 'capacite_prod'
-                                df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('feu.*av'), 'key'] = 'nb_feuill_pre_arret'
-                                df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('feu.*ap'), 'key'] = 'nb_feuill_post_arret'
+                                df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('feu.*av|feu.*pr'), 'key'] = 'nb_feuill_pre_arret'
+                                df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('feu.*ap|feu.*al'), 'key'] = 'nb_feuill_post_arret'
                                 df_cap_prod = df_cap_prod.T
                                 df_cap_prod.columns = df_cap_prod.iloc[0]
                                 df_cap_prod = df_cap_prod.iloc[1:]
