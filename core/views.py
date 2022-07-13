@@ -975,7 +975,7 @@ class AddTcr(LoginRequiredMixin, View):
             try:
                 do_something = False
                 for sheetname in xl.sheet_names:
-                    if re.match("^[0-9 ]+$", sheetname):
+                    if re.match("^[0-9]+$", sheetname):
                         # print(sheetname)
                         df = pd.read_excel(file_str, sheet_name=sheetname, header=1)
                         # print(df)
