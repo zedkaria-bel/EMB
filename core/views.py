@@ -974,10 +974,10 @@ class AddTcr(LoginRequiredMixin, View):
             no_error = True
             try:
                 do_something = False
-                print(xl.sheet_names)
+                # print(xl.sheet_names)
                 for sheetname in xl.sheet_names:
-                    print(sheetname)
-                    if re.match("^[0-9]+$", sheetname):
+                    # print(sheetname)
+                    if re.match("^[0-9 ]+$", sheetname):
                         # print(sheetname)
                         df = pd.read_excel(file_str, sheet_name=sheetname, header=1)
                         # print(df)
@@ -988,17 +988,23 @@ class AddTcr(LoginRequiredMixin, View):
                         today = datetime.date.today()
                         cursor.execute('SELECT COUNT(*) FROM public."' + tab_name + '" WHERE "date" = \'' + str(datetime.date(year, month, 28)) + '\';')
                         count = cursor.fetchone()[0]
-                        if (count == 0 and datetime.date(year, month, 28) == datetime.date(today.year, today.month - 1, 28) ) or (month == month_crn and year == year_crn):
+                        print(count == 0 or datetime.date(year, month, 28) == datetime.date(today.year, today.month - 1, 28))
+                        if (count == 0 or datetime.date(year, month, 28) == datetime.date(today.year, today.month - 1, 28) ) or (month == month_crn and year == year_crn):
                             # print(month, year)
                             do_something = True
                             no_error = False
                             df = pd.read_excel(file_str, sheet_name=sheetname, header=1, skiprows=4)
                             last_idx = df[df['N°'].str.contains('RATIO', na = False)].index.to_list()[0]
-                            df = df[['Désignation ', 'SIEGE', 'KDU', 'SKDU', 'AZDU', 'ENTREPRISE']]
+                            df.rename(columns = {
+                                df.columns[1]: 'des',
+                            }, inplace = True)
+                            # print(df.head())
+                            df = df[['des', 'SIEGE', 'KDU', 'SKDU', 'AZDU', 'ENTREPRISE']]
                             df = df.iloc[0: last_idx - 1 , :] 
                             df = df.T
                             df.columns = df.iloc[0]
                             df = df.iloc[1: , :]
+                            # print(df.head())
                             df['date'] = datetime.date(year, month, 28)
                             df.fillna(0, inplace = True)
                             if month < 10:
