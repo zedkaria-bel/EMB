@@ -3,6 +3,8 @@ import numpy as np
 import re
 import datetime
 
+from sqlalchemy import case, false
+
 
 # C:\Users\zaki1\Downloads\prod_val_boites_19122021.xlsx
 pd.set_option('display.max_rows', None)
@@ -122,7 +124,7 @@ def get_val_df(df):
     df.rename(columns = {
         'Unnamed: 0': 'Unité',
         'Unnamed: 1': 'Ligne',
-        'Unnamed: 2': 'Désignation',
+        'Unnamed: 2': 'Désignation',  
         'Unnamed: 3': 'Client',
         'Unnamed: 4': 'PU_coutRev',
         'Unnamed: 5': 'montant_journee_coutRev',
@@ -131,10 +133,16 @@ def get_val_df(df):
         'Unnamed: 8': 'montant_journee_prix_vente',
         'Unnamed: 9': 'MontantCumul_prix_vente',
     }, inplace = True)
-    indexNames = df[(df['Ligne'].str.contains('TOTAL', na = False))].index
+
+    # new case : if 'ligne 800 grs' for example wasn't setted for all the products in the excel file
+    indexNames = df[(df['Ligne'].str.contains('total', case = False, na = False)) & (~df['Désignation'].notnull())].index
+    # print(indexNames)
     df.drop(indexNames , inplace=True)
     indexNames = df[(df['Client'].str.contains('TOTAL', na = False))].index
     df.drop(indexNames , inplace=True)
+    index_newcase = df[(df['Ligne'].str.contains('total', case = False, na = False)) & (df['Désignation'].notnull())].index
+    for idx in index_newcase:
+        df.at[idx, 'Ligne'] = df.at[idx + 1, 'Ligne']
     # indexNames = df[df['MontantCumul_coutRev'] == 0].index
     # df.drop(indexNames , inplace=True)
     # df.dropna(subset = ['Désignation'], inplace=True)
@@ -147,6 +155,7 @@ def get_val_df(df):
     subdf.fillna(0, inplace=True)
     # print(date)
     # print(df.iloc[:, :10])
+    # print(subdf)
     return subdf
 
 file_str = r'C:\Users\zaki1\Desktop\Controle de Gestion\Scripts\PRODUCTION V2\Activité journalière au 19 janvier 2022.xlsx'

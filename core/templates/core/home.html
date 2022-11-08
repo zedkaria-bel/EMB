@@ -116,12 +116,10 @@
           <tr>
             {% if count != 0 %}
             <th class="py-3" scope="col"><b class="h6">#</b></th>
-            <th class="py-3" scope="col"><b class="h6">Date</b></th>
-            <th class="py-3" scope="col"><b class="h6">Unité</b></th>
-            <th class="py-3" scope="col"><b class="h6">Ligne</b></th>
-            <th class="py-3" scope="col"><b class="h6">Brute (Jour)</b></th>
-            <th class="py-3" scope="col"><b class="h6">Rebut (Jour)</b></th>
-            <th class="py-3" scope="col"><b class="h6">PU - Coût de revient</b></th>
+            <th class="py-3" scope="col"><b class="h6">Désignation</b></th>
+            <th class="py-3" scope="col"><b class="h6">Client</b></th>
+            <th class="py-3" scope="col"><b class="h6">Brute (j)</b></th>
+            <th class="py-3" scope="col"><b class="h6">Brute (cumul)</b></th>
             <th class="py-3" scope="col"><b class="h6">Catégorie</b></th>
             <th class="py-3" scope="col"><b class="h6">Produit</b></th>
             <th class="py-3" scope="col"><b class="h6">Détails</b></th>
@@ -132,18 +130,22 @@
             {% for request in object_list %}
             <tr class="row_tab" style="border-bottom: 2px #d7d7d7 solid !important;">
                 <th class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ page_obj.start_index|add:forloop.counter0 }}</b></th>
-                <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.date|date:'d-m-Y' }}</b></td>
-                <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.unite }}</b></td>
                 <td class="py-3" scope="row"><b class="h6 font-weight-bold" >
-                    {% if request.ligne is not None %}
-                    {{ request.ligne }}
+                    {% if request.des|len_str > 50 %}
+                    {{ request.des|get_str_st_part }}...
+                    {% else %}
+                    {{ request.des }}
+                    {% endif %}
+                </b></td>
+                <td class="py-3" scope="row"><b class="h6 font-weight-bold" >
+                    {% if request.client is not None %}
+                    {{ request.client }}
                     {% else %}
                     -
                     {% endif %}
                 </b></td>
                 <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.brute_jour|intcomma|space_digits }}</b></td>
-                <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.rebut_jour }}</b></td>
-                <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.pu_cout_revient|floatformat:"2" }} DZD</b></td>
+                <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.brute_mois|intcomma|space_digits }}</b></td>
                 <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.category }}</b></td>
                 <td class="py-3" scope="row"><b class="h6 font-weight-bold" >{{ request.produit }}</b></td>
                 <td class="py-3" scope="row"><b class="h6 font-weight-bold" >

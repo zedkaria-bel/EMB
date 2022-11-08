@@ -36,12 +36,14 @@ def get_acc_df(df):
     df_copy['Volume'] = np.nan
     df_copy['category'] = df_copy['Unnamed: 1'].str.split().str[1]
     df_copy['produit'] = 'Accessoire'
+    df['format'] = np.nan
 
     indexNames = df[(df['Unnamed: 1'].str.contains('TOTAL')) & (df['Unnamed: 1'].str.contains('KDU') | df['Unnamed: 1'].str.contains('AZDU') | df['Unnamed: 1'].str.contains('SKDU') | df['Unnamed: 1'].str.contains('GENERAL')) & df['Unnamed: 2'].isnull()].index
     df.drop(indexNames , inplace=True)
     df['Volume'] = np.nan
     df['category'] = np.nan
     df['produit'] = 'Accessoire'
+    df['format'] = np.nan
     df.loc[(df['Unnamed: 2'].notnull()) & (df['Unnamed: 1'].str.contains('TOTAL', na = False)), 'Unnamed: 1'] = np.nan
     # print(df.head())
     # idx_vol = []
@@ -78,7 +80,9 @@ def get_acc_df(df):
                     # print(i, prec_vol, val)
                     try:
                         if not pd.isnull(df['Unnamed: 2'].loc[i]):
+                            print('ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo' + str(found))
                             df['Volume'].loc[i] = str(found)
+                            df['format'].loc[i] = df['Volume'].loc[i]
                     except KeyError:
                         i+=1
                 prec_vol = val
@@ -180,7 +184,7 @@ def get_acc_df(df):
     # print(df)
     df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
     df_copy = df_copy.loc[:, ~df_copy.columns.str.contains('^Unnamed')]
-    print(df.shape)
+    # print(df.shape)
     return df, df_copy
 
 # df = get_acc_df(r'C:\Users\zaki1\Downloads\prod_acc_19122021.xlsx')

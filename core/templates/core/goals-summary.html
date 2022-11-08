@@ -37,6 +37,13 @@
         <p class="mb-0 ml-4 h5"><b>MODIFIER LES OBJECTIFS</b></p>
         {% endif %}
     </a>
+    <a id="resume_obj" class="px-4 py-2 d-flex flex-row h6 align-items-center" style="background-color: white; border-radius: 60px; transition: 0.5s; color: #303be9;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-folder-plus" viewBox="0 0 16 16">
+            <path d="m.5 3 .04.87a1.99 1.99 0 0 0-.342 1.311l.637 7A2 2 0 0 0 2.826 14H9v-1H2.826a1 1 0 0 1-.995-.91l-.637-7A1 1 0 0 1 2.19 4h11.62a1 1 0 0 1 .996 1.09L14.54 8h1.005l.256-2.819A2 2 0 0 0 13.81 3H9.828a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 6.172 1H2.5a2 2 0 0 0-2 2zm5.672-1a1 1 0 0 1 .707.293L7.586 3H2.19c-.24 0-.47.042-.683.12L1.5 2.98a1 1 0 0 1 1-.98h3.672z"/>
+            <path d="M13.5 10a.5.5 0 0 1 .5.5V12h1.5a.5.5 0 1 1 0 1H14v1.5a.5.5 0 1 1-1 0V13h-1.5a.5.5 0 0 1 0-1H13v-1.5a.5.5 0 0 1 .5-.5z"/>
+        </svg>
+        <p class="mb-0 ml-4 h5"><b>RESUMÉ DU PROGRAMME</b></p>
+    </a>
     {% if mode == 'edit' %}
     <form method="GET" action="{% url 'core:goals-summary' mode='edit' %}" id="form" class="col-6 d-flex flex-row" style="display: flex; justify-content: center; align-items: center;">
         {% csrf_token %}
@@ -71,7 +78,7 @@
 
         {% if mode == 'edit' %}
         <div class="col-2">
-            <div class="list-group mb-4" id="list-tab" role="tablist" style="max-height: 40vh;
+            <div class="list-group mb-4" id="list-tab" role="tablist" style="max-height: 60vh;
                 overflow-y:auto;">
                 {% for date in dates %}
                     <a class="list-group-item list-group-item-action {% if date|date:'m'|to_int == first_dt.0 and date|date:'Y'|to_int == first_dt.1 %} active {% endif %} py-4 h5 m-0" id="list-{{date|date:'m'|to_int}}-{{date|date:'Y'|to_int}}" data-toggle="list" href="{{date|date:'m'|to_int}}-{{date|date:'Y'|to_int}}_form" role="tab" aria-controls="{{date|date:'m'|to_int}}-{{date|date:'Y'|to_int}}"><b>{{ date|date:'m'|month_name }} {{date|date:'Y'}}</b></a>
@@ -160,6 +167,7 @@
                                         <input type="hidden" id="unit-obj" name="unit-obj" value="{{vol.unite}}">
                                         <input type="hidden" id="volume-obj" name="volume-obj" value="{{vol.volume}}">
                                         <input type="hidden" id="category-obj" name="category-obj" value="{{vol.category}}">
+                                        <input type="hidden" id="objs" name="objs">
                                         <div class="form-inline col-12 d-flex align-items-center">
                                             <div class="form-group p-2 col-6">
                                                 <label for="obj" class="col-form-label mr-2"><b>Objectif</b></label>
@@ -183,9 +191,7 @@
                                 {% endfor %}
                             </div>
                         </div>
-                        {% if unit.grouper != 'SKDU' %}
                         <hr class="m-0" style="color: black; width: 100%; height: 0.5px;">
-                        {% endif %}
                         {% endfor %}
                         </form>
                     </div>
@@ -363,6 +369,7 @@
         }
     });
 
+
     $('#submit-form').on('click', function(){
         if($('#mode').val() == 'add'){
             $('#prod-obj').val($('#prod').val());
@@ -378,7 +385,16 @@
             return value.replace(/\s/g, '').replace(',', '.');
         });
         $('.form-inline > .form-group > input').prop("type", "number");
-        $('#form-obj').submit()
+        // $('.form-inline > .form-group > #obj').filter(':visible').each(function(){
+        //     console.log($(this).val())
+        // })
+        // var i = 0;
+        // var obj = []
+        // $('.form-inline > .form-group > #obj').filter(':visible').each(function(){
+        //     obj[i] = $(this).val();
+        //     i++;
+        // });
+        // $('#form-obj').submit();
     })
 
     $('form').submit(function(e) {

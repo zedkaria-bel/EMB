@@ -162,6 +162,7 @@
             <input type="number" class="form-control" name="montantcumul_coutrev" id="montantcumul_coutrev" value="{{obj.montantcumul_coutrev}}" placeholder="Montant cumulé" required disabled>
         </div>
     </div>
+    {% if obj.produit != 'Accessoire' %}
     <h5 class='mt-3' style="color:teal !important;"><b>Avec prix de vente </b></h5>
     <hr class='mt-0' style="height: 4px !important; background-color: teal !important;">
     <div class="form-row">
@@ -178,6 +179,7 @@
             <input type="number" class="form-control" name="montantcumul_prix_vente" id="montantcumul_prix_vente" value="{{obj.montantcumul_prix_vente}}" placeholder="Montant cumulé" required disabled>
         </div>
     </div>
+    {% endif %}
 </div>
 
 

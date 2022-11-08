@@ -1,6 +1,7 @@
 import calendar
 import datetime
 import imp
+from itertools import product
 import os
 import re
 import sys
@@ -236,6 +237,7 @@ class EditProd(LoginRequiredMixin, View):
         dic['conforme_mois'] = old_obj.conforme_mois - old_obj.conforme_jour + dic['conforme_jour']
         dic['rebut_mois'] = old_obj.rebut_mois - old_obj.rebut_jour + dic['rebut_jour']
         # MAJ des champs calculé auto
+        print(dic)
         try:
             dic['taux_jour'] = dic['brute_jour'] / dic['capacite_jour']
         except ZeroDivisionError:
@@ -249,7 +251,18 @@ class EditProd(LoginRequiredMixin, View):
             dic['taux_rebut'] = dic['rebut_mois'] / dic['brute_mois']
         except ZeroDivisionError:
             dic['taux_rebut'] = 0
-        # print(dic)
+        dic['montant_journee_coutrev'] = dic['pu_cout_revient'] * dic['conforme_jour']
+        dic['montantcumul_coutrev'] = dic['pu_cout_revient'] * dic['conforme_mois']
+        # print(dic['pu_cout_revient'], dic['conforme_mois'], dic['montantcumul_coutrev'])
+        if dic['produit'] == 'Boite':
+            try:
+                dic['montant_journee_prix_vente'] = dic['pu_prix_vente'] * (dic['montant_journee_coutrev'] / dic['pu_cout_revient'])
+            except ZeroDivisionError:
+                dic['montant_journee_prix_vente'] = 0
+            try:
+                dic['montantcumul_prix_vente'] = dic['pu_prix_vente'] * (dic['montantcumul_coutrev'] / dic['pu_cout_revient'])
+            except ZeroDivisionError:
+                dic['montantcumul_prix_vente'] = 0
         obj, created = Production.objects.update_or_create(
             id = int(request.POST.get('id')),
             defaults = dic
@@ -613,7 +626,7 @@ class AddAct(LoginRequiredMixin, View):
                 # max_dt = datetime.date(2022, 1, 16)
 
                 # ACC
-                bg_df = pd.read_excel(new_act_journ, sheet_name='03 Prod Accessoires', skiprows=8, header=1)
+                bg_df = pd.read_excel(new_act_journ, sheet_name='03 Prod Accessoires', skiprows=9, header=1)
                 # Rename the first column so we could address it
                 bg_df.columns.values[0] = 'Unnamed: 0'
                 bg_df.columns.values[1] = 'Unnamed: 1'
@@ -649,7 +662,7 @@ class AddAct(LoginRequiredMixin, View):
                         acc_df.drop(indexNames , inplace=True)
                         acc_df.loc[~acc_df['Unité'].str.lower().str.contains('kdu|skdu|azdu', na = False), 'Unité'] = np.nan
                         acc_df['Unité'].fillna(method='ffill', inplace = True)
-                        print(acc_df[['Unité', 'Désignation', 'Brute_mois', 'Conforme_mois', 'date', 'category', 'produit']])
+                        # print(acc_df[['Unité', 'Désignation', 'Brute_mois', 'Conforme_mois', 'date', 'category', 'produit']])
                         
 
                        
@@ -670,7 +683,9 @@ class AddAct(LoginRequiredMixin, View):
                         idx_line_num = acc_df['Ligne'].map(safe_float_convert)
                         acc_df.loc[idx_line_num, 'Ligne'] = np.nan
                         acc_df['Ligne'].fillna(method='ffill', inplace = True)
-                        acc_df['Ligne'] = acc_df['Ligne'].str.upper().str.strip()
+                        # print(acc_df)
+                        if not acc_df['Ligne'].isnull().all():
+                            acc_df['Ligne'] = acc_df['Ligne'].str.upper().str.strip()
                         pails_idx = acc_df.index[~acc_df['Ligne'].isnull()].tolist()
                         # print(pails_idx)
                         for x in pails_idx:
@@ -781,7 +796,7 @@ class AddAct(LoginRequiredMixin, View):
                     if date > max_dt:
                         df = df.reset_index(drop=True)
                         df.drop(df.tail(1).index,inplace=True)
-                        # print(df.iloc[:, : 8])
+                        # print(df)
                         df = get_val_df(df)
                         frames.append(df)
                         result = pd.concat(frames)
@@ -894,7 +909,7 @@ class AddAct(LoginRequiredMixin, View):
                 print(max_dt)
 
 
-                bg_df = pd.read_excel(new_act_journ, sheet_name='06 TRS', skiprows=8, header=1)
+                bg_df = pd.read_excel(new_act_journ, sheet_name='06 TRS', skiprows=7, header=1)
                 bg_df.columns.values[0] = 'Unnamed: 0'
                 bg_df.columns.values[1] = 'Unnamed: 1'
                 dfs = bg_df.index[bg_df['Unnamed: 0'].str.contains('Unité', na = False)].tolist()
@@ -910,7 +925,7 @@ class AddAct(LoginRequiredMixin, View):
                     else:
                         match = re.search(r'\d{2}\s*/\d{2}\s*/\d{4}', dte)
                         date = datetime.datetime.strptime(match.group(), '%d/%m/%Y').date()
-                    print(date, max_dt)
+                    # print(date, max_dt)
                     if date > max_dt:
                         df = df.reset_index(drop=True)
                         df = get_trs_df(df)
@@ -1127,6 +1142,7 @@ class AddActMan(LoginRequiredMixin, View):
             dic_prod['pu_cout_revient'] = float(dic['pu_cout_revient'][i])
             dic_prod['montant_journee_coutrev'] = dic_prod['pu_cout_revient'] * dic_prod['conforme_jour']
             dic_prod['montantcumul_coutrev'] = dic_prod['pu_cout_revient'] * dic_prod['conforme_mois']
+            print(dic_prod['pu_cout_revient'], dic['conforme_mois'], dic_prod['montantcumul_coutrev'])
             dic_prod['pu_prix_vente'] = float(dic['pu_prix_vente'][i])
             try:
                 dic_prod['montant_journee_prix_vente'] = dic_prod['pu_prix_vente'] * (dic_prod['montant_journee_coutrev'] / dic_prod['pu_cout_revient'])
@@ -1491,8 +1507,9 @@ class ObjCapacitySummary(LoginRequiredMixin, ListView):
         else:
             context['prod'] = 'Boite'
         # pylint: disable=no-member
-        qs = ObjectifCapaciteProduction.objects.all().order_by('-date')
+        qs = ObjectifCapaciteProduction.objects.filter(produit = 'Boite').order_by('-date')
         context['dates'] = list(qs.values_list('date', flat=True).distinct())
+        # print(context['dates'])
         # if len(context['dates']) > 1:
         #     rmv_date = context['dates'].pop(0)
         if not self.request.GET.get('date'):
@@ -1507,6 +1524,7 @@ class AddObjectifCap(LoginRequiredMixin, View):
     def post(self, request):
         dic = dict(request.POST)
         del dic['csrfmiddlewaretoken']
+        print(dic)
         mode = None
         if dic['mode'][0] == 'add':
             mode = 'add'
@@ -1558,9 +1576,9 @@ class AddObjectifCap(LoginRequiredMixin, View):
             dic_obj['category'] = dic['category-obj'][obj]
             dic_obj['produit'] = dic['prod-obj'][0]
             obj, created = ObjectifCapaciteProduction.objects.update_or_create(
-            id = dic_obj['id'],
-            defaults = dic_obj
-        )
+                id = dic_obj['id'],
+                defaults = dic_obj
+            )
         messages.success(request, "L'opération s'est terminé avec succès !")
         if not mode:
             mode = 'edit'
@@ -1660,11 +1678,11 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 flash_df = flash_df.iloc[:, :14]
                                 to_rmv = df.index[df['Unnamed: 0'].str.lower().str.contains('shi', na = False)].tolist()[0]
                                 flash_df = flash_df.iloc[to_rmv + 3:-1]
-                                print(flash_df)
                                 flash_df['Unnamed: 0'].fillna(method='ffill', inplace = True)
                                 flash_df['Unnamed: 0'].fillna(method='bfill', inplace = True)
                                 flash_df['Unnamed: 1'].fillna(method='ffill', inplace = True)
-                                flash_df['Unnamed: 13'].fillna(method='ffill', inplace = True)
+                                flash_df['Unnamed: 15'].fillna(method='ffill', inplace = True)
+                                # print(flash_df['Unnamed: 0'])
                                 flash_df['Unnamed: 0'] = flash_df['Unnamed: 0'].astype(str).str.strip().str[-1].astype(int)
                                 # print(flash_df['Unnamed: 0'])
                                 flash_df.rename(columns = {
@@ -1698,6 +1716,14 @@ class addFlashJourn(LoginRequiredMixin, View):
                                     flash_df['taux_reb'] = flash_df['rebut'] / flash_df['brut']
                                 except ZeroDivisionError():
                                     flash_df['taux_reb'] = np.nan
+                                print(flash_df)
+                                tot_sf_reb = flash_df['sf_rebut'].sum()
+                                tot_sf_conf = flash_df['sf_conf'].sum()
+                                tot_sf_brute = tot_sf_reb + tot_sf_conf
+                                tot_reb = flash_df['rebut'].sum()
+                                tot_conf = flash_df['conf'].sum()
+                                tot_brute = tot_conf + tot_reb
+                                print(tot_sf_brute, tot_sf_conf, tot_sf_reb, tot_brute, tot_conf, tot_reb)
                                 flash_df['date'] = date
                                 flash_df['ligne'] = line
                                 flash_df['conduct'].replace(0, np.nan, inplace = True)
@@ -1830,10 +1856,8 @@ class addFlashJourn(LoginRequiredMixin, View):
                                         }, inplace = True)
                                     else:
                                         check_last_col = True
-                                print(df_cap_prod)
                                 df_cap_prod = df_cap_prod.loc[:, ~df_cap_prod.columns.str.contains('^Unnamed')]
                                 df_cap_prod = df_cap_prod[df_cap_prod['val'].notna()]
-                                print(df_cap_prod)
                                 df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('mn'), 'key'] = 'arrets'
                                 df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('bru'), 'key'] = 'prod_brute'
                                 df_cap_prod.loc[df_cap_prod['key'].str.lower().str.contains('shif'), 'key'] = 'shift'
@@ -1858,13 +1882,10 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 flash_df = flash_df.reset_index(drop=True)
                                 # print(flash_df)
                                 # print(( (df_cap_prod['shift'] * flash_df.at[0, 'hours'] * 60) - df_cap_prod['arrets'] ) / (df_cap_prod['shift'] * flash_df.at[0, 'hours'] * 60))
-                                try:
-                                    df_cap_prod['taux_util'] = ( (df_cap_prod['shift'] * flash_df.at[0, 'hours'] * 60) - df_cap_prod['arrets'] ) / (df_cap_prod['shift'] * flash_df.at[0, 'hours'] * 60)
-                                except:
-                                    df_cap_prod['taux_util'] = np.nan
+                                df_cap_prod['prod_brute'] = tot_brute + tot_sf_brute
                                 # print((df_cap_prod['cph'] * df_cap_prod['shift'] * flash_df.at[0, 'hours'] * df_cap_prod['taux_util']).astype(float).round())
                                 try:
-                                    df_cap_prod['capacite_prod'] = (df_cap_prod['cph'] * df_cap_prod['shift'] * flash_df.at[0, 'hours'] * df_cap_prod['taux_util']).astype(float).round()
+                                    df_cap_prod['capacite_prod'] = ( ((480 * df_cap_prod['shift']) - df_cap_prod['arrets']) * (df_cap_prod['cph']*(flash_df.at[0, 'hours'] * df_cap_prod['shift'])) / (480 * df_cap_prod['shift']) ).astype(float).round()
                                 except:
                                     df_cap_prod['capacite_prod'] = np.nan
                                 try:
@@ -1876,9 +1897,14 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 except:
                                     df_cap_prod['nb_feuill_pre_arret'] = np.nan
                                 try:
-                                    df_cap_prod['nb_feuill_post_arret'] = df_cap_prod['capacite_prod'] / ( df_cap_prod['shift'] * flash_df.at[0, 'hours'] )
+                                    df_cap_prod['nb_feuill_post_arret'] = df_cap_prod['prod_brute'] / ( df_cap_prod['shift'] * flash_df.at[0, 'hours'] )
                                 except:
                                     df_cap_prod['nb_feuill_post_arret'] = np.nan
+                                try:
+                                    df_cap_prod['taux_util'] = df_cap_prod['nb_feuill_post_arret'] / df_cap_prod['nb_feuill_pre_arret']
+                                except:
+                                    df_cap_prod['taux_util'] = np.nan
+                                print(df_cap_prod)
 
                                 # COMBINE DF_ARRET AND DF_CAP_PROD
                                 df_arrets.reset_index(drop=True, inplace=True)
@@ -2066,13 +2092,16 @@ class EditFlashImp(LoginRequiredMixin, View):
                     flash_imp_dic['sf_taux_reb'] = 0
                 flash_imp_dic['rebut'] = dic['rebut'][j]
                 flash_imp_dic['conf'] = dic['conf'][j]
+                # print(dic['rebut'][j], dic['conf'][j])
                 flash_imp_dic['brut'] = flash_imp_dic['conf'] + flash_imp_dic['rebut']
                 try:
                     flash_imp_dic['taux_reb'] = flash_imp_dic['rebut'] / flash_imp_dic['brut']
                 except ZeroDivisionError:
                     flash_imp_dic['taux_reb'] = 0
+                prod_brute = flash_imp_dic['brut'] + flash_imp_dic['sf_brut']
+                print(dic['ligne'][i], flash_imp_dic['brut'], str(flash_imp_dic['sf_brut']) + ' = ', prod_brute)
                 sum_prod_brute['prod_brute_' + dic['ligne'][i]] = sum_prod_brute['prod_brute_' + dic['ligne'][i]] + flash_imp_dic['sf_brut'] + flash_imp_dic['brut']
-                print(flash_imp_dic)
+                # print(flash_imp_dic)
                 print('\n')
                 try:
                     obj, created = Flash_Impression.objects.update_or_create(
@@ -2094,15 +2123,17 @@ class EditFlashImp(LoginRequiredMixin, View):
             nb_line = len(dic['lvg'])
         else:
             nb_line = len(dic['id'])
+        print('CAP IMP')
         for i in range(0, nb_line):
             cap_imp_dic = dict()
             if mode == 'edit':
-                cap_imp_dic['id'] = dic['id_flash'][j]
+                cap_imp_dic['id'] = dic['id'][i]
             else:
                 tab_name = 'Production_Capacite_Imp'
                 cursor.execute('SELECT MAX("id") FROM public."' + tab_name + '"')
                 max_id = cursor.fetchone()[0]
                 cap_imp_dic['id'] = max_id + 1
+            # print(sum_prod_brute)
             cap_imp_dic['date'] = date
             cap_imp_dic['shift'] = dic['shift'][i]
             cap_imp_dic['prod_brute'] = sum_prod_brute['prod_brute_' + dic['ligne'][i]]
@@ -2120,18 +2151,27 @@ class EditFlashImp(LoginRequiredMixin, View):
             cap_imp_dic['arrets'] = cap_imp_dic['prep_line'] + cap_imp_dic['pause_eat'] + cap_imp_dic['chg_form'] + cap_imp_dic['lvg'] + cap_imp_dic['manque_prog'] + cap_imp_dic['panne'] + cap_imp_dic['reglages'] + cap_imp_dic['autres'] + cap_imp_dic['abs']
             # calcul des taux et de la capacite
             # print(round(cap_imp_dic['cph'] * cap_imp_dic['shift'] * flash_imp_dic['hours'] * cap_imp_dic['taux_util']))
+            # cap_imp_dic['capacite_prod'] = round(( ((480 * cap_imp_dic['shift']) - cap_imp_dic['arrets']) * (cap_imp_dic['cph']*(flash_imp_dic['hours'] * cap_imp_dic['shift'])) / (480 * cap_imp_dic['shift']) ))
             try:
-                cap_imp_dic['taux_util'] = ( (cap_imp_dic['shift'] * flash_imp_dic['hours'] * 60) - cap_imp_dic['arrets'] ) / (cap_imp_dic['shift'] * flash_imp_dic['hours'] * 60)
-            except:
-                cap_imp_dic['taux_util'] = np.nan
-            try:
-                cap_imp_dic['capacite_prod'] = round(cap_imp_dic['cph'] * cap_imp_dic['shift'] * flash_imp_dic['hours'] * cap_imp_dic['taux_util'])
+                cap_imp_dic['capacite_prod'] = round(( ((480 * cap_imp_dic['shift']) - cap_imp_dic['arrets']) * (cap_imp_dic['cph']*(flash_imp_dic['hours'] * cap_imp_dic['shift'])) / (480 * cap_imp_dic['shift']) ))
             except:
                 cap_imp_dic['capacite_prod'] = np.nan
             try:
                 cap_imp_dic['taux_prod'] = cap_imp_dic['prod_brute'] / cap_imp_dic['capacite_prod']
             except:
                 cap_imp_dic['taux_prod'] = np.nan
+            try:
+                cap_imp_dic['nb_feuill_pre_arret'] = cap_imp_dic['capacite_prod'] / ( ( (cap_imp_dic['shift'] * flash_imp_dic['hours'] * 60) - cap_imp_dic['arrets'] ) / 60 )
+            except:
+                cap_imp_dic['nb_feuill_pre_arret'] = np.nan
+            try:
+                cap_imp_dic['nb_feuill_post_arret'] = cap_imp_dic['prod_brute'] / ( cap_imp_dic['shift'] * flash_imp_dic['hours'] )
+            except:
+                cap_imp_dic['nb_feuill_post_arret'] = np.nan
+            try:
+                cap_imp_dic['taux_util'] = cap_imp_dic['nb_feuill_post_arret'] / cap_imp_dic['nb_feuill_pre_arret']
+            except:
+                cap_imp_dic['taux_util'] = np.nan
             print(cap_imp_dic)
             print('\n')
             try:
@@ -2142,7 +2182,7 @@ class EditFlashImp(LoginRequiredMixin, View):
             except:
                 if mode == 'add':
                     return redirect('core:add-flash-imp-manual')
-                messages.error(request, 'Une erreur s\'est produite! Réssayez plus tard.')
+                messages.error(request, 'Une erreur s\'est produiteyyyyy! Réssayez plus tard.')
                 return HttpResponseRedirect(reverse('core:flash-impr-details', kwargs={
                     'pk' : dic['main_id'][0]
                 }))
@@ -2156,6 +2196,7 @@ class EditFlashImp(LoginRequiredMixin, View):
 @login_required
 def add_cap_prod_imp_man(request):
     shifts = list(Flash_Impression.objects.order_by('shift').values_list('shift', flat=True).distinct())
+    shifts = [x for x in shifts if x is not None]
     shifts = list(map(lambda s: s.strip(), shifts))
     shifts = list(set(shifts))
     l = [1, 'shift', 3.5]

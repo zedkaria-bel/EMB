@@ -80,13 +80,14 @@ def get_prod_phy(df):
     df_copy = df_copy.loc[df_copy['Volume'].notnull()]
     df_copy['Unnamed: 5'].fillna(0, inplace=True)
     df_copy['Unnamed: 4'].fillna(0, inplace=True)
-    print(df_copy)
+    # print(df_copy)
 
     indexNames = df[(df['Unnamed: 1'].str.contains('TOTAL')) & (df['Unnamed: 1'].str.contains('KDU') | df['Unnamed: 1'].str.contains('AZDU') | df['Unnamed: 1'].str.contains('SKDU') | df['Unnamed: 1'].str.contains('GENERAL'))].index
     df.drop(indexNames , inplace=True)
     df['Volume'] = np.nan
     df['category'] = np.nan
     df['produit'] = 'Boite'
+    df['format'] = np.nan
     # df.loc[(df['Unnamed: 2'].notnull()) & (df['Unnamed: 1'].str.contains('TOTAL', na = False)), 'Unnamed: 1'] = np.nan
     # idx_vol = []
     # idx_cat = []
@@ -130,6 +131,12 @@ def get_prod_phy(df):
                     try:
                         if not pd.isnull(df['Unnamed: 2'].loc[i]) and pd.isnull(df['category'].loc[i]):
                             df['Volume'].loc[i] = str(found)
+                            if '1/10' in df['Unnamed: 2'].loc[i].lower():
+                                df['format'].loc[i] = '1/10'
+                            else:
+                                print('ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo' + str(found))
+                                
+                                df['format'].loc[i] = df['Volume'].loc[i]
                     except KeyError:
                         i+=1
                 prec_vol = val
@@ -262,7 +269,7 @@ def get_prod_phy(df):
     # print(df)
     # print(date)
     df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
-    print(df.shape)
+    # print(df.shape)
     # print(df.head())
     # print(df['Taux_real'])
     return df, df_copy

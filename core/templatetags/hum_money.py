@@ -99,3 +99,11 @@ def get_percent(nb):
 @register.filter
 def get_flash_count(obj):
     return obj.count()
+
+@register.filter
+def len_str(str):
+    return len(str)
+
+@register.filter
+def get_str_st_part(str):
+    return str[:31]
