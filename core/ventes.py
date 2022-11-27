@@ -35,8 +35,9 @@ def get_vente_df(df):
     }, inplace = True)
     indexNames = df[(~df['Ligne'].isnull()) & ((~df['Ligne'].str.contains('CONSERVE', na = False)) & (~df['Ligne'].str.contains('DIVERS', na = False)) & (~df['Ligne'].str.contains('AUTRE', na = False)))].index
     df.drop(indexNames , inplace=True)
-    indexNames = df[df['Ligne'].isnull() & df['Désignation'].isnull()].index
+    indexNames = df[df['Ligne'].isnull() & df['Désignation'].isnull() & df['Client'].isnull()].index
     df.drop(indexNames , inplace=True)
+    # print(df)
     tots = df.index[df['Ligne'].str.contains('TOTAL|AUTRES', na = False, regex = True)].tolist()
     # print(tots)
     prec_cat = 0
@@ -57,7 +58,7 @@ def get_vente_df(df):
             # print(found)
             for i in range(prec_cat, val):
                 try:
-                    if not pd.isnull(df['Désignation'].loc[i]):
+                    if not pd.isnull(df['Montant_journee'].loc[i]):
                         # print(tot, df['Unnamed: 2'].loc[i])
                         # print(found)
                         df['category'].loc[i] = str(found)
@@ -75,13 +76,21 @@ def get_vente_df(df):
     for col in df.columns:
         if col != 'Client' and col != 'Désignation':
             df[col].fillna(0, inplace=True)
-    # print(df)
     df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
-    
+
+    # print('XXXX')
+    # print(df['Montant_journee'])
+    # print(df['Qte_Journ'])
+    # print(df['Qte_Cumul'])
+    # print(df['PU'])
+    df.loc[(df['Montant_journee'] != 0) & ((df['Qte_Journ'] == 0) | (df['Qte_Cumul'].isnull())), 'Qte_Journ'] = df['Montant_journee'] / df['PU']
+    print('PPPP')
+    df.loc[(df['Qte_Cumul'] == 0) & (df['Qte_Journ'] != 0), 'Qte_Cumul'] = df['Qte_Journ']
     indexNames = df[df['Qte_Cumul'] == 0].index
     df.drop(indexNames , inplace=True)
     df.loc[df['category'].str.contains('diver', flags=re.IGNORECASE, na = False), 'category'] = 'DIVERSE'
     df['Unité'] = df['Unité'].str.upper()
+    print(df)
     # file_name = 'Ventes_' + str(date.month) + '_' + str(date.year) + '.xlsx'
     # if not os.path.isfile(r'C:\Users\zaki1\Desktop\Controle de Gestion\Scripts\Ventes_' + str(date.month) + '_' + str(date.year) + '.xlsx'):
     #     # print('New file !')

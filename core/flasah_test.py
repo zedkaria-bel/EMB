@@ -134,7 +134,7 @@ def get_prod_phy(df):
                             if '1/10' in df['Unnamed: 2'].loc[i].lower():
                                 df['format'].loc[i] = '1/10'
                             else:
-                                print('ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo' + str(found))
+                                # print('ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo' + str(found))
                                 
                                 df['format'].loc[i] = df['Volume'].loc[i]
                     except KeyError:

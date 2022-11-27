@@ -1,4 +1,5 @@
 import calendar
+from cmath import isnan
 import datetime
 import imp
 from itertools import product
@@ -1636,6 +1637,28 @@ class addFlashJourn(LoginRequiredMixin, View):
                 xl = pd.ExcelFile(new_act_journ, engine='openpyxl') # pylint: disable=abstract-class-instantiated
                 bg_frames = []
                 good_file = False
+                regex_exps = {
+                    'sub': [
+                        r'^.*?(\d\s*/\s*\d).*(sub.+|sb.+).*(\d\s*/\s*\d).*',
+                        r'^.*?(\d\s*/\s*\d).*(sub.+|sb.+).*(\d+\s*kg).*',
+                        r'^.*?(\d\s*/\s*\d).*(sub.+|sb.+).*(\w{3}.*\d{2}(,|.)?\d*)',
+                        r'^.*?(\d\s*/\s*\d).*(sub.+|sb.+).*(\d+\s*\w+).*',
+                        r'^.*?(\w{3}.*\d{2,}).*(sub.+|sb.+).*(\w{3}.*\d{2}(,|.)?\d*)',
+                        r'^.*?(\d+\s*\w+).*(sub.+|sb.+).*(\d+\s*kg).*',
+                        r'^.*?(\d+\s*\w+).*(sub.+|sb.+).*(\d\s*/\s*\d).*',
+                        r'^.*?(\d+\s*\w+).*(sub.+|sb.+).*(\d{1,}\s*(.|,)?\d).*',
+                        r'^.*?(\d+\s*\w+).*(sub.+|sb.+).*(\d+\s*\w+).*',
+                    ],
+                    'non-sub': [
+                        r'^.*?(\d\s*/\s*\d).*',
+                        r'^.*?(0\s*(\,|\.)\s*8\d*\s*l)',
+                        r'^.*?(\w{3}\s*(:|/)*\s*\d{1,}\s*\w{1,})',
+                        r'^.*?(\w{3}.*\d{2,})',
+                        r'^.*?(\d+\s*\w+).*',
+                        r'^(?=.*/)(?!.*\d).*',
+                        r'^(?=.*\w)(?!.*\d).*',
+                    ]
+                }
                 for sheetname in xl.sheet_names:
                     if 'flash' in sheetname.lower() or 'journ' in sheetname.lower():
                         good_file = True
@@ -1662,6 +1685,7 @@ class addFlashJourn(LoginRequiredMixin, View):
                                     df = bg_df.loc[val:]
                                 df = df.reset_index(drop=True)
                                 line = df.iloc[0]['Unnamed: 0']
+                                print(line + ' *************************************************************************')
                                 if 'vern' in line.lower():
                                     line = 'VERNISSEUSE'
                                 else:
@@ -1739,6 +1763,9 @@ class addFlashJourn(LoginRequiredMixin, View):
                                     df_capacite = df.loc[start_df2:, :]
                                 df_capacite = df_capacite.reset_index(drop=True)
                                 df_capacite.dropna(axis=1, how='all', inplace = True)
+                                print(df_capacite.columns.values.tolist())
+                                if 'Unnamed: 1' in df_capacite.columns.values.tolist():
+                                    del df_capacite['Unnamed: 1']
                                 df_arrets = df_capacite.iloc[:, :6]
                                 df_cap_prod = df_capacite.iloc[:, 6:]
                                 
@@ -1755,8 +1782,9 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 df_arrets = df_arrets[df_arrets['label_arret'].notna()]
                                 # df_arrets['line'] = line
                                 # df_arrets['date'] = date
+                                
 
-                                df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('parat'), 'label_arret'] = 'prep_line'
+                                df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('parat|prép|prep'), 'label_arret'] = 'prep_line'
                                 df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('paus'), 'label_arret'] = 'pause_eat'
                                 df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('forma'), 'label_arret'] = 'chg_form'
                                 df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('lavag'), 'label_arret'] = 'lvg'
@@ -1765,30 +1793,52 @@ class addFlashJourn(LoginRequiredMixin, View):
                                 df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('reg|rég'), 'label_arret'] = 'reglages'
                                 df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('autr'), 'label_arret'] = 'autres'
                                 df_arrets.loc[df_arrets['label_arret'].str.lower().str.contains('abs'), 'label_arret'] = 'abs'
-
+                                # print(df_arrets)
+                                # print('mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm')
                                 new_ones = list(set(df_arrets['label_arret'].unique()) - set(full_labels))
+                                print(new_ones)
                                 df_arrets = df_arrets.reset_index(drop=True)
                                 if len(new_ones):
+                                    new_arret_name = ''
                                     for new_arret in new_ones:
                                         new = True
+                                        print('BEGIN LOOOOOOOOOOOOOOOOOOOOOOOOOOP')
+                                        print(df_arrets)
                                         # print(df_arrets)
-                                        # print(df_arrets.loc[df_arrets['label_arret'] == new_arret, 'temps arrets (mn)'].iloc[0])
-                                        if df_arrets.loc[df_arrets['label_arret'] == new_arret, 'temps arrets (mn)'].iloc[0] == np.nan:
+                                        # print(df_arrets.at[(df_arrets['label_arret'] == new_arret).idxmax(), 'temps arrets (mn)'])
+                                        print(new_arret, df_arrets.at[(df_arrets['label_arret'] == new_arret).idxmax(), 'temps arrets (mn)'])
+                                        if df_arrets.at[(df_arrets['label_arret'] == new_arret).idxmax(), 'temps arrets (mn)'] == np.nan:
                                             df_arrets.drop(df_arrets.loc[df_arrets['label_arret'] == new_arret], inplace = True)
                                             new = False
                                         if new:
+                                            # print(df_arrets['label_arret'].unique())
                                             if 'autres' in df_arrets['label_arret'].unique():
                                                 if df_arrets.loc[df_arrets['label_arret'] == 'autres', 'temps arrets (mn)'].iloc[0] == np.nan:
                                                     df_arrets.loc[df_arrets['label_arret'] == 'autres', 'temps arrets (mn)'] = 0
-                                                df_arrets.loc[df_arrets['label_arret'] == 'autres', 'temps arrets (mn)'] += df_arrets.loc[df_arrets['label_arret'] == new_arret, 'temps arrets (mn)']
-                                                df_arrets.drop(df_arrets.loc[df_arrets['label_arret'] == new_arret], inplace = True)
+                                                df_arrets.loc[df_arrets['label_arret'] == 'autres', 'temps arrets (mn)'] += df_arrets.at[(df_arrets['label_arret'] == new_arret).idxmax(), 'temps arrets (mn)']
+                                                df_arrets.loc[df_arrets['label_arret'] == 'autres', 'Unnamed: 5'] += df_arrets.at[(df_arrets['label_arret'] == new_arret).idxmax(), 'Unnamed: 5']
+                                                df_arrets.loc[df_arrets['label_arret'] == 'autres', 'Unnamed: 6'] += df_arrets.at[(df_arrets['label_arret'] == new_arret).idxmax(), 'Unnamed: 6']
+                                                df_arrets.loc[df_arrets['label_arret'] == 'autres', 'Unnamed: 7'] += df_arrets.at[(df_arrets['label_arret'] == new_arret).idxmax(), 'Unnamed: 7']
                                             else:
                                                 df_arrets.loc[df_arrets['label_arret'] == new_arret, 'label_arret'] = 'autres'
-                                            df_arrets.loc[len(df_arrets.index)] = ['descr', new_arret, new_arret, new_arret, new_arret]
+                                            # l = list(df_arrets.loc[df_arrets['label_arret'] == new_arret, 'temps arrets (mn)'])
+                                            print(df_arrets.at[(df_arrets['label_arret'] == new_arret).idxmax(), 'temps arrets (mn)'])
+                                            if 'descr' in df_arrets['label_arret'].unique():
+                                                if df_arrets.at[(df_arrets['label_arret'] == new_arret).idxmax(), 'temps arrets (mn)'] != 0:
+                                                    new_arret_name = str(df_arrets.at[len(df_arrets.index)-1, 'temps arrets (mn)']) + ' / ' + new_arret
+                                                    print(new_arret_name)
+                                                    df_arrets.loc[(df_arrets['label_arret'] == 'descr')] = [['descr', new_arret_name, new_arret_name, new_arret_name, new_arret_name]]
+                                                df_arrets.drop(df_arrets.loc[df_arrets['label_arret'] == new_arret].index, inplace = True)
+                                            else:
+                                                df_arrets.loc[len(df_arrets.index)] = ['descr', new_arret, new_arret, new_arret, new_arret]
+                                        print(df_arrets)
+                                        print('END LOOOOOOOOOOOOOOOOOOOOOOOOOOP')
                                         
                                 # print(df_arrets)
 
                                 if 'descr' not in df_arrets['label_arret'].unique():
+                                    # print(df_arrets.columns)
+                                    # print(df_arrets)
                                     df_arrets.loc[len(df_arrets.index)] = ['descr', np.nan, np.nan, np.nan, np.nan]
 
                                 diff = list(set(full_labels) - set(df_arrets['label_arret'].unique().tolist()))
@@ -1917,6 +1967,98 @@ class addFlashJourn(LoginRequiredMixin, View):
 
                                 # print(flash_df)
                                 # print(df_capacite)
+
+                                # New added block 09-11-2022 ==> add format and category
+                                flash_df['atelier_impr'] = None
+                                flash_df['category'] = None
+                                flash_df['format_prod'] = None
+                                flash_df['format_subst'] = None
+
+                                try:
+                                    for idx, row in flash_df.iterrows():
+                                        des = flash_df.iloc[idx]['des'].lower()
+                                        sub_idx = 0
+                                        nonsub_idx = 0
+                                        match = None
+                                        exc = False
+                                        while True:
+                                            if 'sub' in des or 'sb' in des:
+                                                # if sub_idx == len(regex_exps['sub']):
+                                                #     exc = True
+                                                #     break
+                                                match = re.search(regex_exps['sub'][sub_idx], des)
+                                                if match:
+                                                    flash_df.at[idx, 'format_prod'] = str(match.group(1)).upper()
+                                                    if 'kg' in des:
+                                                        flash_df.at[idx, 'format_subst'] = None
+                                                    else:
+                                                        flash_df.at[idx, 'format_subst'] = str(match.group(3)).upper()
+                                            else:
+                                                # if nonsub_idx == len(regex_exps['non-sub']):
+                                                #     exc = True
+                                                #     break
+                                                match = re.search(regex_exps['non-sub'][nonsub_idx], des)
+                                                if match:
+                                                    # print(match.groups())
+                                                    if regex_exps['non-sub'][nonsub_idx] == r'^(?=.*/)(?!.*\d).*' or regex_exps['non-sub'][nonsub_idx] == r'^(?=.*\w)(?!.*\d).*':
+                                                        flash_df.at[idx, 'format_prod'] = None
+                                                    else:
+                                                        flash_df.at[idx, 'format_prod'] = str(match.group(1)).upper()
+                                                    flash_df.at[idx, 'format_subst'] = None
+                                            sub_idx += 1
+                                            nonsub_idx += 1
+                                            if match:
+                                                break
+                                except IndexError:
+                                    messages.error(request, "Format de fer non identifié pour : " + des.upper() + ".")
+                                    return redirect('core:add-flash-imp') 
+                                
+                                if not flash_df['des'].isnull().all():
+                                    flash_df.loc[(flash_df['format_prod'].str.upper().str.contains('1\s*(L|Ø|D)', na = False)) & (flash_df['des'].str.contains('108', na = False)), 'format_prod'] = '0.8 / 1 L Ø 108'
+                                    flash_df.loc[(flash_df['format_prod'].str.upper().str.contains('1\s*L', na = False)) & (flash_df['des'].str.contains('83', na = False)), 'format_prod'] = '1 L Ø 83'
+                                    flash_df.loc[flash_df['format_prod'].str.contains('\s*1 L$', na = False), 'format_prod'] = None
+                                    flash_df.loc[flash_df['format_prod'].str.contains('3/1', na = False), 'format_prod'] = '5/1'
+                                    flash_df.loc[flash_df['format_prod'].str.contains('3\s*L', na = False), 'format_prod'] = '3 L'
+                                    flash_df.loc[flash_df['format_prod'].str.contains('6\s*OZ', na = False), 'format_prod'] = '16 OZ'
+                                    flash_df.loc[flash_df['format_subst'].str.contains('6\s*OZ', na = False), 'format_subst'] = '16 OZ'
+                                    flash_df.loc[flash_df['format_prod'].str.contains('4\s*OZ', na = False), 'format_prod'] = '4 OZ'
+                                    flash_df.loc[flash_df['des'].str.contains('FDS.*73', na = False), 'format_prod'] = 'FDS Ø 73'
+                                    flash_df.loc[flash_df['des'].str.contains('0\s*(\,|\.)\s*8\d*\s*L', na = False), 'format_prod'] = '0.8 / 1 L Ø 108'
+                                    flash_df.loc[flash_df['format_subst'].str.contains('0\s*(\,|\.)\s*8', na = False), 'format_subst'] = '0.8 L Ø 108'
+                                    flash_df.loc[flash_df['des'].str.contains('(18\s*L|20\s*L)|(PAILS\s*18)|(PAILS\s*20)', na = False), 'format_prod'] = '18 / 20 L'
+                                    flash_df.loc[flash_df['des'].str.contains('10\s*L', na = False), 'format_prod'] = '10 L'
+                                    flash_df.loc[flash_df['des'].str.contains('CAT.*AMOU', na = False), 'format_prod'] = '1/2'
+                                    flash_df.loc[flash_df['format_prod'].str.contains('108', na = False) & flash_df['format_subst'].str.contains('1/2', na = False), 'format_subst'] = '1/2 L Ø 108'
+                                    flash_df.loc[flash_df['des'].str.lower().str.contains(r'(sub\w+|sb\w+).*1\s*8\s*l?', na = False) & flash_df['format_prod'].str.contains('18 / 20 L', na = False), 'format_subst'] = '18 L'
+                                    flash_df.loc[(flash_df['des'].str.upper().str.contains('FDS', na = False)) & (flash_df['des'].str.contains('153', na = False)), 'format_prod'] = 'FDS Ø 153'
+                                    flash_df.loc[(flash_df['des'].str.upper().str.contains('FDS', na = False)) & (flash_df['des'].str.contains('65', na = False)), 'format_prod'] = 'FDS Ø 65'
+                                    flash_df.loc[(flash_df['format_prod'].str.upper().str.contains('5/1', na = False)) & (flash_df['des'].str.lower().str.contains('sub|sb', na = False)) & (~flash_df['des'].str.lower().str.contains('kg', na = False)), 'format_subst'] = '3/1'
+
+                                # print(df.loc[~df['des'].str.lower().str.contains('sub|sb', na = False), ['des', 'format_prod', 'format_subst']])
+
+                                # Filling atelier_impr and category cols
+
+                                table_name = 'public."PROGRAMME_DT"'
+                                pg_dt_df = pd.read_sql_query('select * from ' + table_name, con=engine)
+
+                                pg_dt_df = pg_dt_df.loc[pg_dt_df['atelier'] == 'Imprimerie']
+                                pg_dt_bte_df = pg_dt_df.loc[pg_dt_df['atelier_impr'] == 'Boite']
+                                flash_df.loc[flash_df['format_prod'].isin(pg_dt_bte_df['format'].unique()), 'atelier_impr'] = 'Boite'
+
+                                pg_dt_bte_cons_df = pg_dt_bte_df.loc[pg_dt_bte_df['category'] == 'CONSERVE']
+                                flash_df.loc[flash_df['format_prod'].isin(pg_dt_bte_cons_df['format'].unique()), 'category'] = 'CONSERVE'
+                                pg_dt_bte_cons_df = pg_dt_bte_df.loc[pg_dt_bte_df['category'] == 'DIVERSE']
+                                flash_df.loc[flash_df['format_prod'].isin(pg_dt_bte_cons_df['format'].unique()), 'category'] = 'DIVERSE'
+
+
+
+                                pg_dt_bte_df = pg_dt_df.loc[pg_dt_df['atelier_impr'] == 'Accessoire']
+                                flash_df.loc[flash_df['format_prod'].isin(pg_dt_bte_df['format'].unique()), 'atelier_impr'] = 'Accessoire'
+
+                                pg_dt_bte_cons_df = pg_dt_bte_df.loc[pg_dt_bte_df['category'] == 'CONSERVE']
+                                flash_df.loc[flash_df['format_prod'].isin(pg_dt_bte_cons_df['format'].unique()), 'category'] = 'CONSERVE'
+                                pg_dt_bte_cons_df = pg_dt_bte_df.loc[pg_dt_bte_df['category'] == 'DIVERSE']
+                                flash_df.loc[flash_df['format_prod'].isin(pg_dt_bte_cons_df['format'].unique()), 'category'] = 'DIVERSE'
 
                                 tab_name = 'Flash_Impression'
 
@@ -2208,4 +2350,3 @@ def add_cap_prod_imp_man(request):
         'shifts': shifts,
     }
     return render(request, 'core/add-flash-imp-manual.html', context)
-
