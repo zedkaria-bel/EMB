@@ -156,3 +156,4 @@ media_root/
 BAT/
 core/migrations/
 scripts/
+core/test_massi.py
