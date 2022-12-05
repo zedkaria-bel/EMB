@@ -153,7 +153,7 @@ cython_debug/
 #.idea/
 
 media_root/  
-BAT/
+# BAT/
 core/migrations/
 scripts/
 core/test_massi.py
